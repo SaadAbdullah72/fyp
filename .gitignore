@@ -12,3 +12,6 @@ venv/
 ai_engine/data/cropped_muzzles/cattle-00[4-9]*
 ai_engine/data/cropped_muzzles/cattle-0[1-9]*
 ai_engine/data/cropped_muzzles/cattle-[1-9]*
+cloudflared.exe
+LIVE_URL.txt
+

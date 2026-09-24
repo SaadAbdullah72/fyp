@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.swp
+*.log
+.env
+.venv/
+venv/
+.git/
+.gitignore
+test_*.py
+
+# Keep only sample cattle folders (cattle-001, cattle-002, cattle-003) for 1-click viva demos, ignore others
+ai_engine/data/cropped_muzzles/cattle-00[4-9]*
+ai_engine/data/cropped_muzzles/cattle-0[1-9]*
+ai_engine/data/cropped_muzzles/cattle-[1-9]*

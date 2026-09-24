@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.swp
+*.log
+.env
+.venv/
+venv/
+.DS_Store
+
+# Ignore huge bulk training images (keep cattle-001, cattle-002, cattle-003 for 1-click test buttons)
+ai_engine/data/cropped_muzzles/cattle-00[4-9]*
+ai_engine/data/cropped_muzzles/cattle-0[1-9]*
+ai_engine/data/cropped_muzzles/cattle-[1-9]*

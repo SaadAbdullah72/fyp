@@ -1565,4 +1565,420 @@ input[type="range"] {
   gap: 14px;
 }
 
+/* ==========================================================================
+   FAISS, XAI GRAD-CAM, & QUALITY GATE UPGRADED STYLES
+   ========================================================================== */
+
+/* Status Pills */
+.status-faiss {
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+}
+.faiss-bolt {
+  color: #facc15;
+  font-size: 0.95rem;
+  animation: pulse-bolt 1.5s infinite;
+}
+@keyframes pulse-bolt {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #facc15); }
+  50% { transform: scale(1.2); filter: drop-shadow(0 0 6px #facc15); }
+}
+
+.status-shield {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+}
+
+.status-xai {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+}
+
+/* XAI Badges & Cards */
+.xai-badge {
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.xai-explain-card {
+  margin-top: 18px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.xai-card-header h4 {
+  font-size: 1.05rem;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.xai-canvas-wrapper {
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+  display: flex;
+  justify-content: center;
+}
+
+.xai-canvas-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Quality & FAISS Badges Row */
+.quality-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.quality-chip {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.succ-xai-card {
+  margin-top: 16px;
+  background: rgba(10, 14, 26, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.succ-xai-thumb-box {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.succ-xai-thumb {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+/* Mode 2 Quality & XAI Visualizer */
+.direct-quality-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.quality-mini-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.quality-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.quality-pill-score {
+  font-family: var(--font-mono);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.direct-xai-card {
+  margin-top: 18px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.direct-xai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.xai-view-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.xai-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.xai-tab.active, .xai-tab:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.dual-xai-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.xai-col {
+  text-align: center;
+}
+
+.xai-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.xai-thumb {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+}
+
+/* 4-Way Multi-Modal Inspection Grid */
+.quad-images-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quad-col {
+  text-align: center;
+}
+
+.quad-thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+  transition: transform 0.2s ease;
+}
+
+.quad-thumb:hover {
+  transform: scale(1.05);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* Mode 3 Quality Audit Card */
+.quality-audit-card {
+  margin-top: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.quality-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quality-score-badge {
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.quality-metrics-mini {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.quality-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.quality-feedback-text {
+  font-style: italic;
+  color: #94a3b8;
+}
+
+/* FAISS High-Speed Ranking Card */
+.faiss-ranking-card {
+  margin-top: 14px;
+  background: rgba(10, 14, 26, 0.65);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.faiss-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.faiss-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f1f5f9;
+}
+
+.faiss-latency-pill {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.faiss-candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.faiss-candidate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  transition: background 0.15s ease;
+}
+
+.faiss-candidate-row:hover {
+  background: rgba(6, 182, 212, 0.12);
+}
+
+.candidate-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.candidate-rank {
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  width: 18px;
+}
+
+.candidate-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.candidate-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-name {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.candidate-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.candidate-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.candidate-sim {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.candidate-badge-match {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.candidate-badge-miss {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 

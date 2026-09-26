@@ -26,8 +26,15 @@ from verify import MuzzleVerificationEngine
 from utils.biometric_hasher import BiometricHasher
 from utils.preprocess import MuzzlePreprocessor
 from detector import LivestockMuzzleDetector
+from xai_heatmap import MuzzleExplainabilityEngine
+from vector_index import CattleVectorIndex
+from quality_gate import ImageQualityGate
 
-app = FastAPI(title="Livestock Muzzle Biometric Intelligence System", version="1.0.0")
+app = FastAPI(
+    title="Livestock Muzzle Biometric Intelligence System",
+    description="Next-Gen Cattle Biometric Platform with FAISS Vector Search, Grad-CAM XAI Heatmaps, and Quality Gate.",
+    version="2.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global In-Memory Registry
+# Global Storage: Dual FAISS Vector Index + Fast Metadata Map
+vector_index = CattleVectorIndex(embedding_dim=512)
+quality_gate = ImageQualityGate()
 REGISTRY: Dict[str, Dict[str, Any]] = {}
 
 # Initialize Verification Engine & YOLO Detector
@@ -49,25 +58,26 @@ if not os.path.exists(WEIGHTS_PATH):
 print("[*] Starting Muzzle Biometric Engine & Detector...")
 engine = MuzzleVerificationEngine(weights_path=WEIGHTS_PATH)
 preprocessor = MuzzlePreprocessor(target_size=(224, 224))
+xai_engine = MuzzleExplainabilityEngine(engine.model, device=engine.device)
+
 try:
     detector = LivestockMuzzleDetector()
 except Exception as e:
     detector = None
     print(f"[!] YOLO detector not loaded: {e}")
 
-print("[SUCCESS] All AI Engines are ready!")
+print("[SUCCESS] Deep AI Engines (FAISS, Grad-CAM XAI, Quality Gate) Ready!")
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Helper function to auto-detect and crop muzzle if image is full cow photo
+
 def prepare_muzzle_crop(img_bgr: np.ndarray) -> np.ndarray:
+    """Auto-detects and crops muzzle if full cow image, else preserves aspect."""
     h, w = img_bgr.shape[:2]
-    # If image is already close-up cropped (e.g. roughly square 512x512 with texture)
     if 0.75 <= w / h <= 1.35 and max(h, w) <= 600:
         return img_bgr
-    # If full photo, attempt YOLO detection
     if detector is not None:
         try:
             return detector.detect_and_crop(img_bgr)
@@ -75,12 +85,12 @@ def prepare_muzzle_crop(img_bgr: np.ndarray) -> np.ndarray:
             pass
     return img_bgr
 
-# Helper function to convert cv2 image to base64
+
 def cv2_to_base64(image_bgr: np.ndarray, format: str = "jpeg") -> str:
     _, buffer = cv2.imencode(f".{format}", image_bgr)
     return f"data:image/{format};base64," + base64.b64encode(buffer).decode("utf-8")
 
-# Helper function to read uploaded image bytes to BGR
+
 def bytes_to_cv2(image_bytes: bytes) -> np.ndarray:
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -94,7 +104,21 @@ async def serve_index():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return HTMLResponse("<h1>Antigravity Biometric Engine</h1><p>Frontend static files loading...</p>")
+    return HTMLResponse("<h1>Antigravity Biometric Engine 2.0</h1><p>Frontend static files loading...</p>")
+
+
+@app.get("/api/system-status")
+async def get_system_status():
+    """Reports real-time engine health, FAISS status, and hardware accelerator."""
+    return {
+        "status": "healthy",
+        "faiss_engine": vector_index.index_type,
+        "indexed_vectors": vector_index.count(),
+        "device": str(engine.device),
+        "backbone": "ResNet-50 + ArcFace (512-D)",
+        "xai_module": "Grad-CAM / Channel Activation Map Active",
+        "quality_gate": "Laplacian Blur + Specular Glare + 2D FFT Anti-Spoof Active"
+    }
 
 
 @app.get("/api/registry")
@@ -109,6 +133,7 @@ async def get_registry():
             "hash": data.get("hash", ""),
             "thumbnail": data.get("thumbnail", ""),
             "created_at": data.get("created_at", ""),
+            "quality_score": data.get("quality_score", 95.0),
             "features_dim": len(data.get("embedding", []))
         })
     return {
@@ -120,14 +145,27 @@ async def get_registry():
 
 @app.post("/api/reset")
 async def reset_registry():
-    """Wipes all local in-memory records and starts fresh from zero."""
+    """Wipes all local in-memory records and FAISS index."""
     count = len(REGISTRY)
     REGISTRY.clear()
+    vector_index.clear()
     return {
         "status": "success",
         "cleared_count": count,
-        "message": "Local database wiped completely. Registry reset to 0."
+        "message": "Local database & FAISS index wiped completely. Registry reset to 0."
     }
+
+
+@app.post("/api/quality-check")
+async def check_image_quality(file: UploadFile = File(...)):
+    """Pre-scan diagnostics endpoint: checks blur, lighting, and anti-spoofing."""
+    try:
+        content = await file.read()
+        bgr = bytes_to_cv2(content)
+        assessment = quality_gate.assess_quality(bgr)
+        return {"status": "success", "assessment": assessment}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/compare")
@@ -137,8 +175,11 @@ async def compare_two_muzzles(
     threshold: float = 0.35
 ):
     """
-    Direct 1-to-1 Biometric Verification:
-    Compares two muzzle images directly without needing database registration.
+    Direct 1-to-1 Biometric Verification with:
+    1. Pre-inference Quality Gate & Anti-Spoofing on both images.
+    2. Deep 512-D ArcFace Cosine Alignment.
+    3. Grad-CAM Attention Heatmaps for both muzzles.
+    4. Side-by-side Biometric Alignment Correspondence Visualization.
     """
     try:
         bytes1 = await file1.read()
@@ -146,11 +187,15 @@ async def compare_two_muzzles(
         bgr1 = prepare_muzzle_crop(bytes_to_cv2(bytes1))
         bgr2 = prepare_muzzle_crop(bytes_to_cv2(bytes2))
 
-        # Extract embeddings
+        # 1. Quality & Anti-Spoofing Check
+        q1 = quality_gate.assess_quality(bgr1)
+        q2 = quality_gate.assess_quality(bgr2)
+
+        # 2. Extract embeddings
         emb1 = engine.extract_embedding(bgr1)
         emb2 = engine.extract_embedding(bgr2)
 
-        # Cosine similarity
+        # 3. Cosine similarity
         cosine_sim = float(np.dot(emb1, emb2))
         clamped_sim = float(np.clip(cosine_sim, -1.0, 1.0))
         angular_dist = round(float(np.degrees(np.arccos(clamped_sim))), 2)
@@ -161,7 +206,12 @@ async def compare_two_muzzles(
         hash1 = BiometricHasher.generate_sha256_hash(emb1)
         hash2 = BiometricHasher.generate_sha256_hash(emb2)
 
-        print(f"[COMPARE] File 1: {file1.filename} vs File 2: {file2.filename} | Sim: {cosine_sim:.4f} | Threshold: {threshold} | Match: {is_match}")
+        # 4. Generate XAI Visualizations
+        xai1 = xai_engine.generate_attention_heatmap(bgr1)
+        xai2 = xai_engine.generate_attention_heatmap(bgr2)
+        corr_canvas = xai_engine.generate_pairwise_correspondence(bgr1, bgr2, cosine_sim, is_match)
+
+        print(f"[COMPARE] File 1: {file1.filename} vs File 2: {file2.filename} | Sim: {cosine_sim:.4f} | Thr: {threshold} | Match: {is_match}")
 
         return {
             "status": "success",
@@ -171,6 +221,17 @@ async def compare_two_muzzles(
             "confidence_percent": f"{confidence_pct}%",
             "angular_distance_deg": angular_dist,
             "threshold": threshold,
+            "quality_analysis": {
+                "image1": q1,
+                "image2": q2
+            },
+            "xai": {
+                "heatmap1": cv2_to_base64(xai1["overlay_bgr"]),
+                "heatmap2": cv2_to_base64(xai2["overlay_bgr"]),
+                "ridge1": cv2_to_base64(xai1["ridge_color"]),
+                "ridge2": cv2_to_base64(xai2["ridge_color"]),
+                "correspondence_canvas": cv2_to_base64(corr_canvas)
+            },
             "image1": {
                 "filename": file1.filename,
                 "thumbnail": cv2_to_base64(cv2.resize(bgr1, (200, 200))),
@@ -189,22 +250,24 @@ async def compare_two_muzzles(
 @app.post("/api/scan")
 async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
     """
-    Scans a muzzle image:
-    1. Preprocesses & enhances ridges with CLAHE.
-    2. Extracts 512-D L2-normalized embedding via fine-tuned ArcFace ResNet50.
-    3. Computes SHA-256 cryptographic hash.
-    4. Compares with in-memory enrolled cattle via Cosine Similarity.
-    5. Returns MATCH_VERIFIED or FLAGGED_UNREGISTERED.
+    Scans a muzzle image with Full Suite:
+    1. Pre-inference Quality Gate & Screen Replay Anti-Spoofing.
+    2. Deep 512-D ArcFace Biometric Embedding.
+    3. Grad-CAM Deep Attention Heatmap generation.
+    4. FAISS Sub-Millisecond Vector Search over enrolled database.
+    5. Returns Top Matches, Search Latency (ms), and XAI overlays.
     """
     try:
         content = await file.read()
         bgr_img = prepare_muzzle_crop(bytes_to_cv2(content))
-        
-        # 1. Texture enhancement via CLAHE
+
+        # 1. Quality & Anti-Spoofing
+        q_result = quality_gate.assess_quality(bgr_img)
+
+        # 2. Texture enhancement & Embedding
         enhanced_bgr = preprocessor.enhance_texture(bgr_img)
         enhanced_resized = cv2.resize(enhanced_bgr, (224, 224), interpolation=cv2.INTER_CUBIC)
         
-        # 2. Extract Embedding
         rgb_img = Image.fromarray(enhanced_resized[:, :, ::-1])
         tensor = engine.transform(rgb_img).unsqueeze(0).to(engine.device)
         with torch.no_grad():
@@ -214,93 +277,66 @@ async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
         # 3. Biometric Hash
         bio_hash = BiometricHasher.generate_sha256_hash(embedding)
 
-        # 4. Compare with enrolled cattle
-        best_match_tag = None
-        best_match_name = None
-        best_similarity = -1.0
-        best_match_thumb = None
+        # 4. Grad-CAM Attention Heatmap
+        xai_res = xai_engine.generate_attention_heatmap(bgr_img)
 
-        for tag_id, cow in REGISTRY.items():
-            enrolled_emb = np.array(cow["embedding"], dtype=np.float32)
-            sim = float(np.dot(embedding, enrolled_emb))
-            if sim > best_similarity:
-                best_similarity = sim
-                best_match_tag = tag_id
-                best_match_name = cow.get("name", "Unknown")
-                best_match_thumb = cow.get("thumbnail", "")
+        # 5. High-Speed FAISS Vector Search
+        search_res = vector_index.search(embedding, top_k=5, threshold=threshold)
+        best_match_item = search_res["best_match"]
+        is_match = (best_match_item is not None and best_match_item["is_match"]) and (vector_index.count() > 0)
+        best_similarity = best_match_item["similarity"] if best_match_item else -1.0
 
-        is_match = (best_similarity >= threshold) and (len(REGISTRY) > 0)
-        confidence_pct = round(max(0.0, min(100.0, (best_similarity + 1.0) / 2.0 * 100.0)), 2) if len(REGISTRY) > 0 else 0.0
+        confidence_pct = round(max(0.0, min(100.0, (best_similarity + 1.0) / 2.0 * 100.0)), 2) if vector_index.count() > 0 else 0.0
         clamped_sim = np.clip(best_similarity, -1.0, 1.0)
-        angular_dist = round(float(np.degrees(np.arccos(clamped_sim))), 2) if len(REGISTRY) > 0 else 90.0
+        angular_dist = round(float(np.degrees(np.arccos(clamped_sim))), 2) if vector_index.count() > 0 else 90.0
 
-        print(f"[SCAN] File: {file.filename} | Sim: {best_similarity:.4f} | Threshold: {threshold} | Match: {is_match} | RegisteredCount: {len(REGISTRY)}")
+        print(f"[SCAN - FAISS] File: {file.filename} | Sim: {best_similarity:.4f} | Latency: {search_res['latency_ms']}ms | Match: {is_match}")
 
-        # Create previews
+        # Visualizations
         orig_thumb = cv2_to_base64(cv2.resize(bgr_img, (220, 220)))
         enhanced_thumb = cv2_to_base64(enhanced_resized)
+        heatmap_thumb = cv2_to_base64(cv2.resize(xai_res["overlay_bgr"], (220, 220)))
+        ridge_thumb = cv2_to_base64(cv2.resize(xai_res["ridge_color"], (220, 220)))
 
         return {
             "status": "success",
             "is_match": bool(is_match),
-            "match_status": "MATCH_VERIFIED" if is_match else ("FLAGGED_UNREGISTERED" if len(REGISTRY) > 0 else "NO_REGISTERED_CATTLE"),
-            "best_similarity": round(best_similarity, 4) if len(REGISTRY) > 0 else 0.0,
+            "match_status": "MATCH_VERIFIED" if is_match else ("FLAGGED_UNREGISTERED" if vector_index.count() > 0 else "NO_REGISTERED_CATTLE"),
+            "best_similarity": round(best_similarity, 4) if vector_index.count() > 0 else 0.0,
             "confidence_percent": f"{confidence_pct}%",
             "angular_distance_deg": angular_dist,
             "threshold": threshold,
+            "quality_gate": q_result,
+            "vector_search": {
+                "engine": search_res["engine"],
+                "latency_ms": search_res["latency_ms"],
+                "total_indexed": search_res["total_indexed"],
+                "candidates": search_res["matches"]
+            },
             "matched_animal": {
-                "tag_id": best_match_tag,
-                "name": best_match_name,
-                "thumbnail": best_match_thumb
+                "tag_id": best_match_item["tag_id"],
+                "name": best_match_item["name"],
+                "breed": best_match_item["breed"],
+                "thumbnail": best_match_item.get("thumbnail", "")
             } if is_match else None,
             "closest_animal": {
-                "tag_id": best_match_tag,
-                "name": best_match_name,
-                "similarity": round(best_similarity, 4)
-            } if (not is_match and len(REGISTRY) > 0) else None,
+                "tag_id": best_match_item["tag_id"],
+                "name": best_match_item["name"],
+                "similarity": best_match_item["similarity"]
+            } if (not is_match and best_match_item is not None) else None,
             "biometric_hash": bio_hash,
             "embedding_sample": [round(float(x), 4) for x in embedding[:12]],
             "embedding_raw": [float(x) for x in embedding],
             "thumbnails": {
                 "original": orig_thumb,
-                "enhanced": enhanced_thumb
+                "enhanced": enhanced_thumb,
+                "heatmap": heatmap_thumb,
+                "ridge": ridge_thumb
             }
         }
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-class RegisterRequest(BaseModel):
-    tag_id: str
-    name: str = "Cattle Animal"
-    breed: str = "Indigenous Cattle"
-    embedding_raw: List[float]
-    biometric_hash: str
-    thumbnail: str
-
-
-@app.post("/api/register")
-async def register_animal(data: RegisterRequest):
-    """Enrolls scanned biometric embedding into in-memory registry."""
-    if not data.tag_id.strip():
-        raise HTTPException(status_code=400, detail="Tag ID / RFID is required.")
-
-    REGISTRY[data.tag_id] = {
-        "tag_id": data.tag_id,
-        "name": data.name,
-        "breed": data.breed,
-        "embedding": data.embedding_raw,
-        "hash": data.biometric_hash,
-        "thumbnail": data.thumbnail,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-    return {
-        "status": "success",
-        "message": f"Animal '{data.tag_id}' enrolled successfully into biometric registry.",
-        "total_registered": len(REGISTRY)
-    }
 
 
 @app.post("/api/smart-register")
@@ -312,24 +348,28 @@ async def smart_register(
     threshold: float = Form(0.40)
 ):
     """
-    Smart Registration with Automated Duplicate Detection:
-    1. Upload muzzle image + animal name
-    2. Extract 512-D biometric embedding (ResNet50 + ArcFace)
-    3. Check ALL enrolled cattle in registry for cosine similarity
-    4. If maximum similarity >= threshold:
-       - REJECT: ALREADY_REGISTERED (returns matched animal photo, name, tag, and score)
-    5. If no match found:
-       - ENROLL: NEW_REGISTERED (saves to local database)
+    Smart Cattle Registration with Anti-Duplicate AI & FAISS Vector Engine:
+    1. Pre-inference Quality Gate & Liveness Audit.
+    2. Extract 512-D ArcFace embedding & SHA-256 hash.
+    3. Generate Grad-CAM Attention Heatmap.
+    4. Query FAISS Vector Database for duplicate check.
+    5. If Duplicate detected:
+       - REJECT: ALREADY_REGISTERED (returns matched animal photo, XAI alignment map, and score).
+    6. If unique:
+       - ENROLL: Adds vector to FAISS Index & saves record.
     """
     try:
         content = await file.read()
         bgr_img = prepare_muzzle_crop(bytes_to_cv2(content))
 
-        # Extract embedding
+        # 1. Quality & Anti-Spoofing Assessment
+        q_result = quality_gate.assess_quality(bgr_img)
+
+        # 2. Texture enhancement & Embedding
         enhanced_bgr = preprocessor.enhance_texture(bgr_img)
         enhanced_resized = cv2.resize(enhanced_bgr, (224, 224), interpolation=cv2.INTER_CUBIC)
-        from PIL import Image as PILImage
-        rgb_img = PILImage.fromarray(enhanced_resized[:, :, ::-1])
+        
+        rgb_img = Image.fromarray(enhanced_resized[:, :, ::-1])
         tensor = engine.transform(rgb_img).unsqueeze(0).to(engine.device)
         with torch.no_grad():
             embedding_tensor = engine.model(tensor)
@@ -338,70 +378,90 @@ async def smart_register(
         bio_hash = BiometricHasher.generate_sha256_hash(embedding)
         thumbnail = cv2_to_base64(cv2.resize(bgr_img, (200, 200)))
 
-        # Check for duplicates against ALL registered animals
-        best_match_tag = None
-        best_match_name = None
-        best_similarity = -1.0
-        best_match_thumb = None
-        best_match_time = None
+        # 3. Grad-CAM Attention Heatmap
+        xai_res = xai_engine.generate_attention_heatmap(bgr_img)
+        heatmap_thumb = cv2_to_base64(cv2.resize(xai_res["overlay_bgr"], (200, 200)))
 
-        for enrolled_tag, cow in REGISTRY.items():
-            enrolled_emb = np.array(cow["embedding"], dtype=np.float32)
-            sim = float(np.dot(embedding, enrolled_emb))
-            if sim > best_similarity:
-                best_similarity = sim
-                best_match_tag = enrolled_tag
-                best_match_name = cow.get("name", "Unknown")
-                best_match_thumb = cow.get("thumbnail", "")
-                best_match_time = cow.get("created_at", "")
-
-        is_duplicate = (best_similarity >= threshold) and (len(REGISTRY) > 0)
+        # 4. FAISS Vector Search for Duplicates
+        search_res = vector_index.search(embedding, top_k=1, threshold=threshold)
+        best_candidate = search_res["best_match"]
+        is_duplicate = (best_candidate is not None and best_candidate["is_match"]) and (vector_index.count() > 0)
 
         if is_duplicate:
             # Animal already registered!
-            confidence = round(max(0.0, min(100.0, (best_similarity + 1.0) / 2.0 * 100.0)), 1)
-            clamped_sim = float(np.clip(best_similarity, -1.0, 1.0))
+            sim_score = best_candidate["similarity"]
+            conf = round(max(0.0, min(100.0, (sim_score + 1.0) / 2.0 * 100.0)), 1)
+            clamped_sim = float(np.clip(sim_score, -1.0, 1.0))
             angular_dist = round(float(np.degrees(np.arccos(clamped_sim))), 2)
-            print(f"[DUPLICATE REJECTED] '{name}' matches '{best_match_name}' (sim={best_similarity:.4f}, thr={threshold})")
+
+            matched_cow = REGISTRY.get(best_candidate["tag_id"], {})
+            print(f"[FAISS DUPLICATE REJECTED] '{name}' matches '{best_candidate['name']}' (sim={sim_score:.4f}, latency={search_res['latency_ms']}ms)")
+
+            # Create XAI Pairwise Alignment Visualizer between new upload and existing record
+            matched_thumb_bgr = None
+            if "raw_crop" in matched_cow:
+                matched_thumb_bgr = matched_cow["raw_crop"]
+            else:
+                matched_thumb_bgr = bgr_img # fallback
             
-            matched_cow = REGISTRY.get(best_match_tag, {})
+            xai_corr = xai_engine.generate_pairwise_correspondence(bgr_img, matched_thumb_bgr, sim_score, True)
+            corr_b64 = cv2_to_base64(xai_corr)
+
             return {
                 "status": "already_registered",
-                "message": f"Sorry! This animal is ALREADY registered as '{best_match_name}'!",
-                "similarity": round(best_similarity, 4),
-                "confidence": confidence,
+                "message": f"Sorry! This animal is ALREADY registered as '{best_candidate['name']}'!",
+                "similarity": round(sim_score, 4),
+                "confidence": conf,
                 "angular_distance_deg": angular_dist,
                 "threshold": threshold,
+                "quality_gate": q_result,
+                "vector_search": {
+                    "engine": search_res["engine"],
+                    "latency_ms": search_res["latency_ms"],
+                    "total_indexed": search_res["total_indexed"]
+                },
+                "xai": {
+                    "heatmap_upload": heatmap_thumb,
+                    "correspondence_canvas": corr_b64
+                },
                 "uploaded_name": name.strip(),
                 "uploaded_thumbnail": thumbnail,
                 "matched_animal": {
-                    "tag_id": best_match_tag,
-                    "name": best_match_name,
+                    "tag_id": best_candidate["tag_id"],
+                    "name": best_candidate["name"],
                     "breed": matched_cow.get("breed", "Cattle"),
-                    "registered_at": best_match_time,
-                    "thumbnail": best_match_thumb,
+                    "registered_at": matched_cow.get("created_at", ""),
+                    "thumbnail": matched_cow.get("thumbnail", ""),
                     "hash": matched_cow.get("hash", "")
                 },
-                "total_registered": len(REGISTRY)
+                "total_registered": vector_index.count()
             }
         else:
-            # New animal — enroll it
+            # New unique animal — enroll it
             if not tag_id or not tag_id.strip():
                 import uuid
                 final_tag = f"CATTLE-{str(uuid.uuid4())[:8].upper()}"
             else:
                 final_tag = tag_id.strip().upper()
 
-            REGISTRY[final_tag] = {
+            cow_record = {
                 "tag_id": final_tag,
                 "name": name.strip(),
                 "breed": breed.strip() if breed else "Cattle",
                 "embedding": [float(x) for x in embedding],
                 "hash": bio_hash,
                 "thumbnail": thumbnail,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "raw_crop": cv2.resize(bgr_img, (240, 240)),
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "quality_score": q_result["overall_score"]
             }
-            print(f"[NEW ENROLLED] '{name}' registered as '{final_tag}' (closest sim={best_similarity:.4f})")
+
+            # Add to FAISS Vector Index & Registry
+            vector_index.add(final_tag, embedding, cow_record)
+            REGISTRY[final_tag] = cow_record
+
+            print(f"[FAISS NEW ENROLLED] '{name}' registered as '{final_tag}' (Latency: {search_res['latency_ms']}ms)")
+
             return {
                 "status": "new_registered",
                 "message": f"New animal '{name.strip()}' registered successfully!",
@@ -410,12 +470,21 @@ async def smart_register(
                 "breed": breed.strip() if breed else "Cattle",
                 "biometric_hash": bio_hash,
                 "thumbnail": thumbnail,
-                "total_registered": len(REGISTRY),
+                "quality_gate": q_result,
+                "vector_search": {
+                    "engine": search_res["engine"],
+                    "latency_ms": search_res["latency_ms"],
+                    "total_indexed": vector_index.count()
+                },
+                "xai": {
+                    "heatmap_thumbnail": heatmap_thumb
+                },
+                "total_registered": vector_index.count(),
                 "embedding_sample": [round(float(x), 4) for x in embedding[:12]],
                 "closest_existing": {
-                    "name": best_match_name,
-                    "similarity": round(best_similarity, 4)
-                } if (best_match_name is not None and len(REGISTRY) > 1) else None
+                    "name": best_candidate["name"],
+                    "similarity": round(best_candidate["similarity"], 4)
+                } if (best_candidate is not None and vector_index.count() > 1) else None
             }
 
     except Exception as e:
@@ -424,13 +493,14 @@ async def smart_register(
 
 @app.delete("/api/registry/{tag_id}")
 async def delete_animal(tag_id: str):
-    """Deletes an animal from the in-memory registry."""
+    """Deletes an animal from both in-memory registry and FAISS vector index."""
     if tag_id in REGISTRY:
         cow = REGISTRY.pop(tag_id)
+        vector_index.remove(tag_id)
         return {
             "status": "success",
-            "message": f"Animal '{cow.get('name')}' ({tag_id}) removed from registry.",
-            "total_registered": len(REGISTRY)
+            "message": f"Animal '{cow.get('name')}' ({tag_id}) removed from registry & FAISS index.",
+            "total_registered": vector_index.count()
         }
     raise HTTPException(status_code=404, detail=f"Animal '{tag_id}' not found.")
 

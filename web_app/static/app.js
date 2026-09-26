@@ -344,6 +344,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       smartDupMatchedBreed.textContent = data.matched_animal.breed || 'Cattle';
       smartDupMatchedDate.textContent = data.matched_animal.registered_at;
 
+      // XAI Pairwise Correspondence Canvas
+      const smartDupXaiCanvas = document.getElementById('smartDupXaiCanvas');
+      if (smartDupXaiCanvas && data.xai && data.xai.correspondence_canvas) {
+        smartDupXaiCanvas.src = data.xai.correspondence_canvas;
+      }
+
       showToast(`⛔ DUPLICATE DETECTED: Animal already registered as '${data.matched_animal.name}'!`);
     } else {
       // NEW ANIMAL REGISTERED!
@@ -358,6 +364,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       smartSuccTag.textContent = data.tag_id;
       smartSuccBreed.textContent = data.breed || 'Cattle';
       smartSuccHash.textContent = data.biometric_hash;
+
+      // Quality & FAISS Metrics
+      const smartSuccQualityScore = document.getElementById('smartSuccQualityScore');
+      const smartSuccLiveness = document.getElementById('smartSuccLiveness');
+      const smartSuccFaissLatency = document.getElementById('smartSuccFaissLatency');
+      const smartSuccXaiThumb = document.getElementById('smartSuccXaiThumb');
+
+      if (smartSuccQualityScore && data.quality_gate) {
+        smartSuccQualityScore.textContent = `${data.quality_gate.overall_score}%`;
+      }
+      if (smartSuccLiveness && data.quality_gate && data.quality_gate.anti_spoofing) {
+        smartSuccLiveness.textContent = data.quality_gate.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Authentic Live Animal' : '⚠️ Flagged Replay';
+      }
+      if (smartSuccFaissLatency && data.vector_search) {
+        smartSuccFaissLatency.textContent = `⚡ ${data.vector_search.latency_ms}ms (${data.vector_search.engine})`;
+      }
+      if (smartSuccXaiThumb && data.xai && data.xai.heatmap_thumbnail) {
+        smartSuccXaiThumb.src = data.xai.heatmap_thumbnail;
+      }
 
       // Embedding preview
       smartSuccVectorChips.innerHTML = '';
@@ -598,7 +623,75 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('⚠️ Mismatch: Different Animals!');
     }
 
+    // Populate Quality Audits
+    if (data.quality_analysis) {
+      const q1 = data.quality_analysis.image1;
+      const q2 = data.quality_analysis.image2;
+      const directQ1Score = document.getElementById('directQ1Score');
+      const directQ1Live = document.getElementById('directQ1Live');
+      const directQ2Score = document.getElementById('directQ2Score');
+      const directQ2Live = document.getElementById('directQ2Live');
+
+      if (directQ1Score && q1) directQ1Score.textContent = `${q1.overall_score}%`;
+      if (directQ1Live && q1) directQ1Live.textContent = `${q1.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Live Animal' : '⚠️ Replay'} (Sharp: ${q1.sharpness_index})`;
+      
+      if (directQ2Score && q2) directQ2Score.textContent = `${q2.overall_score}%`;
+      if (directQ2Live && q2) directQ2Live.textContent = `${q2.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Live Animal' : '⚠️ Replay'} (Sharp: ${q2.sharpness_index})`;
+    }
+
+    // Populate XAI Visualizations
+    if (data.xai) {
+      const directXaiCorrImg = document.getElementById('directXaiCorrImg');
+      const directHeatImg1 = document.getElementById('directHeatImg1');
+      const directHeatImg2 = document.getElementById('directHeatImg2');
+      const directRidgeImg1 = document.getElementById('directRidgeImg1');
+      const directRidgeImg2 = document.getElementById('directRidgeImg2');
+
+      if (directXaiCorrImg && data.xai.correspondence_canvas) directXaiCorrImg.src = data.xai.correspondence_canvas;
+      if (directHeatImg1 && data.xai.heatmap1) directHeatImg1.src = data.xai.heatmap1;
+      if (directHeatImg2 && data.xai.heatmap2) directHeatImg2.src = data.xai.heatmap2;
+      if (directRidgeImg1 && data.xai.ridge1) directRidgeImg1.src = data.xai.ridge1;
+      if (directRidgeImg2 && data.xai.ridge2) directRidgeImg2.src = data.xai.ridge2;
+    }
+
     directResultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Setup XAI View Tabs in Mode 2
+  const btnTabXaiCorr = document.getElementById('btnTabXaiCorr');
+  const btnTabXaiHeatmaps = document.getElementById('btnTabXaiHeatmaps');
+  const btnTabXaiRidges = document.getElementById('btnTabXaiRidges');
+  const xaiTabBodyCorr = document.getElementById('xaiTabBodyCorr');
+  const xaiTabBodyHeatmaps = document.getElementById('xaiTabBodyHeatmaps');
+  const xaiTabBodyRidges = document.getElementById('xaiTabBodyRidges');
+
+  if (btnTabXaiCorr && btnTabXaiHeatmaps && btnTabXaiRidges) {
+    btnTabXaiCorr.addEventListener('click', () => {
+      btnTabXaiCorr.classList.add('active');
+      btnTabXaiHeatmaps.classList.remove('active');
+      btnTabXaiRidges.classList.remove('active');
+      xaiTabBodyCorr.classList.remove('hidden');
+      xaiTabBodyHeatmaps.classList.add('hidden');
+      xaiTabBodyRidges.classList.add('hidden');
+    });
+
+    btnTabXaiHeatmaps.addEventListener('click', () => {
+      btnTabXaiCorr.classList.remove('active');
+      btnTabXaiHeatmaps.classList.add('active');
+      btnTabXaiRidges.classList.remove('active');
+      xaiTabBodyCorr.classList.add('hidden');
+      xaiTabBodyHeatmaps.classList.remove('hidden');
+      xaiTabBodyRidges.classList.add('hidden');
+    });
+
+    btnTabXaiRidges.addEventListener('click', () => {
+      btnTabXaiCorr.classList.remove('active');
+      btnTabXaiHeatmaps.classList.remove('active');
+      btnTabXaiRidges.classList.add('active');
+      xaiTabBodyCorr.classList.add('hidden');
+      xaiTabBodyHeatmaps.classList.add('hidden');
+      xaiTabBodyRidges.classList.remove('hidden');
+    });
   }
 
 
@@ -669,6 +762,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchedProfileCard.classList.add('hidden');
     dualInspectionCard.classList.add('hidden');
     fingerprintSection.classList.add('hidden');
+
+    const scanQualityCard = document.getElementById('scanQualityCard');
+    const scanFaissCard = document.getElementById('scanFaissCard');
+    if (scanQualityCard) scanQualityCard.classList.add('hidden');
+    if (scanFaissCard) scanFaissCard.classList.add('hidden');
   }
 
   btnScanVerify.addEventListener('click', async () => {
@@ -699,8 +797,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   function renderSearchResults(res) {
+    // 4-Way Multi-Modal Inspection Grid
     rawThumb.src = res.thumbnails.original;
     claheThumb.src = res.thumbnails.enhanced;
+
+    const scanHeatThumb = document.getElementById('scanHeatThumb');
+    const scanRidgeThumb = document.getElementById('scanRidgeThumb');
+    if (scanHeatThumb && res.thumbnails.heatmap) scanHeatThumb.src = res.thumbnails.heatmap;
+    if (scanRidgeThumb && res.thumbnails.ridge) scanRidgeThumb.src = res.thumbnails.ridge;
+
     dualInspectionCard.classList.remove('hidden');
 
     metricsGrid.classList.remove('hidden');
@@ -709,6 +814,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     metricCosineBar.style.width = `${barWidth}%`;
     metricConfidence.textContent = res.confidence_percent;
     metricAngular.textContent = `${res.angular_distance_deg}°`;
+
+    // Quality Gate Card
+    const scanQualityCard = document.getElementById('scanQualityCard');
+    const scanQualityScore = document.getElementById('scanQualityScore');
+    const scanSharpnessVal = document.getElementById('scanSharpnessVal');
+    const scanGlareVal = document.getElementById('scanGlareVal');
+    const scanLivenessVal = document.getElementById('scanLivenessVal');
+    const scanQualityFeedback = document.getElementById('scanQualityFeedback');
+
+    if (scanQualityCard && res.quality_gate) {
+      scanQualityScore.textContent = `${res.quality_gate.overall_score}%`;
+      scanSharpnessVal.textContent = res.quality_gate.sharpness_index;
+      scanGlareVal.textContent = `${res.quality_gate.glare_percentage}%`;
+      scanLivenessVal.textContent = res.quality_gate.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Authentic Live Animal' : '⚠️ Flagged Digital Replay';
+      scanQualityFeedback.textContent = (res.quality_gate.feedback || []).join(' • ');
+      scanQualityCard.classList.remove('hidden');
+    }
+
+    // FAISS High-Speed Retrieval Card
+    const scanFaissCard = document.getElementById('scanFaissCard');
+    const scanFaissEngine = document.getElementById('scanFaissEngine');
+    const scanFaissLatency = document.getElementById('scanFaissLatency');
+    const scanFaissCandidates = document.getElementById('scanFaissCandidates');
+
+    if (scanFaissCard && res.vector_search) {
+      scanFaissEngine.textContent = res.vector_search.engine;
+      scanFaissLatency.textContent = `${res.vector_search.latency_ms} ms`;
+
+      scanFaissCandidates.innerHTML = '';
+      const candidates = res.vector_search.candidates || [];
+      if (candidates.length === 0) {
+        scanFaissCandidates.innerHTML = '<span class="text-xs text-muted" style="padding: 6px;">No registered candidates to rank.</span>';
+      } else {
+        candidates.forEach(cand => {
+          const row = document.createElement('div');
+          row.className = 'faiss-candidate-row';
+          row.innerHTML = `
+            <div class="candidate-left">
+              <span class="candidate-rank">#${cand.rank}</span>
+              <img src="${cand.thumbnail || ''}" class="candidate-avatar" alt="${cand.tag_id}">
+              <div class="candidate-info">
+                <span class="candidate-name">${cand.name}</span>
+                <span class="candidate-tag">${cand.tag_id} &bull; ${cand.breed}</span>
+              </div>
+            </div>
+            <div class="candidate-right">
+              <span class="candidate-sim">${cand.similarity.toFixed(4)}</span>
+              <span class="${cand.is_match ? 'candidate-badge-match' : 'candidate-badge-miss'}">
+                ${cand.is_match ? 'MATCH' : 'BELOW THRESHOLD'}
+              </span>
+            </div>
+          `;
+          scanFaissCandidates.appendChild(row);
+        });
+      }
+      scanFaissCard.classList.remove('hidden');
+    }
 
     if (res.is_match && res.matched_animal) {
       verdictBanner.className = 'verdict-banner banner-match';

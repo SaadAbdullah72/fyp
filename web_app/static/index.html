@@ -33,9 +33,15 @@
     </div>
 
     <div class="header-actions">
-      <div class="status-pill status-online">
-        <span class="pulse-dot"></span>
-        <span>ResNet50 + ArcFace: <strong>Active</strong></span>
+      <div class="status-pill status-faiss" title="Sub-millisecond vector indexing active">
+        <span class="faiss-bolt">⚡</span>
+        <span>FAISS: <strong>Active</strong></span>
+      </div>
+      <div class="status-pill status-shield" title="2D FFT Moiré Screen Replay Detection Active">
+        <span>🛡️ Anti-Spoof: <strong>Active</strong></span>
+      </div>
+      <div class="status-pill status-xai" title="Grad-CAM Deep Activation Heatmaps">
+        <span>🧠 XAI Heatmap: <strong>Live</strong></span>
       </div>
       <div class="status-pill registry-counter">
         <span>Enrolled Cattle: <strong id="headerRegistryCount">0</strong></span>
@@ -238,6 +244,18 @@
           </div>
         </div>
 
+        <!-- XAI Pairwise Explainability Visualizer for Duplicate Confirmation -->
+        <div class="xai-explain-card" id="smartDupXaiCard">
+          <div class="xai-card-header">
+            <span class="xai-badge">EXPLAINABLE AI (XAI) CONFIRMATION</span>
+            <h4>Deep Ridge Alignment & Spatial Attention Map</h4>
+            <p class="text-xs text-muted">Grad-CAM deep feature activations reveal matching micro-pore clusters and ridge textures between the attempted upload and enrolled animal:</p>
+          </div>
+          <div class="xai-canvas-wrapper">
+            <img id="smartDupXaiCanvas" src="" alt="XAI Correspondence Canvas" class="xai-canvas-img">
+          </div>
+        </div>
+
         <div class="dup-footer-alert">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -268,6 +286,22 @@
             </div>
             <p class="text-muted">Breed: <strong id="smartSuccBreed">Sahiwal Cattle</strong></p>
             
+            <!-- Quality & FAISS Badges -->
+            <div class="quality-badges-row">
+              <div class="quality-chip">
+                <span class="text-xs text-muted">Quality Score:</span>
+                <strong id="smartSuccQualityScore" class="text-cyan font-mono">98.5%</strong>
+              </div>
+              <div class="quality-chip">
+                <span class="text-xs text-muted">Liveness:</span>
+                <span id="smartSuccLiveness" class="text-success text-xs font-semibold">✅ Authentic Live Animal</span>
+              </div>
+              <div class="quality-chip">
+                <span class="text-xs text-muted">FAISS Search:</span>
+                <span id="smartSuccFaissLatency" class="text-primary font-mono text-xs">⚡ 1.2ms</span>
+              </div>
+            </div>
+
             <div class="hash-row">
               <span class="text-xs text-muted font-semibold">Biometric SHA-256 Hash:</span>
               <div class="hash-box" id="smartSuccHash">0x...</div>
@@ -281,6 +315,18 @@
             <div id="smartSuccClosestInfo" class="closest-info-box hidden">
               <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.40 threshold).</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Success XAI Attention Heatmap Row -->
+        <div class="succ-xai-card" id="smartSuccXaiCard">
+          <div class="xai-card-header">
+            <span class="xai-badge">XAI FEATURE ACTIVATION</span>
+            <h4>Grad-CAM Muzzle Ridge Attention Heatmap</h4>
+            <p class="text-xs text-muted">Neural network feature activations concentrated across biometric ridges & sweat pores:</p>
+          </div>
+          <div class="succ-xai-thumb-box">
+            <img id="smartSuccXaiThumb" src="" alt="Grad-CAM Attention Heatmap" class="succ-xai-thumb">
           </div>
         </div>
       </div>
@@ -413,6 +459,70 @@
           <div class="hash-box text-xs" id="directHash2">0x...</div>
         </div>
       </div>
+
+      <!-- Mode 2 Quality & Anti-Spoofing Audit -->
+      <div class="direct-quality-grid" id="directQualityGrid">
+        <div class="quality-mini-card">
+          <div class="quality-title-row">
+            <span class="text-xs text-muted font-semibold">Photo 1 Quality & Liveness</span>
+            <span id="directQ1Score" class="quality-pill-score">98.5%</span>
+          </div>
+          <p id="directQ1Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal (Sharpness: 240.2)</p>
+        </div>
+        <div class="quality-mini-card">
+          <div class="quality-title-row">
+            <span class="text-xs text-muted font-semibold">Photo 2 Quality & Liveness</span>
+            <span id="directQ2Score" class="quality-pill-score">97.8%</span>
+          </div>
+          <p id="directQ2Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal (Sharpness: 231.5)</p>
+        </div>
+      </div>
+
+      <!-- Mode 2 XAI Visualizer Section with Interactive Tabs -->
+      <div class="direct-xai-card" id="directXaiCard">
+        <div class="direct-xai-header">
+          <div>
+            <span class="xai-badge">EXPLAINABLE AI (XAI) VISUALIZER</span>
+            <h4>Grad-CAM Ridge Alignment & Pore Correspondence</h4>
+            <p class="text-xs text-muted">Examine the spatial neural activation maps and pairwise ridge correlation:</p>
+          </div>
+          <div class="xai-view-tabs">
+            <button class="xai-tab active" id="btnTabXaiCorr" type="button">Alignment Map</button>
+            <button class="xai-tab" id="btnTabXaiHeatmaps" type="button">Heatmap Layers</button>
+            <button class="xai-tab" id="btnTabXaiRidges" type="button">Ridge Texture</button>
+          </div>
+        </div>
+
+        <div class="xai-tab-body" id="xaiTabBodyCorr">
+          <img id="directXaiCorrImg" src="" alt="Pairwise Alignment Map" class="xai-canvas-img">
+        </div>
+
+        <div class="xai-tab-body hidden" id="xaiTabBodyHeatmaps">
+          <div class="dual-xai-grid">
+            <div class="xai-col">
+              <span class="xai-label">Photo 1 Neural Heatmap</span>
+              <img id="directHeatImg1" src="" alt="Photo 1 Heatmap" class="xai-thumb">
+            </div>
+            <div class="xai-col">
+              <span class="xai-label">Photo 2 Neural Heatmap</span>
+              <img id="directHeatImg2" src="" alt="Photo 2 Heatmap" class="xai-thumb">
+            </div>
+          </div>
+        </div>
+
+        <div class="xai-tab-body hidden" id="xaiTabBodyRidges">
+          <div class="dual-xai-grid">
+            <div class="xai-col">
+              <span class="xai-label">Photo 1 Ridge Grooves</span>
+              <img id="directRidgeImg1" src="" alt="Photo 1 Ridge Grooves" class="xai-thumb">
+            </div>
+            <div class="xai-col">
+              <span class="xai-label">Photo 2 Ridge Grooves</span>
+              <img id="directRidgeImg2" src="" alt="Photo 2 Ridge Grooves" class="xai-thumb">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -490,17 +600,28 @@
         </button>
       </div>
 
+      <!-- 4-Way Multi-Modal Inspection Grid (Raw, CLAHE, Grad-CAM XAI, Ridge Detail) -->
       <div class="dual-inspection hidden" id="dualInspectionCard">
-        <h3 class="inspection-title">Biometric Ridge Enhancement (CLAHE)</h3>
-        <div class="dual-images-row">
-          <div class="dual-col">
-            <span class="dual-label">Raw Muzzle Photo</span>
-            <img id="rawThumb" src="" alt="Raw Image">
+        <div class="inspection-header-row">
+          <h3 class="inspection-title">Biometric Explainability & Ridge Analysis</h3>
+          <span class="badge-ai-shield">Grad-CAM XAI</span>
+        </div>
+        <div class="quad-images-grid">
+          <div class="quad-col">
+            <span class="dual-label">1. Raw Muzzle</span>
+            <img id="rawThumb" src="" alt="Raw Image" class="quad-thumb">
           </div>
-          <div class="dual-arrow">➜</div>
-          <div class="dual-col">
-            <span class="dual-label">Enhanced Ridge Grooves</span>
-            <img id="claheThumb" src="" alt="CLAHE Enhanced Image">
+          <div class="quad-col">
+            <span class="dual-label">2. CLAHE Texture</span>
+            <img id="claheThumb" src="" alt="CLAHE Enhanced" class="quad-thumb">
+          </div>
+          <div class="quad-col">
+            <span class="dual-label">3. XAI Heatmap</span>
+            <img id="scanHeatThumb" src="" alt="Grad-CAM Heatmap" class="quad-thumb">
+          </div>
+          <div class="quad-col">
+            <span class="dual-label">4. Ridge Grooves</span>
+            <img id="scanRidgeThumb" src="" alt="Ridge Grooves" class="quad-thumb">
           </div>
         </div>
       </div>
@@ -544,6 +665,45 @@
         <div class="metric-item">
           <span class="metric-label">Angular Separation</span>
           <span class="metric-value" id="metricAngular">-</span>
+        </div>
+      <!-- Mode 3 Quality Gate Audit -->
+      <div class="quality-audit-card hidden" id="scanQualityCard">
+        <div class="quality-card-header">
+          <span class="xai-badge">SMART QUALITY GATE & ANTI-SPOOFING</span>
+          <div class="quality-score-badge">
+            Score: <strong id="scanQualityScore" class="font-mono">98.5%</strong>
+          </div>
+        </div>
+        <div class="quality-metrics-mini">
+          <div class="quality-stat">
+            <span class="text-xs text-muted">Ridge Sharpness:</span>
+            <strong id="scanSharpnessVal" class="text-cyan font-mono">245.8</strong>
+          </div>
+          <div class="quality-stat">
+            <span class="text-xs text-muted">Specular Glare:</span>
+            <strong id="scanGlareVal" class="font-mono">0.8%</strong>
+          </div>
+          <div class="quality-stat">
+            <span class="text-xs text-muted">Anti-Spoofing:</span>
+            <span id="scanLivenessVal" class="text-success text-xs font-semibold">✅ Authentic Live Animal</span>
+          </div>
+        </div>
+        <p id="scanQualityFeedback" class="text-xs text-muted quality-feedback-text">Optimal sharpness & lighting.</p>
+      </div>
+
+      <!-- FAISS High-Speed Vector Retrieval Card -->
+      <div class="faiss-ranking-card hidden" id="scanFaissCard">
+        <div class="faiss-header-row">
+          <div class="faiss-title-group">
+            <span class="faiss-bolt">⚡</span>
+            <span class="font-semibold text-sm">FAISS Vector Search Performance</span>
+          </div>
+          <div class="faiss-latency-pill">
+            <span id="scanFaissEngine">FAISS-FlatIP</span> &bull; Latency: <strong id="scanFaissLatency" class="text-cyan">0.85 ms</strong>
+          </div>
+        </div>
+        <div class="faiss-candidates-list" id="scanFaissCandidates">
+          <!-- Dynamically populated top 5 candidates -->
         </div>
       </div>
 

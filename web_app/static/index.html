@@ -3,504 +3,547 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BovineID | Livestock Biometric Intelligence</title>
+  <title>BovineID &bull; Livestock Biometric Intelligence System</title>
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="bright-theme">
+<body class="executive-theme">
 
-  <!-- Main Container -->
-  <div class="app-wrapper">
+  <!-- Ambient Background Lighting Orbs -->
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-indigo"></div>
+  <div class="ambient-glow glow-emerald"></div>
 
-    <!-- Clean Header -->
+  <div class="app-shell">
+
+    <!-- Top Executive Header -->
     <header class="app-header">
-      <div class="brand-group">
-        <div class="brand-symbol">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a9 9 0 0 0-9 9c0 3.5 2 6.5 5 8"></path>
-            <path d="M12 3a9 9 0 0 1 9 9c0 3.5-2 6.5-5 8"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 15v6"></path>
+      <div class="brand-block">
+        <div class="brand-crest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 0-10 10c0 4.2 2.6 7.8 6.3 9.3"></path>
+            <path d="M12 2a10 10 0 0 1 10 10c0 4.2-2.6 7.8-6.3 9.3"></path>
+            <circle cx="12" cy="12" r="3.5"></circle>
+            <path d="M12 15.5v5.5"></path>
           </svg>
         </div>
         <div>
-          <h1 class="brand-name">BovineID</h1>
-          <p class="brand-tagline">Livestock Biometric Intelligence System</p>
+          <div class="brand-title-row">
+            <h1 class="brand-title">BovineID</h1>
+            <span class="system-badge">Enterprise Edition</span>
+          </div>
+          <p class="brand-desc">Deep Livestock Muzzle Biometric Intelligence & Anti-Duplicate Platform</p>
         </div>
       </div>
 
-      <div class="header-actions">
-        <div class="registry-pill">
-          <span class="pill-dot"></span>
-          <span>Enrolled: <strong id="headerRegistryCount">0</strong></span>
+      <div class="header-controls">
+        <div class="stat-capsule">
+          <span class="live-dot"></span>
+          <span class="stat-text">Enrolled Cattle: <strong id="headerRegistryCount" class="font-mono">0</strong></span>
         </div>
-        <button id="btnResetAll" class="btn btn-ghost" title="Clear all enrolled cattle from database">
+        <button id="btnResetAll" class="btn-wipe" title="Reset all records in the registry">
           Reset Database
         </button>
       </div>
     </header>
 
-    <!-- Navigation Tabs (Only 3 clean options) -->
-    <nav class="nav-tabs-bar">
-      <button class="nav-tab active" id="tabRegister">
-        Register Cattle
+    <!-- Navigation Tabs Bar (3 Clean Modes) -->
+    <nav class="mode-navigation">
+      <button class="nav-button active" id="tabRegister">
+        <span class="nav-num">01</span>
+        <span class="nav-text">Register Cattle</span>
       </button>
-      <button class="nav-tab" id="tabMatch">
-        Muzzle Match
+      <button class="nav-button" id="tabMatch">
+        <span class="nav-num">02</span>
+        <span class="nav-text">Muzzle Match</span>
       </button>
-      <button class="nav-tab" id="tabLookup">
-        Database Lookup
+      <button class="nav-button" id="tabLookup">
+        <span class="nav-num">03</span>
+        <span class="nav-text">Database Lookup</span>
       </button>
     </nav>
 
 
     <!-- ========================================================== -->
-    <!-- SECTION 1: REGISTER CATTLE (ENROLLMENT & ANTI-DUPLICATE)   -->
+    <!-- MODE 1: REGISTER CATTLE (ENROLLMENT & DUPLICATE BLOCKING)  -->
     <!-- ========================================================== -->
-    <section class="view-panel" id="panelRegister">
-      <div class="panel-card">
-        <div class="card-intro">
-          <h2>Register New Cattle</h2>
-          <p>Enroll animal profile with biometric muzzle verification. Duplicates are automatically flagged.</p>
+    <section class="glass-section" id="panelRegister">
+      <div class="section-heading">
+        <div>
+          <h2>Smart Cattle Biometric Registration</h2>
+          <p>Scans muzzle ridge micro-structures and validates uniqueness. Duplicates are strictly blocked.</p>
         </div>
-
-        <!-- Quick 1-Click Demo Presets -->
-        <div class="preset-links-row">
-          <span class="preset-label">Test Presets:</span>
-          <button class="preset-btn" id="btnSmartPreset1">Enroll Bella (Cow-001)</button>
-          <button class="preset-btn" id="btnSmartPreset2">Test Duplicate (Daisy)</button>
-          <button class="preset-btn" id="btnSmartPreset3">Enroll Thunder (Cow-002)</button>
+        <div class="viva-quickbar">
+          <span class="viva-label">⚡ 1-Click Tests:</span>
+          <button class="viva-btn btn-cow1" id="btnSmartPreset1">Enroll Bella (Cow-001)</button>
+          <button class="viva-btn btn-cowdup" id="btnSmartPreset2">Test Duplicate (Daisy)</button>
+          <button class="viva-btn btn-cow2" id="btnSmartPreset3">Enroll Thunder (Cow-002)</button>
         </div>
-
-        <div class="enrollment-grid">
-          <!-- Form Details -->
-          <div class="form-column">
-            <div class="input-field">
-              <label for="smartRegName">Animal Name <span class="required">*</span></label>
-              <input type="text" id="smartRegName" placeholder="e.g. Bella" required>
-            </div>
-
-            <div class="input-row">
-              <div class="input-field flex-1">
-                <label for="smartRegBreed">Breed</label>
-                <input type="text" id="smartRegBreed" value="Sahiwal Cattle">
-              </div>
-              <div class="input-field flex-1">
-                <label for="smartRegTag">Tag ID (Optional)</label>
-                <input type="text" id="smartRegTag" placeholder="Auto-generated">
-              </div>
-            </div>
-
-            <button id="btnSubmitSmartRegister" class="btn btn-primary btn-block btn-lg" disabled>
-              <span class="btn-spinner hidden" id="smartRegisterSpinner"></span>
-              Register Animal
-            </button>
-          </div>
-
-          <!-- Muzzle Upload Zone with Laser Scanner Overlay -->
-          <div class="upload-column">
-            <label class="input-label">Muzzle Photograph <span class="required">*</span></label>
-            <div class="clean-dropzone" id="smartDropZone">
-              <input type="file" id="smartFileInput" accept="image/*" class="hidden-input">
-              
-              <div class="drop-prompt" id="smartDropPrompt">
-                <div class="upload-icon-clean">
-                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                </div>
-                <p class="drop-title">Select or drag muzzle image</p>
-                <p class="drop-sub">JPG or PNG &bull; Minimum 80% clarity required</p>
-              </div>
-
-              <!-- Preview with Laser Scanner Animation -->
-              <div class="drop-preview hidden" id="smartDropPreview">
-                <div class="scanner-viewport" id="smartScannerViewport">
-                  <img id="smartPreviewImg" src="" alt="Muzzle Preview">
-                  <!-- Laser Scanner Overlay -->
-                  <div class="laser-scanner-overlay hidden" id="smartLaserScanner">
-                    <div class="hud-corner top-left"></div>
-                    <div class="hud-corner top-right"></div>
-                    <div class="hud-corner bottom-left"></div>
-                    <div class="hud-corner bottom-right"></div>
-                    <div class="laser-beam"></div>
-                    <span class="scanner-status-text">Analyzing muzzle ridge patterns...</span>
-                  </div>
-                </div>
-                <button id="btnSmartRemoveImg" class="btn-remove" title="Remove image">&times;</button>
-              </div>
-            </div>
-
-            <!-- Quality Gate Validation Box -->
-            <div class="quality-gate-banner hidden" id="smartQualityBanner">
-              <div class="quality-info">
-                <span class="quality-title" id="smartQualityTitle">Checking Quality...</span>
-                <p class="quality-desc" id="smartQualityDesc">Analyzing ridge sharpness and illumination.</p>
-              </div>
-              <div class="quality-score-pill" id="smartQualityScorePill">--%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Registration Result Container -->
-        <div class="result-wrapper hidden" id="smartResultCard">
-
-          <!-- DUPLICATE DETECTED CASE -->
-          <div class="alert-box alert-duplicate hidden" id="smartDuplicateView">
-            <div class="alert-header">
-              <div class="alert-icon">!</div>
-              <div>
-                <h3>Duplicate Animal Detected</h3>
-                <p id="dupBannerDesc">Biometric ridge patterns match an existing enrolled animal in your database.</p>
-              </div>
-            </div>
-
-            <div class="comparison-cards-grid">
-              <div class="compare-card">
-                <span class="card-caption">Attempted Upload</span>
-                <img id="smartDupUploadThumb" src="" alt="Uploaded" class="card-avatar">
-                <h4 id="smartDupUploadName">Daisy</h4>
-                <span class="status-tag tag-blocked">Blocked (Duplicate)</span>
-              </div>
-
-              <div class="similarity-hub">
-                <span class="sim-number" id="smartDupConfidence">84.5%</span>
-                <span class="sim-label">Biometric Correlation</span>
-                <div class="sim-cosine">Cosine Sim: <strong id="smartDupCosine" class="font-mono">0.6512</strong></div>
-              </div>
-
-              <div class="compare-card">
-                <span class="card-caption">Enrolled Record</span>
-                <img id="smartDupMatchedThumb" src="" alt="Enrolled" class="card-avatar">
-                <h4 id="smartDupMatchedName">Bella</h4>
-                <span class="meta-tag" id="smartDupMatchedTag">COW-001</span>
-                <p class="text-xs text-muted" id="smartDupMatchedDate">Registered: 2026-09-24</p>
-              </div>
-            </div>
-
-            <!-- Explainable AI (XAI) Canvas -->
-            <div class="xai-preview-card" id="smartDupXaiCard">
-              <span class="xai-chip">Biometric Ridge Alignment Proof</span>
-              <img id="smartDupXaiCanvas" src="" alt="XAI Correspondence Canvas" class="xai-img">
-            </div>
-          </div>
-
-          <!-- ENROLLMENT SUCCESS CASE -->
-          <div class="alert-box alert-success hidden" id="smartSuccessView">
-            <div class="alert-header">
-              <div class="alert-icon-check">&check;</div>
-              <div>
-                <h3 id="succBannerTitle">Animal Enrolled Successfully</h3>
-                <p id="succBannerDesc">No matching biometric record found. Animal profile is now verified and stored.</p>
-              </div>
-            </div>
-
-            <div class="enrolled-profile-row">
-              <img id="smartSuccThumb" src="" alt="Registered Animal" class="enrolled-thumb">
-              <div class="enrolled-details">
-                <div class="enrolled-headline">
-                  <h4 id="smartSuccName">Bella</h4>
-                  <span class="id-pill font-mono" id="smartSuccTag">CATTLE-001</span>
-                </div>
-                <p class="enrolled-breed" id="smartSuccBreed">Sahiwal Cattle</p>
-
-                <div class="audit-pills">
-                  <span class="audit-pill">Quality: <strong id="smartSuccQualityScore">98%</strong></span>
-                  <span class="audit-pill" id="smartSuccLiveness">Verified Live Animal</span>
-                  <span class="audit-pill font-mono" id="smartSuccFaissLatency">Latency: 0.8ms</span>
-                </div>
-
-                <div class="hash-display">
-                  <span class="hash-label">Biometric Hash:</span>
-                  <span class="hash-value font-mono" id="smartSuccHash">0x...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
       </div>
-    </section>
 
+      <div class="card-split-grid">
+        <!-- Form Inputs -->
+        <div class="form-pane">
+          <div class="form-group">
+            <label for="smartRegName">Animal Name <span class="accent-star">*</span></label>
+            <input type="text" id="smartRegName" placeholder="e.g. Bella" required>
+          </div>
 
-    <!-- ========================================================== -->
-    <!-- SECTION 2: MUZZLE MATCH (DIRECT 1-TO-1 COMPARISON)         -->
-    <!-- ========================================================== -->
-    <section class="view-panel hidden" id="panelMatch">
-      <div class="panel-card">
-        <div class="card-intro">
-          <h2>Direct 1-to-1 Muzzle Match</h2>
-          <p>Upload two muzzle photographs to verify if they belong to the same animal or different animals.</p>
-        </div>
-
-        <div class="preset-links-row">
-          <span class="preset-label">Test Pairs:</span>
-          <button class="preset-btn" id="btnPresetSame">Genuine Pair (Cow-001 Photo 1 vs 2)</button>
-          <button class="preset-btn" id="btnPresetDiff">Impostor Pair (Cow-001 vs Cow-002)</button>
-        </div>
-
-        <div class="dual-upload-grid">
-          <!-- Box 1 -->
-          <div class="match-upload-box" id="boxCompare1">
-            <input type="file" id="compareFileInput1" accept="image/*" class="hidden-input">
-            <div class="drop-prompt" id="boxPrompt1">
-              <span class="box-tag">Reference Photo</span>
-              <p class="drop-title">Select Photo 1</p>
-              <p class="drop-sub">Minimum 80% clarity</p>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="smartRegBreed">Breed</label>
+              <input type="text" id="smartRegBreed" value="Sahiwal Cattle">
             </div>
-            <div class="drop-preview hidden" id="boxPreview1">
-              <div class="scanner-viewport" id="matchScanner1">
-                <img id="boxImg1" src="" alt="Photo 1">
-                <div class="laser-scanner-overlay hidden" id="matchLaser1">
-                  <div class="laser-beam"></div>
-                </div>
-              </div>
-              <button class="btn-remove" id="btnRemoveBox1">&times;</button>
-              <div class="quality-mini-pill" id="boxQuality1">Quality: --</div>
+            <div class="form-group flex-1">
+              <label for="smartRegTag">Custom Tag ID (Optional)</label>
+              <input type="text" id="smartRegTag" placeholder="Auto-generated if empty">
             </div>
           </div>
 
-          <div class="match-divider">VS</div>
-
-          <!-- Box 2 -->
-          <div class="match-upload-box" id="boxCompare2">
-            <input type="file" id="compareFileInput2" accept="image/*" class="hidden-input">
-            <div class="drop-prompt" id="boxPrompt2">
-              <span class="box-tag">Test Photo</span>
-              <p class="drop-title">Select Photo 2</p>
-              <p class="drop-sub">Minimum 80% clarity</p>
-            </div>
-            <div class="drop-preview hidden" id="boxPreview2">
-              <div class="scanner-viewport" id="matchScanner2">
-                <img id="boxImg2" src="" alt="Photo 2">
-                <div class="laser-scanner-overlay hidden" id="matchLaser2">
-                  <div class="laser-beam"></div>
-                </div>
+          <!-- Quality Status Notice -->
+          <div class="quality-audit-box idle" id="smartQualityBox">
+            <div class="quality-icon" id="smartQualityIcon">⏱️</div>
+            <div class="quality-meta">
+              <div class="quality-line1">
+                <span class="quality-state" id="smartQualityState">Quality Pre-Check Pending</span>
+                <span class="quality-pct font-mono" id="smartQualityScore">--%</span>
               </div>
-              <button class="btn-remove" id="btnRemoveBox2">&times;</button>
-              <div class="quality-mini-pill" id="boxQuality2">Quality: --</div>
+              <p class="quality-hint" id="smartQualityHint">Upload a muzzle photograph above to run the 80% quality verification gate.</p>
             </div>
           </div>
-        </div>
 
-        <div class="action-row">
-          <button id="btnRunDirectCompare" class="btn btn-primary btn-lg" style="min-width: 240px;" disabled>
-            <span class="btn-spinner hidden" id="directCompareSpinner"></span>
-            Verify Match
+          <button id="btnSubmitSmartRegister" class="action-btn btn-submit" disabled>
+            <span class="btn-spinner hidden" id="smartRegisterSpinner"></span>
+            <span class="btn-label" id="smartRegisterBtnLabel">Awaiting 80% Qualified Photo</span>
           </button>
         </div>
 
-        <!-- Direct Match Results -->
-        <div class="result-wrapper hidden" id="directResultsCard">
-          <div class="verdict-card" id="directVerdictBanner">
-            <div class="verdict-headline">
-              <div class="verdict-indicator" id="directVerdictIcon">&check;</div>
-              <div>
-                <h3 id="directVerdictTitle">Match Verified: Same Animal</h3>
-                <p id="directVerdictDesc">Both photographs exhibit strong biometric alignment.</p>
+        <!-- Muzzle Upload Box with HUD Laser Scanner -->
+        <div class="upload-pane">
+          <div class="pane-header">
+            <label class="pane-label">Cattle Muzzle Image <span class="accent-star">*</span></label>
+            <span class="gate-tag">Min 80% Clarity Required</span>
+          </div>
+
+          <div class="clean-dropzone" id="smartDropZone">
+            <input type="file" id="smartFileInput" accept="image/*" class="file-hidden">
+            
+            <div class="dropzone-idle" id="smartDropPrompt">
+              <div class="drop-circle">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="drop-prompt-title">Click or Drop Muzzle Photograph</p>
+              <p class="drop-prompt-sub">JPG or PNG &bull; Auto-cropped via YOLO</p>
+            </div>
+
+            <!-- Preview Viewport with Holographic Laser Scanner -->
+            <div class="dropzone-active hidden" id="smartDropPreview">
+              <div class="scanner-stage" id="smartScannerStage">
+                <img id="smartPreviewImg" src="" alt="Muzzle Crop">
+
+                <!-- HUD Holographic Laser Scanner (ONLY runs on click) -->
+                <div class="hud-laser-overlay hidden" id="smartLaserOverlay">
+                  <div class="hud-bracket b-tl"></div>
+                  <div class="hud-bracket b-tr"></div>
+                  <div class="hud-bracket b-bl"></div>
+                  <div class="hud-bracket b-br"></div>
+                  <div class="laser-sweep-line"></div>
+                  <div class="scanner-hud-tag">
+                    <span class="hud-pulse"></span>
+                    <span>EXTRACTING 512-D EMBEDDINGS</span>
+                  </div>
+                </div>
+              </div>
+              <button id="btnSmartRemoveImg" class="btn-retake" title="Remove & upload different photo">&times;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS: DUPLICATE REJECTION & SUCCESS -->
+      <div class="results-dock hidden" id="smartResultCard">
+
+        <!-- CASE A: DUPLICATE BLOCKED -->
+        <div class="verdict-banner banner-blocked hidden" id="smartDuplicateView">
+          <div class="banner-top">
+            <div class="verdict-crest crest-red">⛔</div>
+            <div class="banner-text">
+              <span class="verdict-pill pill-red">DUPLICATE REGISTRATION BLOCKED</span>
+              <h3>Duplicate Animal Detected in Database</h3>
+              <p id="dupBannerDesc">Biometric ridge patterns match an existing enrolled animal with high confidence.</p>
+            </div>
+          </div>
+
+          <div class="match-correlator-grid">
+            <div class="correlator-box">
+              <span class="box-caption">Attempted Upload</span>
+              <img id="smartDupUploadThumb" src="" alt="Attempt" class="correlator-thumb">
+              <h4 id="smartDupUploadName">Daisy</h4>
+              <span class="badge-flagged">Duplicate Attempt</span>
+            </div>
+
+            <div class="correlator-meter">
+              <span class="meter-pct font-mono" id="smartDupConfidence">84.5%</span>
+              <span class="meter-title">Biometric Correlation</span>
+              <div class="meter-cosine font-mono">Cosine Sim: <strong id="smartDupCosine">0.6512</strong></div>
+            </div>
+
+            <div class="correlator-box">
+              <span class="box-caption">Enrolled Database Record</span>
+              <img id="smartDupMatchedThumb" src="" alt="Enrolled" class="correlator-thumb">
+              <h4 id="smartDupMatchedName">Bella</h4>
+              <span class="badge-enrolled font-mono" id="smartDupMatchedTag">COW-001</span>
+              <p class="text-dim" id="smartDupMatchedDate">Enrolled: 2026-09-24</p>
+            </div>
+          </div>
+
+          <!-- XAI Biometric Ridge Alignment Proof -->
+          <div class="xai-proof-card" id="smartDupXaiCard">
+            <div class="proof-header">
+              <span class="proof-badge">EXPLAINABLE AI (XAI) ALIGNMENT PROOF</span>
+              <h4>Deep Neural Ridge & Pore Correspondence Map</h4>
+            </div>
+            <img id="smartDupXaiCanvas" src="" alt="XAI Correspondence Canvas" class="proof-canvas-img">
+          </div>
+        </div>
+
+        <!-- CASE B: SUCCESSFUL ENROLLMENT -->
+        <div class="verdict-banner banner-enrolled hidden" id="smartSuccessView">
+          <div class="banner-top">
+            <div class="verdict-crest crest-green">&check;</div>
+            <div class="banner-text">
+              <span class="verdict-pill pill-green">ENROLLMENT VERIFIED</span>
+              <h3 id="succBannerTitle">Animal Registered Successfully</h3>
+              <p id="succBannerDesc">No matching biometric was found. Animal has been cryptographically hashed and enrolled.</p>
+            </div>
+          </div>
+
+          <div class="enrolled-profile-card">
+            <img id="smartSuccThumb" src="" alt="Registered Cattle" class="profile-thumb">
+            <div class="profile-details">
+              <div class="profile-title-row">
+                <h4 id="smartSuccName">Bella</h4>
+                <span class="id-tag font-mono" id="smartSuccTag">CATTLE-001</span>
+                <span class="breed-badge" id="smartSuccBreed">Sahiwal Cattle</span>
+              </div>
+
+              <div class="metrics-chips-row">
+                <span class="chip-item">Quality: <strong id="smartSuccQualityScore" class="text-cyan">98.5%</strong></span>
+                <span class="chip-item text-green">Verified Live Animal</span>
+                <span class="chip-item font-mono" id="smartSuccFaissLatency">FAISS: 0.8ms</span>
+              </div>
+
+              <div class="hash-row">
+                <span class="hash-key">Biometric Hash:</span>
+                <span class="hash-code font-mono" id="smartSuccHash">0x...</span>
+              </div>
+
+              <div class="embedding-chips-row">
+                <span class="hash-key">512-D ArcFace Vector Preview:</span>
+                <div class="chips-container" id="smartSuccVectorChips"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================================== -->
+    <!-- MODE 2: MUZZLE MATCH (DIRECT 1-TO-1 COMPARISON)            -->
+    <!-- ========================================================== -->
+    <section class="glass-section hidden" id="panelMatch">
+      <div class="section-heading">
+        <div>
+          <h2>Direct 1-to-1 Muzzle Verification</h2>
+          <p>Verify if two independent muzzle photographs belong to the same cattle animal.</p>
+        </div>
+        <div class="viva-quickbar">
+          <span class="viva-label">⚡ Test Pairs:</span>
+          <button class="viva-btn btn-cow1" id="btnPresetSame">Genuine Pair (Cow-001 Photo 1 vs 2)</button>
+          <button class="viva-btn btn-cowdup" id="btnPresetDiff">Impostor Pair (Cow-001 vs Cow-002)</button>
+        </div>
+      </div>
+
+      <div class="dual-drop-layout">
+        <!-- Box 1 -->
+        <div class="match-box" id="boxCompare1">
+          <input type="file" id="compareFileInput1" accept="image/*" class="file-hidden">
+          <div class="dropzone-idle" id="boxPrompt1">
+            <span class="slot-badge">Photo 1 (Reference)</span>
+            <p class="drop-prompt-title">Select Reference Photo</p>
+            <p class="drop-prompt-sub">Requires &ge; 80% quality</p>
+          </div>
+          <div class="dropzone-active hidden" id="boxPreview1">
+            <div class="scanner-stage">
+              <img id="boxImg1" src="" alt="Photo 1">
+              <div class="hud-laser-overlay hidden" id="matchLaser1">
+                <div class="hud-bracket b-tl"></div><div class="hud-bracket b-tr"></div>
+                <div class="hud-bracket b-bl"></div><div class="hud-bracket b-br"></div>
+                <div class="laser-sweep-line"></div>
+              </div>
+            </div>
+            <button class="btn-retake" id="btnRemoveBox1">&times;</button>
+            <div class="slot-quality-pill" id="boxQuality1">Quality: --%</div>
+          </div>
+        </div>
+
+        <div class="vs-emblem">VS</div>
+
+        <!-- Box 2 -->
+        <div class="match-box" id="boxCompare2">
+          <input type="file" id="compareFileInput2" accept="image/*" class="file-hidden">
+          <div class="dropzone-idle" id="boxPrompt2">
+            <span class="slot-badge">Photo 2 (Test Sample)</span>
+            <p class="drop-prompt-title">Select Test Photo</p>
+            <p class="drop-prompt-sub">Requires &ge; 80% quality</p>
+          </div>
+          <div class="dropzone-active hidden" id="boxPreview2">
+            <div class="scanner-stage">
+              <img id="boxImg2" src="" alt="Photo 2">
+              <div class="hud-laser-overlay hidden" id="matchLaser2">
+                <div class="hud-bracket b-tl"></div><div class="hud-bracket b-tr"></div>
+                <div class="hud-bracket b-bl"></div><div class="hud-bracket b-br"></div>
+                <div class="laser-sweep-line"></div>
+              </div>
+            </div>
+            <button class="btn-retake" id="btnRemoveBox2">&times;</button>
+            <div class="slot-quality-pill" id="boxQuality2">Quality: --%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-dock">
+        <button id="btnRunDirectCompare" class="action-btn btn-match" disabled>
+          <span class="btn-spinner hidden" id="directCompareSpinner"></span>
+          <span id="directCompareBtnLabel">Awaiting Two &ge;80% Qualified Photos</span>
+        </button>
+      </div>
+
+      <!-- Match Result Display -->
+      <div class="results-dock hidden" id="directResultsCard">
+        <div class="verdict-banner" id="directVerdictBanner">
+          <div class="banner-top">
+            <div class="verdict-crest" id="directVerdictIcon">&check;</div>
+            <div class="banner-text">
+              <h3 id="directVerdictTitle">MATCH VERIFIED: SAME ANIMAL</h3>
+              <p id="directVerdictDesc">Both photographs exhibit strong biometric correlation.</p>
+            </div>
+          </div>
+
+          <div class="metrics-dashboard">
+            <div class="metric-card">
+              <span class="metric-caption">Cosine Similarity</span>
+              <span class="metric-value font-mono text-cyan" id="directMetricCosine">0.6512</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-caption">Biometric Confidence</span>
+              <span class="metric-value text-green" id="directMetricConfidence">82.6%</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-caption">Angular Separation</span>
+              <span class="metric-value" id="directMetricAngular">49.4&deg;</span>
+            </div>
+          </div>
+
+          <!-- Explainable AI (XAI) Alignment Canvas -->
+          <div class="xai-proof-card" id="directXaiCard">
+            <div class="proof-header">
+              <span class="proof-badge">EXPLAINABLE AI (XAI) CORRESPONDENCE</span>
+              <h4>Grad-CAM Ridge Alignment & Micro-Pore Matching Proof</h4>
+            </div>
+            <img id="directXaiCorrImg" src="" alt="Pairwise Alignment Map" class="proof-canvas-img">
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================== -->
+    <!-- MODE 3: DATABASE LOOKUP (SEARCH & RETRIEVAL)               -->
+    <!-- ========================================================== -->
+    <section class="glass-section hidden" id="panelLookup">
+      <div class="section-heading">
+        <div>
+          <h2>Database Search & Identification</h2>
+          <p>Scan an unknown muzzle photo to search and retrieve matching cattle records using sub-millisecond FAISS vector search.</p>
+        </div>
+        <div class="viva-quickbar">
+          <span class="viva-label">⚡ 1-Click Samples:</span>
+          <div class="sample-pills-row" id="samplesContainer">
+            <span class="text-dim">Loading test samples...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-split-grid">
+        <!-- Left: Upload & Quality Gate -->
+        <div class="upload-pane">
+          <div class="pane-header">
+            <label class="pane-label">Query Muzzle Photo <span class="accent-star">*</span></label>
+            <span class="gate-tag">Min 80% Clarity Required</span>
+          </div>
+
+          <div class="clean-dropzone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" class="file-hidden">
+            <div class="dropzone-idle" id="dropzonePrompt">
+              <div class="drop-circle">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <p class="drop-prompt-title">Drop Muzzle to Identify</p>
+              <p class="drop-prompt-sub">Requires &ge; 80% quality threshold</p>
+            </div>
+
+            <!-- Preview Viewport with Scanner -->
+            <div class="dropzone-active hidden" id="dropzonePreview">
+              <div class="scanner-stage" id="scanScannerStage">
+                <img id="previewImg" src="" alt="Query Muzzle">
+                <div class="hud-laser-overlay hidden" id="scanLaserOverlay">
+                  <div class="hud-bracket b-tl"></div><div class="hud-bracket b-tr"></div>
+                  <div class="hud-bracket b-bl"></div><div class="hud-bracket b-br"></div>
+                  <div class="laser-sweep-line"></div>
+                  <div class="scanner-hud-tag">
+                    <span class="hud-pulse"></span>
+                    <span>SEARCHING FAISS VECTOR REPOSITORY</span>
+                  </div>
+                </div>
+              </div>
+              <button id="btnRemoveImg" class="btn-retake" title="Remove image">&times;</button>
+            </div>
+          </div>
+
+          <!-- Quality Status Notice -->
+          <div class="quality-audit-box idle" id="scanQualityBox" style="margin-top: 14px;">
+            <div class="quality-icon" id="scanQualityIcon">⏱️</div>
+            <div class="quality-meta">
+              <div class="quality-line1">
+                <span class="quality-state" id="scanQualityState">Quality Pre-Check Pending</span>
+                <span class="quality-pct font-mono" id="scanQualityScore">--%</span>
+              </div>
+              <p class="quality-hint" id="scanQualityHint">Upload a photo to audit ridge sharpness & illumination.</p>
+            </div>
+          </div>
+
+          <button id="btnScanVerify" class="action-btn btn-submit" style="margin-top: 14px;" disabled>
+            <span class="btn-spinner hidden" id="scanSpinner"></span>
+            <span id="scanBtnLabel">Awaiting 80% Qualified Photo</span>
+          </button>
+        </div>
+
+        <!-- Right: Results & Multimodal Inspection -->
+        <div class="lookup-results-pane">
+          <div class="verdict-banner" id="verdictBanner">
+            <div class="banner-top">
+              <div class="verdict-crest" id="verdictIcon">🔍</div>
+              <div class="banner-text">
+                <h3 id="verdictTitle">Awaiting Query Muzzle</h3>
+                <p id="verdictDescription">Upload an image or pick a 1-click test sample to search the database.</p>
               </div>
             </div>
 
-            <div class="metrics-strip">
-              <div class="metric-block">
-                <span class="metric-caption">Cosine Similarity</span>
-                <span class="metric-digit font-mono" id="directMetricCosine">0.6512</span>
+            <div class="metrics-dashboard hidden" id="metricsGrid">
+              <div class="metric-card">
+                <span class="metric-caption">Similarity</span>
+                <span class="metric-value font-mono text-cyan" id="metricCosine">-</span>
               </div>
-              <div class="metric-block">
+              <div class="metric-card">
                 <span class="metric-caption">Confidence</span>
-                <span class="metric-digit" id="directMetricConfidence">82.6%</span>
+                <span class="metric-value text-green" id="metricConfidence">-</span>
               </div>
-              <div class="metric-block">
-                <span class="metric-caption">Angular Distance</span>
-                <span class="metric-digit" id="directMetricAngular">49.4°</span>
-              </div>
-            </div>
-
-            <!-- Explainable AI (XAI) Correspondence Visualizer -->
-            <div class="xai-preview-card" id="directXaiCard">
-              <span class="xai-chip">Biometric Ridge Alignment Proof</span>
-              <img id="directXaiCorrImg" src="" alt="Alignment Map" class="xai-img">
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ========================================================== -->
-    <!-- SECTION 3: DATABASE LOOKUP (SEARCH & IDENTIFICATION)      -->
-    <!-- ========================================================== -->
-    <section class="view-panel hidden" id="panelLookup">
-      <div class="panel-card">
-        <div class="card-intro">
-          <h2>Database Lookup</h2>
-          <p>Scan an unknown muzzle photo to search and retrieve matching cattle records from the registry.</p>
-        </div>
-
-        <!-- Samples Bar -->
-        <div class="preset-links-row" id="lookupSamplesRow">
-          <span class="preset-label">Test Samples:</span>
-          <div class="samples-scroll" id="samplesContainer">
-            <span class="text-xs text-muted">Loading test samples...</span>
-          </div>
-        </div>
-
-        <div class="lookup-grid">
-          <div class="lookup-upload-box">
-            <div class="clean-dropzone" id="dropZone">
-              <input type="file" id="fileInput" accept="image/*" class="hidden-input">
-              <div class="drop-prompt" id="dropzonePrompt">
-                <div class="upload-icon-clean">
-                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                  </svg>
-                </div>
-                <p class="drop-title">Drop muzzle photo to identify</p>
-                <p class="drop-sub">Minimum 80% clarity required</p>
-              </div>
-
-              <!-- Preview with Scanner Animation -->
-              <div class="drop-preview hidden" id="dropzonePreview">
-                <div class="scanner-viewport" id="scanScannerViewport">
-                  <img id="previewImg" src="" alt="Scan Preview">
-                  <div class="laser-scanner-overlay hidden" id="scanLaserScanner">
-                    <div class="hud-corner top-left"></div>
-                    <div class="hud-corner top-right"></div>
-                    <div class="hud-corner bottom-left"></div>
-                    <div class="hud-corner bottom-right"></div>
-                    <div class="laser-beam"></div>
-                    <span class="scanner-status-text">Searching vector database...</span>
-                  </div>
-                </div>
-                <button id="btnRemoveImg" class="btn-remove" title="Remove image">&times;</button>
+              <div class="metric-card">
+                <span class="metric-caption">FAISS Search</span>
+                <span class="metric-value font-mono" id="scanFaissLatency">-</span>
               </div>
             </div>
 
-            <!-- Quality Gate Banner -->
-            <div class="quality-gate-banner hidden" id="scanQualityBanner">
-              <div class="quality-info">
-                <span class="quality-title" id="scanQualityTitle">Checking Quality...</span>
-                <p class="quality-desc" id="scanQualityDesc">Analyzing ridge sharpness.</p>
-              </div>
-              <div class="quality-score-pill" id="scanQualityScorePill">--%</div>
-            </div>
-
-            <button id="btnScanVerify" class="btn btn-primary btn-block btn-lg" style="margin-top: 16px;" disabled>
-              <span class="btn-spinner hidden" id="scanSpinner"></span>
-              Search Database
-            </button>
-          </div>
-
-          <!-- Lookup Verdict Column -->
-          <div class="lookup-results-box">
-            <div class="verdict-card" id="verdictBanner">
-              <div class="verdict-headline">
-                <div class="verdict-indicator" id="verdictIcon">?</div>
-                <div>
-                  <h3 id="verdictTitle">Awaiting Image</h3>
-                  <p id="verdictDescription">Upload a muzzle photo or click a sample to search database.</p>
-                </div>
-              </div>
-
-              <div class="metrics-strip hidden" id="metricsGrid">
-                <div class="metric-block">
-                  <span class="metric-caption">Similarity</span>
-                  <span class="metric-digit font-mono" id="metricCosine">-</span>
-                </div>
-                <div class="metric-block">
-                  <span class="metric-caption">Confidence</span>
-                  <span class="metric-digit" id="metricConfidence">-</span>
-                </div>
-                <div class="metric-block">
-                  <span class="metric-caption">Latency</span>
-                  <span class="metric-digit font-mono" id="scanFaissLatency">-</span>
-                </div>
-              </div>
-
-              <!-- Matched Profile Card -->
-              <div class="matched-box hidden" id="matchedProfileCard">
-                <img id="matchedThumb" src="" alt="Matched" class="matched-avatar">
-                <div class="matched-text">
-                  <span class="matched-tag font-mono" id="matchedTagId">COW-001</span>
+            <!-- Identified Profile Card -->
+            <div class="matched-profile-panel hidden" id="matchedProfileCard">
+              <img id="matchedThumb" src="" alt="Identified Cattle" class="profile-thumb">
+              <div>
+                <div class="profile-title-row">
                   <h4 id="matchedName">Bella</h4>
-                  <p class="text-xs text-success font-semibold">Verified Biometric Match</p>
+                  <span class="id-tag font-mono" id="matchedTagId">COW-001</span>
                 </div>
+                <p class="text-green text-sm" style="font-weight: 600;">&check; Verified Biometric Match in Database</p>
               </div>
+            </div>
 
-              <!-- 4-Way Multi-Modal Inspection Grid -->
-              <div class="quad-inspection hidden" id="dualInspectionCard">
-                <span class="xai-chip">Biometric Multimodal Analysis</span>
-                <div class="quad-grid">
-                  <div class="quad-item">
-                    <span class="quad-label">Original Crop</span>
-                    <img id="rawThumb" src="" alt="Original">
-                  </div>
-                  <div class="quad-item">
-                    <span class="quad-label">Ridge Texture</span>
-                    <img id="claheThumb" src="" alt="Texture">
-                  </div>
-                  <div class="quad-item">
-                    <span class="quad-label">Attention Heatmap</span>
-                    <img id="scanHeatThumb" src="" alt="Heatmap">
-                  </div>
-                  <div class="quad-item">
-                    <span class="quad-label">Ridge Grooves</span>
-                    <img id="scanRidgeThumb" src="" alt="Grooves">
-                  </div>
+            <!-- 4-Way Multi-Modal Inspection Grid -->
+            <div class="multimodal-inspection-box hidden" id="dualInspectionCard">
+              <div class="inspection-title-bar">
+                <span class="proof-badge">MULTIMODAL BIOMETRIC INSPECTION</span>
+                <h4>Ridge Grooves & Moiré Patterns Analysis</h4>
+              </div>
+              <div class="inspection-quad-grid">
+                <div class="quad-cell">
+                  <span class="quad-caption">1. Raw Crop</span>
+                  <img id="rawThumb" src="" alt="Raw Crop">
+                </div>
+                <div class="quad-cell">
+                  <span class="quad-caption">2. CLAHE Texture</span>
+                  <img id="claheThumb" src="" alt="CLAHE Texture">
+                </div>
+                <div class="quad-cell">
+                  <span class="quad-caption">3. XAI Heatmap</span>
+                  <img id="scanHeatThumb" src="" alt="Attention Heatmap">
+                </div>
+                <div class="quad-cell">
+                  <span class="quad-caption">4. Ridge Grooves</span>
+                  <img id="scanRidgeThumb" src="" alt="Grooves Pattern">
                 </div>
               </div>
             </div>
+
           </div>
         </div>
-
       </div>
     </section>
 
 
     <!-- ========================================================== -->
-    <!-- ENROLLED CATTLE DATABASE TABLE                             -->
+    <!-- ENROLLED CATTLE DATABASE REPOSITORY                        -->
     <!-- ========================================================== -->
-    <section class="database-section">
-      <div class="table-card">
-        <div class="table-header-row">
-          <div>
-            <h3>Enrolled Cattle Database</h3>
-            <p>Cryptographically hashed biometric embeddings registered in local storage</p>
-          </div>
-          <div class="table-counter">
-            <span id="registryCountBadge">0 Records</span>
-          </div>
+    <section class="glass-section" style="margin-top: 24px;">
+      <div class="section-heading">
+        <div>
+          <h2>Enrolled Cattle Repository</h2>
+          <p>Cryptographically hashed 512-D ArcFace biometric vectors stored in local memory.</p>
         </div>
+        <div class="stat-capsule">
+          <span id="registryCountBadge" class="font-mono">0 Records Enrolled</span>
+        </div>
+      </div>
 
-        <div class="table-responsive">
-          <table class="clean-table" id="registryTable">
-            <thead>
-              <tr>
-                <th>Muzzle</th>
-                <th>Tag ID</th>
-                <th>Animal Name</th>
-                <th>Breed</th>
-                <th>Biometric Hash</th>
-                <th>Date Enrolled</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="registryTableBody">
-              <tr class="empty-row">
-                <td colspan="7">No animals enrolled yet. Use Register Cattle above to enroll an animal.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="table-frame">
+        <table class="executive-table" id="registryTable">
+          <thead>
+            <tr>
+              <th>Muzzle</th>
+              <th>Tag ID</th>
+              <th>Animal Name</th>
+              <th>Breed</th>
+              <th>Biometric SHA-256 Hash</th>
+              <th>Enrolled Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="registryTableBody">
+            <tr class="empty-row">
+              <td colspan="7">No animals registered yet. Use "Register Cattle" above to enroll an animal.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 

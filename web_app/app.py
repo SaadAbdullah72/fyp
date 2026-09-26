@@ -172,7 +172,7 @@ async def check_image_quality(file: UploadFile = File(...)):
 async def compare_two_muzzles(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),
-    threshold: float = 0.35
+    threshold: float = 0.40
 ):
     """
     Direct 1-to-1 Biometric Verification with:
@@ -248,7 +248,7 @@ async def compare_two_muzzles(
 
 
 @app.post("/api/scan")
-async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
+async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.40):
     """
     Scans a muzzle image with Full Suite:
     1. Pre-inference Quality Gate & Screen Replay Anti-Spoofing.

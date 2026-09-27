@@ -158,12 +158,21 @@ async def reset_registry():
 
 @app.post("/api/quality-check")
 async def check_image_quality(file: UploadFile = File(...)):
-    """Pre-scan diagnostics endpoint: checks blur, lighting, and anti-spoofing."""
+    """Pre-scan diagnostics endpoint: checks blur, lighting, resolution, and anti-spoofing."""
     try:
         content = await file.read()
         bgr = bytes_to_cv2(content)
         assessment = quality_gate.assess_quality(bgr)
-        return {"status": "success", "assessment": assessment}
+        score = float(assessment.get("overall_score", 0.0))
+        passed = bool(score >= 80.0 and assessment.get("passed", False))
+        return {
+            "status": "success",
+            "passed": passed,
+            "meets_production_threshold": bool(score >= 80.0),
+            "score": round(score, 1),
+            "min_required": 80.0,
+            "assessment": assessment
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -172,11 +181,11 @@ async def check_image_quality(file: UploadFile = File(...)):
 async def compare_two_muzzles(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),
-    threshold: float = 0.35
+    threshold: float = 0.40
 ):
     """
     Direct 1-to-1 Biometric Verification with:
-    1. Pre-inference Quality Gate & Anti-Spoofing on both images.
+    1. Pre-inference Strict 80% Quality Gate on both images.
     2. Deep 512-D ArcFace Cosine Alignment.
     3. Grad-CAM Attention Heatmaps for both muzzles.
     4. Side-by-side Biometric Alignment Correspondence Visualization.
@@ -190,6 +199,19 @@ async def compare_two_muzzles(
         # 1. Quality & Anti-Spoofing Check
         q1 = quality_gate.assess_quality(bgr1)
         q2 = quality_gate.assess_quality(bgr2)
+
+        score1 = float(q1.get("overall_score", 0.0))
+        score2 = float(q2.get("overall_score", 0.0))
+
+        if score1 < 80.0 or score2 < 80.0:
+            failed_img = "Image 1" if score1 < 80.0 else "Image 2"
+            failed_score = score1 if score1 < 80.0 else score2
+            return JSONResponse(status_code=400, content={
+                "status": "quality_rejected",
+                "message": f"Biometric Quality Rejected! {failed_img} scored {failed_score:.1f}% (Minimum 80.0% required). Both muzzle photos must be clear.",
+                "quality_scores": {"image1": score1, "image2": score2},
+                "min_required": 80.0
+            })
 
         # 2. Extract embeddings
         emb1 = engine.extract_embedding(bgr1)
@@ -243,15 +265,17 @@ async def compare_two_muzzles(
                 "hash": hash2
             }
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/scan")
-async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
+async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.40):
     """
     Scans a muzzle image with Full Suite:
-    1. Pre-inference Quality Gate & Screen Replay Anti-Spoofing.
+    1. Pre-inference Strict 80% Quality Gate & Screen Replay Anti-Spoofing.
     2. Deep 512-D ArcFace Biometric Embedding.
     3. Grad-CAM Deep Attention Heatmap generation.
     4. FAISS Sub-Millisecond Vector Search over enrolled database.
@@ -263,6 +287,14 @@ async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
 
         # 1. Quality & Anti-Spoofing
         q_result = quality_gate.assess_quality(bgr_img)
+        score = float(q_result.get("overall_score", 0.0))
+        if score < 80.0:
+            return JSONResponse(status_code=400, content={
+                "status": "quality_rejected",
+                "message": f"Biometric Quality Rejected! Image scored {score:.1f}% (Minimum 80.0% required). Please capture a clearer muzzle photo.",
+                "quality_score": score,
+                "min_required": 80.0
+            })
 
         # 2. Texture enhancement & Embedding
         enhanced_bgr = preprocessor.enhance_texture(bgr_img)
@@ -334,58 +366,107 @@ async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.35):
                 "ridge": ridge_thumb
             }
         }
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/smart-register")
 async def smart_register(
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
+    file1: Optional[UploadFile] = File(None),
+    file2: Optional[UploadFile] = File(None),
+    file3: Optional[UploadFile] = File(None),
     name: str = Form(...),
     breed: str = Form("Sahiwal Cattle"),
     tag_id: Optional[str] = Form(None),
-    threshold: float = Form(0.40)
+    threshold: float = Form(0.45)
 ):
     """
-    Smart Cattle Registration with Anti-Duplicate AI & FAISS Vector Engine:
-    1. Pre-inference Quality Gate & Liveness Audit.
-    2. Extract 512-D ArcFace embedding & SHA-256 hash.
-    3. Generate Grad-CAM Attention Heatmap.
-    4. Query FAISS Vector Database for duplicate check.
-    5. If Duplicate detected:
-       - REJECT: ALREADY_REGISTERED (returns matched animal photo, XAI alignment map, and score).
-    6. If unique:
-       - ENROLL: Adds vector to FAISS Index & saves record.
+    Production-Grade Smart Cattle Registration with:
+    1. Multi-Shot Muzzle Enrollment (3 captures: center, angle A, angle B).
+    2. Strict Pre-Inference Quality Gate (Min 80% score required per shot).
+    3. Biometric Internal Consistency Verification across shots.
+    4. Centroid Master Embedding Normalization.
+    5. FAISS Vector Search for Strict Anti-Duplicate Protection (Threshold 0.45).
     """
     try:
-        content = await file.read()
-        bgr_img = prepare_muzzle_crop(bytes_to_cv2(content))
+        # Collect uploaded files (support 3-shot multi-image or fallback single file)
+        upload_files = []
+        for f in [file1, file2, file3, file]:
+            if f is not None and f.filename:
+                upload_files.append(f)
 
-        # 1. Quality & Anti-Spoofing Assessment
-        q_result = quality_gate.assess_quality(bgr_img)
+        if not upload_files:
+            return JSONResponse(status_code=400, content={
+                "status": "error",
+                "message": "No muzzle images provided for registration."
+            })
 
-        # 2. Texture enhancement & Embedding
-        enhanced_bgr = preprocessor.enhance_texture(bgr_img)
-        enhanced_resized = cv2.resize(enhanced_bgr, (224, 224), interpolation=cv2.INTER_CUBIC)
-        
-        rgb_img = Image.fromarray(enhanced_resized[:, :, ::-1])
-        tensor = engine.transform(rgb_img).unsqueeze(0).to(engine.device)
-        with torch.no_grad():
-            embedding_tensor = engine.model(tensor)
-        embedding = embedding_tensor.squeeze(0).cpu().numpy()
+        raw_bgr_list = []
+        quality_results = []
+        for i, uf in enumerate(upload_files):
+            b_data = await uf.read()
+            bgr = prepare_muzzle_crop(bytes_to_cv2(b_data))
+            q_res = quality_gate.assess_quality(bgr)
+            q_score = float(q_res.get("overall_score", 0.0))
 
-        bio_hash = BiometricHasher.generate_sha256_hash(embedding)
-        thumbnail = cv2_to_base64(cv2.resize(bgr_img, (200, 200)))
+            # Strict 80% Quality Gate Enforcement
+            if q_score < 80.0:
+                return JSONResponse(status_code=400, content={
+                    "status": "quality_rejected",
+                    "message": f"Biometric Quality Rejected! Shot {i+1} scored {q_score:.1f}% (Minimum 80.0% required). Please retake a clear, focused photo.",
+                    "failed_slot": i + 1,
+                    "scores": [float(quality_gate.assess_quality(prepare_muzzle_crop(bytes_to_cv2(b))).get("overall_score", 0)) for b in []],
+                    "min_required": 80.0
+                })
 
-        # 3. Grad-CAM Attention Heatmap
-        xai_res = xai_engine.generate_attention_heatmap(bgr_img)
+            raw_bgr_list.append(bgr)
+            quality_results.append(q_res)
+
+        # Extract 512-D embeddings for all shots
+        embeddings = []
+        thumbnails = []
+        for bgr in raw_bgr_list:
+            emb = engine.extract_embedding(bgr)
+            embeddings.append(emb)
+            thumbnails.append(cv2_to_base64(cv2.resize(bgr, (200, 200))))
+
+        # If multiple shots provided, verify internal consistency (must belong to same animal)
+        if len(embeddings) >= 2:
+            pairwise_sims = []
+            for i in range(len(embeddings)):
+                for j in range(i + 1, len(embeddings)):
+                    sim = float(np.dot(embeddings[i], embeddings[j]))
+                    pairwise_sims.append(sim)
+            min_pair_sim = min(pairwise_sims)
+            if min_pair_sim < 0.38:
+                return JSONResponse(status_code=400, content={
+                    "status": "inconsistent_muzzles",
+                    "message": f"Biometric Inconsistency Warning: The uploaded photos do not appear to be from the same animal (Pairwise match: {min_pair_sim:.3f} < 0.38). Please ensure all shots belong to the same cattle.",
+                    "min_similarity": round(min_pair_sim, 3)
+                })
+
+        # Calculate Normalized Centroid Master Template Vector
+        master_emb = np.mean(embeddings, axis=0)
+        master_emb = master_emb / np.linalg.norm(master_emb)
+
+        # Cryptographic Biometric SHA-256 Hash
+        bio_hash = BiometricHasher.generate_sha256_hash(master_emb)
+        primary_bgr = raw_bgr_list[0]
+        primary_thumb = thumbnails[0]
+
+        # Grad-CAM Attention Heatmap for primary muzzle shot
+        xai_res = xai_engine.generate_attention_heatmap(primary_bgr)
         heatmap_thumb = cv2_to_base64(cv2.resize(xai_res["overlay_bgr"], (200, 200)))
 
-        # 4. FAISS Vector Search for Duplicates
-        search_res = vector_index.search(embedding, top_k=1, threshold=threshold)
+        # FAISS Vector Search for Duplicates against existing database
+        search_res = vector_index.search(master_emb, top_k=1, threshold=threshold)
         best_candidate = search_res["best_match"]
         is_duplicate = (best_candidate is not None and best_candidate["is_match"]) and (vector_index.count() > 0)
+
+        avg_quality = round(float(np.mean([q.get("overall_score", 0.0) for q in quality_results])), 1)
 
         if is_duplicate:
             # Animal already registered!
@@ -397,14 +478,8 @@ async def smart_register(
             matched_cow = REGISTRY.get(best_candidate["tag_id"], {})
             print(f"[FAISS DUPLICATE REJECTED] '{name}' matches '{best_candidate['name']}' (sim={sim_score:.4f}, latency={search_res['latency_ms']}ms)")
 
-            # Create XAI Pairwise Alignment Visualizer between new upload and existing record
-            matched_thumb_bgr = None
-            if "raw_crop" in matched_cow:
-                matched_thumb_bgr = matched_cow["raw_crop"]
-            else:
-                matched_thumb_bgr = bgr_img # fallback
-            
-            xai_corr = xai_engine.generate_pairwise_correspondence(bgr_img, matched_thumb_bgr, sim_score, True)
+            matched_thumb_bgr = matched_cow.get("raw_crop", primary_bgr)
+            xai_corr = xai_engine.generate_pairwise_correspondence(primary_bgr, matched_thumb_bgr, sim_score, True)
             corr_b64 = cv2_to_base64(xai_corr)
 
             return {
@@ -414,7 +489,9 @@ async def smart_register(
                 "confidence": conf,
                 "angular_distance_deg": angular_dist,
                 "threshold": threshold,
-                "quality_gate": q_result,
+                "shots_count": len(upload_files),
+                "quality_scores": [round(float(q.get("overall_score", 0)), 1) for q in quality_results],
+                "average_quality": avg_quality,
                 "vector_search": {
                     "engine": search_res["engine"],
                     "latency_ms": search_res["latency_ms"],
@@ -425,7 +502,8 @@ async def smart_register(
                     "correspondence_canvas": corr_b64
                 },
                 "uploaded_name": name.strip(),
-                "uploaded_thumbnail": thumbnail,
+                "uploaded_thumbnail": primary_thumb,
+                "gallery": thumbnails,
                 "matched_animal": {
                     "tag_id": best_candidate["tag_id"],
                     "name": best_candidate["name"],
@@ -448,29 +526,34 @@ async def smart_register(
                 "tag_id": final_tag,
                 "name": name.strip(),
                 "breed": breed.strip() if breed else "Cattle",
-                "embedding": [float(x) for x in embedding],
+                "embedding": [float(x) for x in master_emb],
                 "hash": bio_hash,
-                "thumbnail": thumbnail,
-                "raw_crop": cv2.resize(bgr_img, (240, 240)),
+                "thumbnail": primary_thumb,
+                "gallery": thumbnails,
+                "raw_crop": cv2.resize(primary_bgr, (240, 240)),
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "quality_score": q_result["overall_score"]
+                "quality_score": avg_quality,
+                "shots_enrolled": len(upload_files)
             }
 
-            # Add to FAISS Vector Index & Registry
-            vector_index.add(final_tag, embedding, cow_record)
+            # Add to FAISS Vector Index & In-memory Registry
+            vector_index.add(final_tag, master_emb, cow_record)
             REGISTRY[final_tag] = cow_record
 
-            print(f"[FAISS NEW ENROLLED] '{name}' registered as '{final_tag}' (Latency: {search_res['latency_ms']}ms)")
+            print(f"[FAISS NEW ENROLLED] '{name}' registered as '{final_tag}' with {len(upload_files)} shots (Latency: {search_res['latency_ms']}ms)")
 
             return {
                 "status": "new_registered",
-                "message": f"New animal '{name.strip()}' registered successfully!",
+                "message": f"New animal '{name.strip()}' enrolled with {len(upload_files)}-Shot Master Template!",
                 "tag_id": final_tag,
                 "name": name.strip(),
                 "breed": breed.strip() if breed else "Cattle",
                 "biometric_hash": bio_hash,
-                "thumbnail": thumbnail,
-                "quality_gate": q_result,
+                "thumbnail": primary_thumb,
+                "gallery": thumbnails,
+                "shots_count": len(upload_files),
+                "quality_scores": [round(float(q.get("overall_score", 0)), 1) for q in quality_results],
+                "average_quality": avg_quality,
                 "vector_search": {
                     "engine": search_res["engine"],
                     "latency_ms": search_res["latency_ms"],
@@ -480,7 +563,7 @@ async def smart_register(
                     "heatmap_thumbnail": heatmap_thumb
                 },
                 "total_registered": vector_index.count(),
-                "embedding_sample": [round(float(x), 4) for x in embedding[:12]],
+                "embedding_sample": [round(float(x), 4) for x in master_emb[:12]],
                 "closest_existing": {
                     "name": best_candidate["name"],
                     "similarity": round(best_candidate["similarity"], 4)

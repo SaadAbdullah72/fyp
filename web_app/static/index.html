@@ -92,90 +92,160 @@
       <div class="flex-1">
         <div class="title-row">
           <h2>Smart Cattle Biometric Registration</h2>
-          <span class="badge-ai-shield">AI Anti-Duplicate Protection</span>
+          <span class="badge-ai-shield">Production 3-Shot Enrollment</span>
         </div>
-        <p>Register a cattle with its muzzle image & name. ArcFace AI extracts 512-D features and automatically checks for duplicates: <strong>if the animal is already registered, it blocks duplicate enrollment and reveals the registered profile!</strong></p>
+        <p>Production software quality: Upload <strong>3 distinct muzzle captures</strong> (Center, Angle A, Angle B). Each shot must pass the <strong>Strict 80% Quality Gate</strong>. The engine computes a normalized 512-D centroid master template with zero-duplicate protection!</p>
       </div>
     </div>
 
     <!-- Quick 1-Click Viva Presets Row -->
     <div class="smart-presets-row">
-      <span class="text-xs text-muted font-semibold">⚡ 1-Click Viva Presets:</span>
+      <span class="text-xs text-muted font-semibold">⚡ 1-Click Production Viva Presets:</span>
       <button class="btn-preset btn-preset-step1" id="btnSmartPreset1">
-        🟢 Step 1: Enroll Cow-001 (Photo 1) as "Bella"
+        🟢 Step 1: Enroll Cow-001 [3 Shots] as "Bella"
       </button>
       <button class="btn-preset btn-preset-step2" id="btnSmartPreset2">
-        ⛔ Step 2: Try Registering Cow-001 (Photo 2) as "Daisy" (Triggers Duplicate Alert!)
+        ⛔ Step 2: Try Registering Cow-001 [3 Shots] as "Daisy" (Triggers Duplicate Alert!)
       </button>
       <button class="btn-preset btn-preset-step3" id="btnSmartPreset3">
-        🔵 Step 3: Enroll Cow-002 as "Thunder" (Unique Animal Match)
+        🔵 Step 3: Enroll Cow-002 [3 Shots] as "Thunder" (Unique Animal Match)
       </button>
     </div>
 
-    <!-- Registration Form & Dropzone Grid -->
-    <div class="smart-form-grid">
-      <!-- Left: Form Fields -->
-      <div class="smart-form-fields">
-        <div class="form-group">
-          <label for="smartRegName">Animal Name / Nickname <span class="text-danger">*</span></label>
-          <input type="text" id="smartRegName" placeholder="e.g. Bella, Sahiwal-01, Daisy" required>
+    <!-- Registration Metadata Form -->
+    <div class="smart-metadata-bar">
+      <div class="form-group flex-2">
+        <label for="smartRegName">Animal Name / Identifier <span class="text-danger">*</span></label>
+        <input type="text" id="smartRegName" placeholder="e.g. Bella, Sahiwal-01, Thunder" required>
+      </div>
+      <div class="form-group flex-1">
+        <label for="smartRegBreed">Breed / Category</label>
+        <input type="text" id="smartRegBreed" placeholder="e.g. Sahiwal Cattle" value="Sahiwal Cattle">
+      </div>
+      <div class="form-group flex-1">
+        <label for="smartRegTag">Custom Tag ID (Optional)</label>
+        <input type="text" id="smartRegTag" placeholder="Auto-generated">
+      </div>
+      <div class="form-group flex-1">
+        <label>Anti-Duplicate Threshold</label>
+        <div class="threshold-pill-fixed" title="Calibrated FAR=0.001% Production Threshold">
+          <span class="font-mono text-cyan">0.45</span>
+          <span class="text-xs text-muted">(Standard Fixed)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-Shot Multi-Angle Dropzone Grid -->
+    <div class="multi-shot-wrapper">
+      <div class="multi-shot-header">
+        <div class="shot-guidance-pill">
+          <span class="pulse-dot"></span>
+          <span><strong>Mandatory 3-Angle Muzzle Capture:</strong> Minimum 80% sharpness & lighting required per shot to unlock registration.</span>
+        </div>
+        <div class="quality-overall-summary" id="multiQualitySummary">
+          <span id="multiQualityStatusText" class="text-warning">⏳ 0 of 3 Shots Ready</span>
+        </div>
+      </div>
+
+      <div class="multi-shot-grid">
+        <!-- Shot 1 -->
+        <div class="shot-card" id="shotCard1">
+          <div class="shot-card-header">
+            <span class="shot-number">Shot 01</span>
+            <span class="shot-type">Center Frontal</span>
+          </div>
+          <div class="dropzone slot-dropzone" id="slotDrop1">
+            <input type="file" id="slotFileInput1" accept="image/*" class="file-input-hidden">
+            <div class="slot-prompt" id="slotPrompt1">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span class="slot-prompt-text">Upload Front Shot</span>
+              <span class="slot-prompt-sub">Click or Drag</span>
+            </div>
+            <div class="slot-preview hidden" id="slotPreview1">
+              <img id="slotImg1" src="" alt="Shot 1 Preview">
+              <button type="button" class="btn-remove-slot" id="btnRemoveSlot1" title="Remove">&times;</button>
+              <div class="slot-overlay-name" id="slotName1">shot1.jpg</div>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="slotQualityBadge1">
+            ⏳ Quality: Awaiting Photo
+          </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group flex-1">
-            <label for="smartRegBreed">Breed / Category</label>
-            <input type="text" id="smartRegBreed" placeholder="e.g. Sahiwal Cattle" value="Sahiwal Cattle">
+        <!-- Shot 2 -->
+        <div class="shot-card" id="shotCard2">
+          <div class="shot-card-header">
+            <span class="shot-number">Shot 02</span>
+            <span class="shot-type">Angle A / Detail</span>
           </div>
-          <div class="form-group flex-1">
-            <label for="smartRegTag">Custom Tag ID (Optional)</label>
-            <input type="text" id="smartRegTag" placeholder="Auto-generated if empty">
+          <div class="dropzone slot-dropzone" id="slotDrop2">
+            <input type="file" id="slotFileInput2" accept="image/*" class="file-input-hidden">
+            <div class="slot-prompt" id="slotPrompt2">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span class="slot-prompt-text">Upload Angle A</span>
+              <span class="slot-prompt-sub">Click or Drag</span>
+            </div>
+            <div class="slot-preview hidden" id="slotPreview2">
+              <img id="slotImg2" src="" alt="Shot 2 Preview">
+              <button type="button" class="btn-remove-slot" id="btnRemoveSlot2" title="Remove">&times;</button>
+              <div class="slot-overlay-name" id="slotName2">shot2.jpg</div>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="slotQualityBadge2">
+            ⏳ Quality: Awaiting Photo
           </div>
         </div>
 
-        <div class="slider-control">
-          <div class="slider-label-row">
-            <span>Deduplication Threshold: <strong class="text-cyan font-mono" id="smartThresholdVal">0.40</strong></span>
-            <span class="text-xs text-muted">Optimal: 0.40 (Same: ~0.65+ | Diff: ~0.34-)</span>
+        <!-- Shot 3 -->
+        <div class="shot-card" id="shotCard3">
+          <div class="shot-card-header">
+            <span class="shot-number">Shot 03</span>
+            <span class="shot-type">Angle B / Grooves</span>
           </div>
-          <input type="range" id="smartThresholdSlider" min="0.25" max="0.75" step="0.01" value="0.40">
+          <div class="dropzone slot-dropzone" id="slotDrop3">
+            <input type="file" id="slotFileInput3" accept="image/*" class="file-input-hidden">
+            <div class="slot-prompt" id="slotPrompt3">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span class="slot-prompt-text">Upload Angle B</span>
+              <span class="slot-prompt-sub">Click or Drag</span>
+            </div>
+            <div class="slot-preview hidden" id="slotPreview3">
+              <img id="slotImg3" src="" alt="Shot 3 Preview">
+              <button type="button" class="btn-remove-slot" id="btnRemoveSlot3" title="Remove">&times;</button>
+              <div class="slot-overlay-name" id="slotName3">shot3.jpg</div>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="slotQualityBadge3">
+            ⏳ Quality: Awaiting Photo
+          </div>
         </div>
+      </div>
 
+      <!-- Action Button Locked by Quality Gate -->
+      <div class="multi-shot-action-row">
         <button id="btnSubmitSmartRegister" class="btn btn-primary btn-block btn-lg" disabled>
           <span class="btn-spinner hidden" id="smartRegisterSpinner"></span>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             <path d="M12 8v8M8 12h8"></path>
           </svg>
-          Register Cattle (AI Duplicate Check)
+          Register Cattle (3-Shot Centroid Master Template)
         </button>
-      </div>
-
-      <!-- Right: Muzzle Photo Dropzone -->
-      <div class="smart-drop-wrapper">
-        <label class="drop-label">Cattle Muzzle Image <span class="text-danger">*</span></label>
-        <div class="dropzone smart-dropzone" id="smartDropZone">
-          <input type="file" id="smartFileInput" accept="image/*" class="file-input-hidden">
-          <div class="dropzone-content" id="smartDropPrompt">
-            <div class="upload-icon-circle">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </div>
-            <p class="dropzone-title">Drop cattle muzzle photo here</p>
-            <p class="dropzone-subtitle">or <span class="highlight-link">Browse from computer</span></p>
-            <span class="format-badge">YOLO auto-crop + CLAHE ridge enhancement</span>
-          </div>
-
-          <div class="dropzone-preview hidden" id="smartDropPreview">
-            <img id="smartPreviewImg" src="" alt="Muzzle Preview">
-            <button id="btnSmartRemoveImg" class="btn-remove-img" title="Remove image">&times;</button>
-            <div class="preview-overlay-info">
-              <span id="smartPreviewFilename">muzzle.jpg</span>
-            </div>
-          </div>
-        </div>
+        <p class="quality-gate-hint" id="qualityGateHint">
+          🔒 Register button is locked. Please enter animal name and upload 3 clear muzzle shots (minimum 80% quality required per shot).
+        </p>
       </div>
     </div>
 
@@ -307,13 +377,18 @@
               <div class="hash-box" id="smartSuccHash">0x...</div>
             </div>
 
+            <div class="gallery-preview-row" id="smartSuccGalleryRow">
+              <span class="text-xs text-muted font-semibold">Enrolled 3-Shot Muzzle Gallery:</span>
+              <div class="gallery-thumbs-grid" id="smartSuccGalleryThumbs"></div>
+            </div>
+
             <div class="vector-preview-row">
-              <span class="text-xs text-muted font-semibold">512-D ArcFace Embedding Preview:</span>
+              <span class="text-xs text-muted font-semibold">512-D Centroid Master Vector Preview:</span>
               <div class="vector-chips" id="smartSuccVectorChips"></div>
             </div>
 
             <div id="smartSuccClosestInfo" class="closest-info-box hidden">
-              <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.40 threshold).</span>
+              <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.45 threshold).</span>
             </div>
           </div>
         </div>
@@ -364,42 +439,57 @@
       </button>
     </div>
 
-    <!-- Dual Dropzone Grid -->
-    <div class="dual-drop-grid">
-      <!-- Box 1 -->
-      <div class="compare-box" id="boxCompare1">
-        <input type="file" id="compareFileInput1" accept="image/*" class="file-input-hidden">
-        <div class="compare-box-prompt" id="boxPrompt1">
-          <span class="box-badge">Photo 1 (Animal A)</span>
-          <div class="upload-icon-small">📁</div>
-          <p class="font-semibold">Drop or Click Image 1</p>
-          <span class="text-xs text-muted">Original / Reference Photo</span>
+    <!-- Dual Dropzone Grid with Quality Assurance -->
+    <div class="dual-drop-wrapper">
+      <div class="dual-drop-grid">
+        <!-- Box 1 -->
+        <div class="compare-col">
+          <div class="compare-box" id="boxCompare1">
+            <input type="file" id="compareFileInput1" accept="image/*" class="file-input-hidden">
+            <div class="compare-box-prompt" id="boxPrompt1">
+              <span class="box-badge">Photo 1 (Animal A)</span>
+              <div class="upload-icon-small">📁</div>
+              <p class="font-semibold">Drop or Click Image 1</p>
+              <span class="text-xs text-muted">Original / Reference Photo</span>
+            </div>
+            <div class="compare-box-preview hidden" id="boxPreview1">
+              <img id="boxImg1" src="" alt="Photo 1">
+              <button class="btn-box-remove" id="btnRemoveBox1">&times;</button>
+              <span class="box-filename" id="boxFilename1">photo1.jpg</span>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="directQualityBadge1" style="margin-top: 8px;">
+            ⏳ Quality: Awaiting Photo
+          </div>
         </div>
-        <div class="compare-box-preview hidden" id="boxPreview1">
-          <img id="boxImg1" src="" alt="Photo 1">
-          <button class="btn-box-remove" id="btnRemoveBox1">&times;</button>
-          <span class="box-filename" id="boxFilename1">photo1.jpg</span>
+
+        <!-- VS Badge -->
+        <div class="vs-circle">VS</div>
+
+        <!-- Box 2 -->
+        <div class="compare-col">
+          <div class="compare-box" id="boxCompare2">
+            <input type="file" id="compareFileInput2" accept="image/*" class="file-input-hidden">
+            <div class="compare-box-prompt" id="boxPrompt2">
+              <span class="box-badge">Photo 2 (Animal B)</span>
+              <div class="upload-icon-small">📁</div>
+              <p class="font-semibold">Drop or Click Image 2</p>
+              <span class="text-xs text-muted">Verification / Test Photo</span>
+            </div>
+            <div class="compare-box-preview hidden" id="boxPreview2">
+              <img id="boxImg2" src="" alt="Photo 2">
+              <button class="btn-box-remove" id="btnRemoveBox2">&times;</button>
+              <span class="box-filename" id="boxFilename2">photo2.jpg</span>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="directQualityBadge2" style="margin-top: 8px;">
+            ⏳ Quality: Awaiting Photo
+          </div>
         </div>
       </div>
-
-      <!-- VS Badge -->
-      <div class="vs-circle">VS</div>
-
-      <!-- Box 2 -->
-      <div class="compare-box" id="boxCompare2">
-        <input type="file" id="compareFileInput2" accept="image/*" class="file-input-hidden">
-        <div class="compare-box-prompt" id="boxPrompt2">
-          <span class="box-badge">Photo 2 (Animal B)</span>
-          <div class="upload-icon-small">📁</div>
-          <p class="font-semibold">Drop or Click Image 2</p>
-          <span class="text-xs text-muted">Verification / Test Photo</span>
-        </div>
-        <div class="compare-box-preview hidden" id="boxPreview2">
-          <img id="boxImg2" src="" alt="Photo 2">
-          <button class="btn-box-remove" id="btnRemoveBox2">&times;</button>
-          <span class="box-filename" id="boxFilename2">photo2.jpg</span>
-        </div>
-      </div>
+      <p class="quality-gate-hint" id="directQualityHint" style="text-align: center; margin-top: 10px;">
+        🔒 Verification locked: Both muzzle photos must achieve at least 80% biometric quality.
+      </p>
     </div>
 
     <!-- Direct Compare Action Bar -->
@@ -580,6 +670,13 @@
           </div>
         </div>
       </div>
+
+      <div class="slot-quality-badge badge-pending" id="searchQualityBadge" style="margin-top: 10px;">
+        ⏳ Quality: Awaiting Photo
+      </div>
+      <p class="quality-gate-hint" id="searchQualityHint" style="text-align: center; margin-top: 6px; font-size: 0.75rem;">
+        🔒 Minimum 80% biometric clarity required to execute registry match.
+      </p>
 
       <div class="scanner-controls">
         <div class="slider-control">

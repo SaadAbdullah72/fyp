@@ -91,22 +91,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   const slotPassed = [false, false, false];
 
   // -------------------------------------------------------------
-  // Mode 2: Direct 1-to-1 Comparison Elements
+  // Mode 2: Multi-Shot Comparison & Duplicate Check Elements
   // -------------------------------------------------------------
   const boxCompare1 = document.getElementById('boxCompare1');
   const boxCompare2 = document.getElementById('boxCompare2');
+  const boxCompare3 = document.getElementById('boxCompare3');
   const compareFileInput1 = document.getElementById('compareFileInput1');
   const compareFileInput2 = document.getElementById('compareFileInput2');
+  const compareFileInput3 = document.getElementById('compareFileInput3');
   const boxPrompt1 = document.getElementById('boxPrompt1');
   const boxPrompt2 = document.getElementById('boxPrompt2');
+  const boxPrompt3 = document.getElementById('boxPrompt3');
   const boxPreview1 = document.getElementById('boxPreview1');
   const boxPreview2 = document.getElementById('boxPreview2');
+  const boxPreview3 = document.getElementById('boxPreview3');
   const boxImg1 = document.getElementById('boxImg1');
   const boxImg2 = document.getElementById('boxImg2');
+  const boxImg3 = document.getElementById('boxImg3');
   const boxFilename1 = document.getElementById('boxFilename1');
   const boxFilename2 = document.getElementById('boxFilename2');
+  const boxFilename3 = document.getElementById('boxFilename3');
   const btnRemoveBox1 = document.getElementById('btnRemoveBox1');
   const btnRemoveBox2 = document.getElementById('btnRemoveBox2');
+  const btnRemoveBox3 = document.getElementById('btnRemoveBox3');
 
   const btnPresetSame = document.getElementById('btnPresetSame');
   const btnPresetDiff = document.getElementById('btnPresetDiff');
@@ -120,20 +127,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   const directVerdictIcon = document.getElementById('directVerdictIcon');
   const directVerdictTitle = document.getElementById('directVerdictTitle');
   const directVerdictDesc = document.getElementById('directVerdictDesc');
+
+  const directDuplicateBanner = document.getElementById('directDuplicateBanner');
+  const directDuplicateIcon = document.getElementById('directDuplicateIcon');
+  const directDuplicateTitle = document.getElementById('directDuplicateTitle');
+  const directDuplicateDesc = document.getElementById('directDuplicateDesc');
+  const directDuplicatePill = document.getElementById('directDuplicatePill');
+  const directDuplicateThumb = document.getElementById('directDuplicateThumb');
+  const directDuplicateName = document.getElementById('directDuplicateName');
+  const directDuplicateTag = document.getElementById('directDuplicateTag');
+  const directDuplicateDate = document.getElementById('directDuplicateDate');
+
+  const directPairwiseCard = document.getElementById('directPairwiseCard');
+  const directPairwiseChips = document.getElementById('directPairwiseChips');
+
   const directMetricCosine = document.getElementById('directMetricCosine');
   const directMetricBar = document.getElementById('directMetricBar');
   const directMetricConfidence = document.getElementById('directMetricConfidence');
   const directMetricAngular = document.getElementById('directMetricAngular');
   const directHash1 = document.getElementById('directHash1');
   const directHash2 = document.getElementById('directHash2');
+  const directHash3 = document.getElementById('directHash3');
+  const directHash3Item = document.getElementById('directHash3Item');
+
   const directQualityBadge1 = document.getElementById('directQualityBadge1');
   const directQualityBadge2 = document.getElementById('directQualityBadge2');
+  const directQualityBadge3 = document.getElementById('directQualityBadge3');
   const directQualityHint = document.getElementById('directQualityHint');
+
+  const directQ1Card = document.getElementById('directQ1Card');
+  const directQ2Card = document.getElementById('directQ2Card');
+  const directQ3Card = document.getElementById('directQ3Card');
+  const directQ1Score = document.getElementById('directQ1Score');
+  const directQ1Live = document.getElementById('directQ1Live');
+  const directQ2Score = document.getElementById('directQ2Score');
+  const directQ2Live = document.getElementById('directQ2Live');
+  const directQ3Score = document.getElementById('directQ3Score');
+  const directQ3Live = document.getElementById('directQ3Live');
+
+  const directHeatCol3 = document.getElementById('directHeatCol3');
+  const directRidgeCol3 = document.getElementById('directRidgeCol3');
+  const directHeatImg3 = document.getElementById('directHeatImg3');
+  const directRidgeImg3 = document.getElementById('directRidgeImg3');
 
   let directFile1 = null;
   let directFile2 = null;
+  let directFile3 = null;
   let directPass1 = false;
   let directPass2 = false;
+  let directPass3 = false;
 
   // -------------------------------------------------------------
   // Mode 3: Search & Verify Elements
@@ -255,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (onComplete) onComplete(true, score);
         } else {
           badgeEl.className = 'slot-quality-badge badge-rejected';
-          badgeEl.innerHTML = `❌ Quality: ${score}% (REJECTED <80%)`;
+          badgeEl.innerHTML = `❌ Quality: ${score}% (REJECTED <50%)`;
           if (onComplete) onComplete(false, score);
         }
       } else {
@@ -360,7 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (hasName) {
         btnSubmitSmartRegister.disabled = false;
-        qualityGateHint.textContent = '✅ All 3 biometric captures validated (Min 80% met). Ready to enroll!';
+        qualityGateHint.textContent = '✅ All 3 biometric captures validated (Min 50% met). Ready to enroll!';
         qualityGateHint.style.color = '#34d399';
       } else {
         btnSubmitSmartRegister.disabled = true;
@@ -369,9 +411,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else {
       multiQualityStatusText.className = 'text-warning font-semibold';
-      multiQualityStatusText.textContent = `⏳ ${readyCount} of 3 Shots Passed 80% Gate`;
+      multiQualityStatusText.textContent = `⏳ ${readyCount} of 3 Shots Passed 50% Gate`;
       btnSubmitSmartRegister.disabled = true;
-      qualityGateHint.textContent = '🔒 Register button is locked. Upload 3 clear muzzle shots (minimum 80% quality required per shot).';
+      qualityGateHint.textContent = '🔒 Register button is locked. Upload 3 clear muzzle shots (minimum 50% quality required per shot).';
       qualityGateHint.style.color = '#94a3b8';
     }
   }
@@ -482,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         smartSuccQualityScore.textContent = `${data.average_quality || 92}% (Avg)`;
       }
       if (smartSuccLiveness) {
-        smartSuccLiveness.textContent = '✅ Authentic Live Animal (Passed 80% Gate)';
+        smartSuccLiveness.textContent = '✅ Authentic Live Animal (Passed 50% Gate)';
       }
       if (smartSuccFaissLatency && data.vector_search) {
         smartSuccFaissLatency.textContent = `⚡ ${data.vector_search.latency_ms}ms (${data.vector_search.engine})`;
@@ -585,12 +627,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   // =============================================================
-  // 2. DIRECT 1-TO-1 COMPARISON LOGIC
+  // =============================================================
+  // 2. MULTI-SHOT COMPARISON & DUPLICATE CHECK LOGIC (MODE 2)
   // =============================================================
   directThresholdSlider.addEventListener('input', (e) => {
     directThresholdVal.textContent = parseFloat(e.target.value).toFixed(2);
   });
 
+  // Box 1
   boxCompare1.addEventListener('click', (e) => {
     if (e.target !== btnRemoveBox1) compareFileInput1.click();
   });
@@ -603,6 +647,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearDirectBox(1);
   });
 
+  // Box 2
   boxCompare2.addEventListener('click', (e) => {
     if (e.target !== btnRemoveBox2) compareFileInput2.click();
   });
@@ -615,7 +660,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearDirectBox(2);
   });
 
+  // Box 3 (Optional 3rd Angle)
+  boxCompare3.addEventListener('click', (e) => {
+    if (e.target !== btnRemoveBox3) compareFileInput3.click();
+  });
+  setupBoxDrop(boxCompare3, (file) => setDirectFile(3, file));
+  compareFileInput3.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) setDirectFile(3, e.target.files[0]);
+  });
+  btnRemoveBox3.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearDirectBox(3);
+  });
+
   function setupBoxDrop(boxElement, fileCallback) {
+    if (!boxElement) return;
     ['dragenter', 'dragover'].forEach(n => {
       boxElement.addEventListener(n, (e) => { e.preventDefault(); boxElement.classList.add('dragover'); });
     });
@@ -646,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           directPass1 = passed;
           checkDirectReady();
         });
-      } else {
+      } else if (boxNum === 2) {
         directFile2 = file;
         boxImg2.src = e.target.result;
         boxFilename2.textContent = file.name;
@@ -654,6 +713,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         boxPreview2.classList.remove('hidden');
         runQualityAudit(file, directQualityBadge2, (passed, score) => {
           directPass2 = passed;
+          checkDirectReady();
+        });
+      } else if (boxNum === 3) {
+        directFile3 = file;
+        boxImg3.src = e.target.result;
+        boxFilename3.textContent = file.name;
+        boxPrompt3.classList.add('hidden');
+        boxPreview3.classList.remove('hidden');
+        runQualityAudit(file, directQualityBadge3, (passed, score) => {
+          directPass3 = passed;
           checkDirectReady();
         });
       }
@@ -673,7 +742,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         directQualityBadge1.className = 'slot-quality-badge badge-pending';
         directQualityBadge1.innerHTML = '⏳ Quality: Awaiting Photo';
       }
-    } else {
+    } else if (boxNum === 2) {
       directFile2 = null;
       directPass2 = false;
       compareFileInput2.value = '';
@@ -683,51 +752,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         directQualityBadge2.className = 'slot-quality-badge badge-pending';
         directQualityBadge2.innerHTML = '⏳ Quality: Awaiting Photo';
       }
+    } else if (boxNum === 3) {
+      directFile3 = null;
+      directPass3 = false;
+      compareFileInput3.value = '';
+      boxPrompt3.classList.remove('hidden');
+      boxPreview3.classList.add('hidden');
+      if (directQualityBadge3) {
+        directQualityBadge3.className = 'slot-quality-badge badge-pending';
+        directQualityBadge3.innerHTML = '⏳ Quality: Optional Photo';
+      }
     }
     checkDirectReady();
     directResultsCard.classList.add('hidden');
   }
 
   function checkDirectReady() {
-    const ready = directFile1 && directFile2 && directPass1 && directPass2;
+    const hasTwo = directFile1 && directFile2 && directPass1 && directPass2;
+    const box3Active = !!directFile3;
+    const box3Ok = !box3Active || directPass3;
+    const ready = hasTwo && box3Ok;
+
     btnRunDirectCompare.disabled = !ready;
     if (directQualityHint) {
       if (directFile1 && directFile2) {
-        if (directPass1 && directPass2) {
-          directQualityHint.textContent = '✅ Both muzzle photos passed the 80% quality gate. Ready to verify match!';
+        if (ready) {
+          if (box3Active) {
+            directQualityHint.textContent = '✅ All 3 muzzle captures passed the 50% quality gate. Ready to verify & check duplicate!';
+          } else {
+            directQualityHint.textContent = '✅ Both muzzle photos passed the 50% quality gate (Photo 3 optional). Ready to verify!';
+          }
           directQualityHint.style.color = '#34d399';
         } else {
-          directQualityHint.textContent = '❌ Quality Check Failed: Both photos must achieve at least 80% clarity.';
+          directQualityHint.textContent = '❌ Quality Check Failed: All uploaded photos must achieve at least 50% clarity.';
           directQualityHint.style.color = '#f87171';
         }
       } else {
-        directQualityHint.textContent = '🔒 Verification locked: Upload two muzzle photos (minimum 80% quality required per photo).';
+        directQualityHint.textContent = '🔒 Verification locked: Upload at least 2 muzzle photos (minimum 50% quality required per photo).';
         directQualityHint.style.color = '#94a3b8';
       }
     }
   }
 
   btnPresetSame.addEventListener('click', async () => {
-    showToast('⚡ Loading Cattle-001 (Photo 1 vs Photo 2)...');
+    showToast('⚡ Loading Cattle-001 (3 Shots) for Cross-Consistency & Duplicate Check...');
     try {
-      const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Photo1.jpg');
-      const f2 = await fetchFileFromSample('cattle-001/cattle-001_3_jpg_muzzle_0.jpg', 'Cattle001_Photo2.jpg');
+      const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Shot1.jpg');
+      const f2 = await fetchFileFromSample('cattle-001/cattle-001_3_jpg_muzzle_0.jpg', 'Cattle001_Shot2.jpg');
+      const f3 = await fetchFileFromSample('cattle-001/cattle-001_4_jpg_muzzle_0.jpg', 'Cattle001_Shot3.jpg');
       setDirectFile(1, f1);
       setDirectFile(2, f2);
-      setTimeout(() => btnRunDirectCompare.click(), 400);
+      setDirectFile(3, f3);
+      setTimeout(() => {
+        if (!btnRunDirectCompare.disabled) btnRunDirectCompare.click();
+      }, 600);
     } catch (err) {
       showToast(`❌ Error: ${err.message}`);
     }
   });
 
   btnPresetDiff.addEventListener('click', async () => {
-    showToast('⚡ Loading Cattle-001 vs Cattle-002...');
+    showToast('⚡ Loading Cattle-001 vs Cattle-002 (Different Animals Mismatch)...');
     try {
+      clearDirectBox(3);
       const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Photo1.jpg');
       const f2 = await fetchFileFromSample('cattle-002/cattle-002_1_jpg_muzzle_0.jpg', 'Cattle002_Photo1.jpg');
       setDirectFile(1, f1);
       setDirectFile(2, f2);
-      setTimeout(() => btnRunDirectCompare.click(), 400);
+      setTimeout(() => {
+        if (!btnRunDirectCompare.disabled) btnRunDirectCompare.click();
+      }, 500);
     } catch (err) {
       showToast(`❌ Error: ${err.message}`);
     }
@@ -742,6 +836,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formData = new FormData();
     formData.append('file1', directFile1);
     formData.append('file2', directFile2);
+    if (directFile3) {
+      formData.append('file3', directFile3);
+    }
     const threshold = parseFloat(directThresholdSlider.value);
 
     try {
@@ -750,7 +847,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         body: formData
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Comparison failed');
+      if (!res.ok) throw new Error(data.detail || data.message || 'Comparison failed');
 
       renderDirectResults(data);
     } catch (err) {
@@ -764,48 +861,94 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderDirectResults(data) {
     directResultsCard.classList.remove('hidden');
 
-    directMetricCosine.textContent = data.cosine_similarity.toFixed(4);
-    const barWidth = Math.max(0, Math.min(100, (data.cosine_similarity + 1) / 2 * 100));
+    const primarySim = data.primary_similarity !== undefined ? data.primary_similarity : (data.cosine_similarity || 0);
+    directMetricCosine.textContent = primarySim.toFixed(4);
+    const barWidth = Math.max(0, Math.min(100, (primarySim + 1) / 2 * 100));
     directMetricBar.style.width = `${barWidth}%`;
     directMetricConfidence.textContent = data.confidence_percent;
     directMetricAngular.textContent = `${data.angular_distance_deg}°`;
 
-    directHash1.textContent = data.image1.hash;
-    directHash2.textContent = data.image2.hash;
-
+    // Verdict Banner
     if (data.is_match) {
       directVerdictBanner.className = 'verdict-banner banner-match';
       directVerdictIcon.textContent = '✅';
       directVerdictTitle.textContent = 'MATCH VERIFIED: SAME ANIMAL';
-      directVerdictDesc.textContent = `Both photographs have high biometric correlation (Similarity: ${data.cosine_similarity.toFixed(4)} >= ${data.threshold}). They belong to the SAME cattle.`;
+      const shotsText = data.shots_count ? `${data.shots_count} muzzle captures` : 'Both photographs';
+      directVerdictDesc.textContent = `${shotsText} belong to the SAME cattle with high biometric correlation (Similarity: ${primarySim.toFixed(4)} >= ${data.threshold}).`;
       directMetricBar.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
       showToast('🎉 Biometric Match Verified: Same Animal!');
     } else {
       directVerdictBanner.className = 'verdict-banner banner-mismatch';
       directVerdictIcon.textContent = '❌';
       directVerdictTitle.textContent = 'MISMATCH: DIFFERENT ANIMALS';
-      directVerdictDesc.textContent = `Biometric ridge grooving patterns diverge (Similarity: ${data.cosine_similarity.toFixed(4)} < ${data.threshold}). These photos belong to DIFFERENT animals.`;
+      directVerdictDesc.textContent = `Biometric ridge patterns diverge (Similarity: ${primarySim.toFixed(4)} < ${data.threshold}). Captured photos belong to DIFFERENT animals.`;
       directMetricBar.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
       showToast('⚠️ Mismatch: Different Animals!');
     }
 
-    // Populate Quality Audits
-    if (data.quality_analysis) {
-      const q1 = data.quality_analysis.image1;
-      const q2 = data.quality_analysis.image2;
-      const directQ1Score = document.getElementById('directQ1Score');
-      const directQ1Live = document.getElementById('directQ1Live');
-      const directQ2Score = document.getElementById('directQ2Score');
-      const directQ2Live = document.getElementById('directQ2Live');
-
-      if (directQ1Score && q1) directQ1Score.textContent = `${q1.overall_score}%`;
-      if (directQ1Live && q1) directQ1Live.textContent = `${q1.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Live Animal' : '⚠️ Replay'} (Sharp: ${q1.sharpness_index})`;
+    // Duplicate Check Result
+    if (data.enrolled_duplicate) {
+      directDuplicateBanner.className = 'duplicate-check-banner';
+      directDuplicateBanner.classList.remove('hidden');
+      directDuplicateIcon.textContent = '⚠️';
+      directDuplicateTitle.textContent = 'ALREADY REGISTERED IN FARM REGISTRY (DUPLICATE DETECTED)';
+      directDuplicateDesc.textContent = `This cattle is already enrolled in the registry as "${data.enrolled_duplicate.name}" (Tag: ${data.enrolled_duplicate.tag_id}) with ${data.enrolled_duplicate.confidence}% confidence (Similarity: ${data.enrolled_duplicate.similarity}).`;
       
-      if (directQ2Score && q2) directQ2Score.textContent = `${q2.overall_score}%`;
-      if (directQ2Live && q2) directQ2Live.textContent = `${q2.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Live Animal' : '⚠️ Replay'} (Sharp: ${q2.sharpness_index})`;
+      if (data.enrolled_duplicate.thumbnail) {
+        directDuplicateThumb.src = data.enrolled_duplicate.thumbnail;
+      }
+      directDuplicateName.textContent = data.enrolled_duplicate.name;
+      directDuplicateTag.textContent = data.enrolled_duplicate.tag_id;
+      directDuplicateDate.textContent = data.enrolled_duplicate.registered_at ? `Enrolled: ${data.enrolled_duplicate.registered_at}` : '';
+      directDuplicatePill.classList.remove('hidden');
+    } else {
+      directDuplicateBanner.className = 'duplicate-check-banner duplicate-safe';
+      directDuplicateBanner.classList.remove('hidden');
+      directDuplicateIcon.textContent = '🛡️';
+      directDuplicateTitle.textContent = 'ZERO DUPLICATE CONFLICT: UNREGISTERED ANIMAL';
+      directDuplicateDesc.textContent = 'This muzzle pattern does not match any cattle currently registered in the farm database. Safe for new enrollment!';
+      directDuplicatePill.classList.add('hidden');
     }
 
-    // Populate XAI Visualizations
+    // Pairwise Cross-Consistency Matrix
+    if (data.pairwise_breakdown && data.pairwise_breakdown.length > 0) {
+      directPairwiseCard.classList.remove('hidden');
+      directPairwiseChips.innerHTML = '';
+      data.pairwise_breakdown.forEach(pair => {
+        const chip = document.createElement('span');
+        chip.className = `pairwise-chip ${pair.is_match ? 'chip-match' : 'chip-mismatch'}`;
+        chip.innerHTML = `<span>${pair.pair}: <strong>${pair.similarity.toFixed(4)}</strong> (${pair.is_match ? '✅ MATCH' : '❌ MISMATCH'})</span>`;
+        directPairwiseChips.appendChild(chip);
+      });
+    } else {
+      directPairwiseCard.classList.add('hidden');
+    }
+
+    // Hashes
+    const img1Hash = data.images?.[0]?.hash || data.image1?.hash || '0x...';
+    const img2Hash = data.images?.[1]?.hash || data.image2?.hash || '0x...';
+    directHash1.textContent = img1Hash;
+    directHash2.textContent = img2Hash;
+
+    if (data.shots_count >= 3 && (data.images?.[2]?.hash || data.image3?.hash)) {
+      directHash3Item.classList.remove('hidden');
+      directHash3.textContent = data.images?.[2]?.hash || data.image3?.hash;
+    } else {
+      directHash3Item.classList.add('hidden');
+    }
+
+    // Quality Mini-Cards
+    const qScores = data.quality_scores || [];
+    if (qScores.length >= 1) directQ1Score.textContent = `${qScores[0]}%`;
+    if (qScores.length >= 2) directQ2Score.textContent = `${qScores[1]}%`;
+    if (qScores.length >= 3) {
+      directQ3Card.classList.remove('hidden');
+      directQ3Score.textContent = `${qScores[2]}%`;
+    } else {
+      directQ3Card.classList.add('hidden');
+    }
+
+    // XAI Visualizations
     if (data.xai) {
       const directXaiCorrImg = document.getElementById('directXaiCorrImg');
       const directHeatImg1 = document.getElementById('directHeatImg1');
@@ -814,10 +957,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       const directRidgeImg2 = document.getElementById('directRidgeImg2');
 
       if (directXaiCorrImg && data.xai.correspondence_canvas) directXaiCorrImg.src = data.xai.correspondence_canvas;
-      if (directHeatImg1 && data.xai.heatmap1) directHeatImg1.src = data.xai.heatmap1;
-      if (directHeatImg2 && data.xai.heatmap2) directHeatImg2.src = data.xai.heatmap2;
-      if (directRidgeImg1 && data.xai.ridge1) directRidgeImg1.src = data.xai.ridge1;
-      if (directRidgeImg2 && data.xai.ridge2) directRidgeImg2.src = data.xai.ridge2;
+      if (directHeatImg1) directHeatImg1.src = data.xai.heatmaps?.[0] || data.xai.heatmap1 || '';
+      if (directHeatImg2) directHeatImg2.src = data.xai.heatmaps?.[1] || data.xai.heatmap2 || '';
+      if (directRidgeImg1) directRidgeImg1.src = data.xai.ridges?.[0] || data.xai.ridge1 || '';
+      if (directRidgeImg2) directRidgeImg2.src = data.xai.ridges?.[1] || data.xai.ridge2 || '';
+
+      if (data.shots_count >= 3 && (data.xai.heatmaps?.[2] || data.xai.heatmap3)) {
+        directHeatCol3.classList.remove('hidden');
+        directRidgeCol3.classList.remove('hidden');
+        directHeatImg3.src = data.xai.heatmaps?.[2] || data.xai.heatmap3;
+        directRidgeImg3.src = data.xai.ridges?.[2] || data.xai.ridge3;
+      } else {
+        directHeatCol3.classList.add('hidden');
+        directRidgeCol3.classList.add('hidden');
+      }
     }
 
     directResultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -913,10 +1066,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnScanVerify.disabled = !passed;
         if (searchQualityHint) {
           if (passed) {
-            searchQualityHint.textContent = '✅ Photo passed 80% quality gate. Ready to search registry.';
+            searchQualityHint.textContent = '✅ Photo passed 50% quality gate. Ready to search registry.';
             searchQualityHint.style.color = '#34d399';
           } else {
-            searchQualityHint.textContent = '❌ Quality Check Failed (<80%): Cannot search database with blurry/low-contrast photo.';
+            searchQualityHint.textContent = '❌ Quality Check Failed (<50%): Cannot search database with blurry/low-contrast photo.';
             searchQualityHint.style.color = '#f87171';
           }
         }
@@ -936,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       searchQualityBadge.innerHTML = '⏳ Quality: Awaiting Photo';
     }
     if (searchQualityHint) {
-      searchQualityHint.textContent = '🔒 Minimum 80% biometric clarity required to execute registry match.';
+      searchQualityHint.textContent = '🔒 Minimum 50% biometric clarity required to execute registry match.';
       searchQualityHint.style.color = '#94a3b8';
     }
     btnScanVerify.disabled = true;

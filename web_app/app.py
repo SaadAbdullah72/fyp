@@ -164,13 +164,13 @@ async def check_image_quality(file: UploadFile = File(...)):
         bgr = bytes_to_cv2(content)
         assessment = quality_gate.assess_quality(bgr)
         score = float(assessment.get("overall_score", 0.0))
-        passed = bool(score >= 80.0 and assessment.get("passed", False))
+        passed = bool(score >= 50.0 and assessment.get("passed", False))
         return {
             "status": "success",
             "passed": passed,
-            "meets_production_threshold": bool(score >= 80.0),
+            "meets_production_threshold": bool(score >= 50.0),
             "score": round(score, 1),
-            "min_required": 80.0,
+            "min_required": 50.0,
             "assessment": assessment
         }
     except Exception as e:
@@ -178,92 +178,152 @@ async def check_image_quality(file: UploadFile = File(...)):
 
 
 @app.post("/api/compare")
-async def compare_two_muzzles(
+async def compare_muzzles(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),
+    file3: Optional[UploadFile] = File(None),
     threshold: float = 0.40
 ):
     """
-    Direct 1-to-1 Biometric Verification with:
-    1. Pre-inference Strict 80% Quality Gate on both images.
-    2. Deep 512-D ArcFace Cosine Alignment.
-    3. Grad-CAM Attention Heatmaps for both muzzles.
-    4. Side-by-side Biometric Alignment Correspondence Visualization.
+    Direct Biometric Verification & Duplicate Check (Supports 2 or 3 Muzzle Captures):
+    1. Pre-inference Quality Gate (Min 50% score required per photo).
+    2. Deep 512-D ArcFace Cosine Alignment across all pairs.
+    3. Pairwise Cross-Consistency Matrix (Shot 1 vs 2, 1 vs 3, 2 vs 3).
+    4. Centroid Master Vector & Duplicate Check against Enrolled Farm Database!
+    5. Grad-CAM Attention Heatmaps & Visual Correspondence Canvas.
     """
     try:
-        bytes1 = await file1.read()
-        bytes2 = await file2.read()
-        bgr1 = prepare_muzzle_crop(bytes_to_cv2(bytes1))
-        bgr2 = prepare_muzzle_crop(bytes_to_cv2(bytes2))
+        upload_files = [file1, file2]
+        if file3 is not None and file3.filename:
+            upload_files.append(file3)
 
-        # 1. Quality & Anti-Spoofing Check
-        q1 = quality_gate.assess_quality(bgr1)
-        q2 = quality_gate.assess_quality(bgr2)
+        raw_bgrs = []
+        qualities = []
+        scores = []
+        for i, uf in enumerate(upload_files):
+            b_data = await uf.read()
+            bgr = prepare_muzzle_crop(bytes_to_cv2(b_data))
+            q = quality_gate.assess_quality(bgr)
+            score = float(q.get("overall_score", 0.0))
 
-        score1 = float(q1.get("overall_score", 0.0))
-        score2 = float(q2.get("overall_score", 0.0))
+            if score < 50.0:
+                return JSONResponse(status_code=400, content={
+                    "status": "quality_rejected",
+                    "message": f"Biometric Quality Rejected! Photo {i+1} scored {score:.1f}% (Minimum 50.0% required). Please capture a clearer muzzle photo.",
+                    "failed_slot": i + 1,
+                    "scores": [score],
+                    "min_required": 50.0
+                })
 
-        if score1 < 80.0 or score2 < 80.0:
-            failed_img = "Image 1" if score1 < 80.0 else "Image 2"
-            failed_score = score1 if score1 < 80.0 else score2
-            return JSONResponse(status_code=400, content={
-                "status": "quality_rejected",
-                "message": f"Biometric Quality Rejected! {failed_img} scored {failed_score:.1f}% (Minimum 80.0% required). Both muzzle photos must be clear.",
-                "quality_scores": {"image1": score1, "image2": score2},
-                "min_required": 80.0
-            })
+            raw_bgrs.append(bgr)
+            qualities.append(q)
+            scores.append(score)
 
-        # 2. Extract embeddings
-        emb1 = engine.extract_embedding(bgr1)
-        emb2 = engine.extract_embedding(bgr2)
+        # Extract embeddings and thumbnails
+        embs = [engine.extract_embedding(b) for b in raw_bgrs]
+        thumbs = [cv2_to_base64(cv2.resize(b, (200, 200))) for b in raw_bgrs]
+        hashes = [BiometricHasher.generate_sha256_hash(e) for e in embs]
 
-        # 3. Cosine similarity
-        cosine_sim = float(np.dot(emb1, emb2))
-        clamped_sim = float(np.clip(cosine_sim, -1.0, 1.0))
+        # XAI Visualizations
+        xai_res = [xai_engine.generate_attention_heatmap(b) for b in raw_bgrs]
+        heatmaps = [cv2_to_base64(x["overlay_bgr"]) for x in xai_res]
+        ridges = [cv2_to_base64(x["ridge_color"]) for x in xai_res]
+
+        if len(upload_files) >= 3:
+            # 3-Shot Multi-Angle Cross-Comparison
+            sim12 = float(np.dot(embs[0], embs[1]))
+            sim13 = float(np.dot(embs[0], embs[2]))
+            sim23 = float(np.dot(embs[1], embs[2]))
+
+            pairwise = [
+                {"pair": "Shot 1 vs Shot 2", "similarity": round(sim12, 4), "is_match": bool(sim12 >= threshold)},
+                {"pair": "Shot 1 vs Shot 3", "similarity": round(sim13, 4), "is_match": bool(sim13 >= threshold)},
+                {"pair": "Shot 2 vs Shot 3", "similarity": round(sim23, 4), "is_match": bool(sim23 >= threshold)}
+            ]
+
+            min_sim = min(sim12, sim13, sim23)
+            avg_sim = (sim12 + sim13 + sim23) / 3.0
+            is_match = bool(min_sim >= threshold)
+
+            corr_canvas = xai_engine.generate_pairwise_correspondence(raw_bgrs[0], raw_bgrs[1], sim12, bool(sim12 >= threshold))
+            primary_sim = avg_sim
+        else:
+            # 2-Shot Comparison
+            sim12 = float(np.dot(embs[0], embs[1]))
+            is_match = bool(sim12 >= threshold)
+            pairwise = [
+                {"pair": "Photo 1 vs Photo 2", "similarity": round(sim12, 4), "is_match": is_match}
+            ]
+            min_sim = sim12
+            avg_sim = sim12
+            primary_sim = sim12
+            corr_canvas = xai_engine.generate_pairwise_correspondence(raw_bgrs[0], raw_bgrs[1], sim12, is_match)
+
+        confidence_pct = round(max(0.0, min(100.0, (primary_sim + 1.0) / 2.0 * 100.0)), 2)
+        clamped_sim = float(np.clip(primary_sim, -1.0, 1.0))
         angular_dist = round(float(np.degrees(np.arccos(clamped_sim))), 2)
 
-        is_match = bool(cosine_sim >= threshold)
-        confidence_pct = round(max(0.0, min(100.0, (cosine_sim + 1.0) / 2.0 * 100.0)), 2)
+        # Centroid Master Template & Farm Database Duplicate Check
+        master_emb = np.mean(embs, axis=0)
+        master_emb = master_emb / np.linalg.norm(master_emb)
+        master_hash = BiometricHasher.generate_sha256_hash(master_emb)
 
-        hash1 = BiometricHasher.generate_sha256_hash(emb1)
-        hash2 = BiometricHasher.generate_sha256_hash(emb2)
+        search_res = vector_index.search(master_emb, top_k=1, threshold=0.45)
+        best_candidate = search_res["best_match"]
+        enrolled_duplicate = None
+        if best_candidate and best_candidate.get("is_match") and vector_index.count() > 0:
+            matched_cow = REGISTRY.get(best_candidate["tag_id"], {})
+            enrolled_duplicate = {
+                "tag_id": best_candidate["tag_id"],
+                "name": best_candidate["name"],
+                "breed": matched_cow.get("breed", "Cattle"),
+                "similarity": round(best_candidate["similarity"], 4),
+                "confidence": round(max(0.0, min(100.0, (best_candidate["similarity"] + 1.0) / 2.0 * 100.0)), 1),
+                "thumbnail": matched_cow.get("thumbnail", ""),
+                "registered_at": matched_cow.get("created_at", "")
+            }
 
-        # 4. Generate XAI Visualizations
-        xai1 = xai_engine.generate_attention_heatmap(bgr1)
-        xai2 = xai_engine.generate_attention_heatmap(bgr2)
-        corr_canvas = xai_engine.generate_pairwise_correspondence(bgr1, bgr2, cosine_sim, is_match)
-
-        print(f"[COMPARE] File 1: {file1.filename} vs File 2: {file2.filename} | Sim: {cosine_sim:.4f} | Thr: {threshold} | Match: {is_match}")
+        print(f"[COMPARE] {len(upload_files)} Shots | Min Sim: {min_sim:.4f} | Avg Sim: {avg_sim:.4f} | Match: {is_match} | Duplicate: {enrolled_duplicate is not None}")
 
         return {
             "status": "success",
             "is_match": is_match,
             "match_status": "MATCH_VERIFIED" if is_match else "MISMATCH_DIFFERENT_ANIMALS",
-            "cosine_similarity": round(cosine_sim, 4),
+            "shots_count": len(upload_files),
+            "primary_similarity": round(primary_sim, 4),
+            "cosine_similarity": round(primary_sim, 4),
+            "min_similarity": round(min_sim, 4),
+            "avg_similarity": round(avg_sim, 4),
             "confidence_percent": f"{confidence_pct}%",
             "angular_distance_deg": angular_dist,
             "threshold": threshold,
-            "quality_analysis": {
-                "image1": q1,
-                "image2": q2
-            },
+            "pairwise_breakdown": pairwise,
+            "quality_scores": [round(s, 1) for s in scores],
+            "enrolled_duplicate": enrolled_duplicate,
             "xai": {
-                "heatmap1": cv2_to_base64(xai1["overlay_bgr"]),
-                "heatmap2": cv2_to_base64(xai2["overlay_bgr"]),
-                "ridge1": cv2_to_base64(xai1["ridge_color"]),
-                "ridge2": cv2_to_base64(xai2["ridge_color"]),
+                "heatmaps": heatmaps,
+                "ridges": ridges,
+                "heatmap1": heatmaps[0],
+                "heatmap2": heatmaps[1],
+                "heatmap3": heatmaps[2] if len(heatmaps) >= 3 else None,
+                "ridge1": ridges[0],
+                "ridge2": ridges[1],
+                "ridge3": ridges[2] if len(ridges) >= 3 else None,
                 "correspondence_canvas": cv2_to_base64(corr_canvas)
             },
-            "image1": {
-                "filename": file1.filename,
-                "thumbnail": cv2_to_base64(cv2.resize(bgr1, (200, 200))),
-                "hash": hash1
+            "images": [
+                {"thumbnail": thumbs[i], "hash": hashes[i], "quality": scores[i], "liveness": qualities[i].get("anti_spoofing", {}).get("liveness_status", "AUTHENTIC_LIVE_ANIMAL")}
+                for i in range(len(upload_files))
+            ],
+            "image1": {"hash": hashes[0], "score": scores[0], "liveness": qualities[0].get("anti_spoofing", {}).get("liveness_status", "AUTHENTIC_LIVE_ANIMAL")},
+            "image2": {"hash": hashes[1], "score": scores[1], "liveness": qualities[1].get("anti_spoofing", {}).get("liveness_status", "AUTHENTIC_LIVE_ANIMAL")},
+            "image3": {"hash": hashes[2], "score": scores[2], "liveness": qualities[2].get("anti_spoofing", {}).get("liveness_status", "AUTHENTIC_LIVE_ANIMAL")} if len(upload_files) >= 3 else None,
+            "quality_analysis": {
+                "image1": qualities[0],
+                "image2": qualities[1],
+                "image3": qualities[2] if len(upload_files) >= 3 else None
             },
-            "image2": {
-                "filename": file2.filename,
-                "thumbnail": cv2_to_base64(cv2.resize(bgr2, (200, 200))),
-                "hash": hash2
-            }
+            "master_hash": master_hash
         }
     except HTTPException:
         raise
@@ -275,7 +335,7 @@ async def compare_two_muzzles(
 async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.40):
     """
     Scans a muzzle image with Full Suite:
-    1. Pre-inference Strict 80% Quality Gate & Screen Replay Anti-Spoofing.
+    1. Pre-inference Strict 50% Quality Gate & Screen Replay Anti-Spoofing.
     2. Deep 512-D ArcFace Biometric Embedding.
     3. Grad-CAM Deep Attention Heatmap generation.
     4. FAISS Sub-Millisecond Vector Search over enrolled database.
@@ -288,12 +348,12 @@ async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.40):
         # 1. Quality & Anti-Spoofing
         q_result = quality_gate.assess_quality(bgr_img)
         score = float(q_result.get("overall_score", 0.0))
-        if score < 80.0:
+        if score < 50.0:
             return JSONResponse(status_code=400, content={
                 "status": "quality_rejected",
-                "message": f"Biometric Quality Rejected! Image scored {score:.1f}% (Minimum 80.0% required). Please capture a clearer muzzle photo.",
+                "message": f"Biometric Quality Rejected! Image scored {score:.1f}% (Minimum 50.0% required). Please capture a clearer muzzle photo.",
                 "quality_score": score,
-                "min_required": 80.0
+                "min_required": 50.0
             })
 
         # 2. Texture enhancement & Embedding
@@ -386,7 +446,7 @@ async def smart_register(
     """
     Production-Grade Smart Cattle Registration with:
     1. Multi-Shot Muzzle Enrollment (3 captures: center, angle A, angle B).
-    2. Strict Pre-Inference Quality Gate (Min 80% score required per shot).
+    2. Strict Pre-Inference Quality Gate (Min 50% score required per shot).
     3. Biometric Internal Consistency Verification across shots.
     4. Centroid Master Embedding Normalization.
     5. FAISS Vector Search for Strict Anti-Duplicate Protection (Threshold 0.45).
@@ -412,15 +472,18 @@ async def smart_register(
             q_res = quality_gate.assess_quality(bgr)
             q_score = float(q_res.get("overall_score", 0.0))
 
-            # Strict 80% Quality Gate Enforcement
-            if q_score < 80.0:
+            # Strict 50% Quality Gate Enforcement
+            if q_score < 50.0:
                 return JSONResponse(status_code=400, content={
                     "status": "quality_rejected",
-                    "message": f"Biometric Quality Rejected! Shot {i+1} scored {q_score:.1f}% (Minimum 80.0% required). Please retake a clear, focused photo.",
+                    "message": f"Biometric Quality Rejected! Shot {i+1} scored {q_score:.1f}% (Minimum 50.0% required). Please retake a clear, focused photo.",
                     "failed_slot": i + 1,
-                    "scores": [float(quality_gate.assess_quality(prepare_muzzle_crop(bytes_to_cv2(b))).get("overall_score", 0)) for b in []],
-                    "min_required": 80.0
+                    "scores": [q_score],
+                    "min_required": 50.0
                 })
+
+            raw_bgr_list.append(bgr)
+            quality_results.append(q_res)
 
             raw_bgr_list.append(bgr)
             quality_results.append(q_res)

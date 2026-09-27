@@ -94,7 +94,7 @@
           <h2>Smart Cattle Biometric Registration</h2>
           <span class="badge-ai-shield">Production 3-Shot Enrollment</span>
         </div>
-        <p>Production software quality: Upload <strong>3 distinct muzzle captures</strong> (Center, Angle A, Angle B). Each shot must pass the <strong>Strict 80% Quality Gate</strong>. The engine computes a normalized 512-D centroid master template with zero-duplicate protection!</p>
+        <p>Production software quality: Upload <strong>3 distinct muzzle captures</strong> (Center, Angle A, Angle B). Each shot must pass the <strong>Strict 50% Quality Gate</strong>. The engine computes a normalized 512-D centroid master template with zero-duplicate protection!</p>
       </div>
     </div>
 
@@ -140,7 +140,7 @@
       <div class="multi-shot-header">
         <div class="shot-guidance-pill">
           <span class="pulse-dot"></span>
-          <span><strong>Mandatory 3-Angle Muzzle Capture:</strong> Minimum 80% sharpness & lighting required per shot to unlock registration.</span>
+          <span><strong>Mandatory 3-Angle Muzzle Capture:</strong> Minimum 50% sharpness & lighting required per shot to unlock registration.</span>
         </div>
         <div class="quality-overall-summary" id="multiQualitySummary">
           <span id="multiQualityStatusText" class="text-warning">⏳ 0 of 3 Shots Ready</span>
@@ -244,7 +244,7 @@
           Register Cattle (3-Shot Centroid Master Template)
         </button>
         <p class="quality-gate-hint" id="qualityGateHint">
-          🔒 Register button is locked. Please enter animal name and upload 3 clear muzzle shots (minimum 80% quality required per shot).
+          🔒 Register button is locked. Please enter animal name and upload 3 clear muzzle shots (minimum 50% quality required per shot).
         </p>
       </div>
     </div>
@@ -411,7 +411,7 @@
 
 
   <!-- ============================================================== -->
-  <!-- MODE 2: DIRECT 1-TO-1 COMPARISON (PHOTO A VS PHOTO B)         -->
+  <!-- MODE 2: MULTI-SHOT MUZZLE COMPARISON & DUPLICATE CHECK         -->
   <!-- ============================================================== -->
   <section class="direct-compare-section glass-card hidden" id="directCompareSection">
     <div class="card-header">
@@ -423,8 +423,8 @@
         </svg>
       </div>
       <div>
-        <h2>Direct 1-to-1 Muzzle Comparison</h2>
-        <p>Drop two muzzle images to verify if they belong to the <strong>SAME animal</strong> or <strong>DIFFERENT animals</strong></p>
+        <h2>Multi-Shot Muzzle Comparison & Duplicate Registry Check</h2>
+        <p>Drop <strong>2 or 3 muzzle captures</strong> to verify <strong>same animal cross-consistency</strong> and check for <strong>duplicate registration</strong> against the farm registry</p>
       </div>
     </div>
 
@@ -432,25 +432,25 @@
     <div class="quick-pairs-row">
       <span class="text-xs text-muted font-semibold">Instant Test Presets:</span>
       <button class="btn-preset btn-preset-match" id="btnPresetSame">
-        🟢 Load Cattle-001 (Photo 1 vs Photo 2) — Same Cow Match
+        🟢 Load Cattle-001 (3 Shots) — Same Cow Match & Duplicate Check
       </button>
       <button class="btn-preset btn-preset-diff" id="btnPresetDiff">
         🔴 Load Cattle-001 vs Cattle-002 — Different Cows Mismatch
       </button>
     </div>
 
-    <!-- Dual Dropzone Grid with Quality Assurance -->
+    <!-- Triple Dropzone Grid with Quality Assurance -->
     <div class="dual-drop-wrapper">
-      <div class="dual-drop-grid">
+      <div class="triple-drop-grid">
         <!-- Box 1 -->
         <div class="compare-col">
           <div class="compare-box" id="boxCompare1">
             <input type="file" id="compareFileInput1" accept="image/*" class="file-input-hidden">
             <div class="compare-box-prompt" id="boxPrompt1">
-              <span class="box-badge">Photo 1 (Animal A)</span>
+              <span class="box-badge">Photo 1 (Frontal / Center)</span>
               <div class="upload-icon-small">📁</div>
-              <p class="font-semibold">Drop or Click Image 1</p>
-              <span class="text-xs text-muted">Original / Reference Photo</span>
+              <p class="font-semibold">Drop or Click Photo 1</p>
+              <span class="text-xs text-muted">Primary Reference Muzzle</span>
             </div>
             <div class="compare-box-preview hidden" id="boxPreview1">
               <img id="boxImg1" src="" alt="Photo 1">
@@ -463,18 +463,15 @@
           </div>
         </div>
 
-        <!-- VS Badge -->
-        <div class="vs-circle">VS</div>
-
         <!-- Box 2 -->
         <div class="compare-col">
           <div class="compare-box" id="boxCompare2">
             <input type="file" id="compareFileInput2" accept="image/*" class="file-input-hidden">
             <div class="compare-box-prompt" id="boxPrompt2">
-              <span class="box-badge">Photo 2 (Animal B)</span>
+              <span class="box-badge">Photo 2 (Side / Angle A)</span>
               <div class="upload-icon-small">📁</div>
-              <p class="font-semibold">Drop or Click Image 2</p>
-              <span class="text-xs text-muted">Verification / Test Photo</span>
+              <p class="font-semibold">Drop or Click Photo 2</p>
+              <span class="text-xs text-muted">Second Angle Muzzle</span>
             </div>
             <div class="compare-box-preview hidden" id="boxPreview2">
               <img id="boxImg2" src="" alt="Photo 2">
@@ -486,9 +483,30 @@
             ⏳ Quality: Awaiting Photo
           </div>
         </div>
+
+        <!-- Box 3 -->
+        <div class="compare-col">
+          <div class="compare-box" id="boxCompare3">
+            <input type="file" id="compareFileInput3" accept="image/*" class="file-input-hidden">
+            <div class="compare-box-prompt" id="boxPrompt3">
+              <span class="box-badge">Photo 3 (Angle B / Optional)</span>
+              <div class="upload-icon-small">📁</div>
+              <p class="font-semibold">Drop or Click Photo 3</p>
+              <span class="text-xs text-muted">3rd Angle Verification</span>
+            </div>
+            <div class="compare-box-preview hidden" id="boxPreview3">
+              <img id="boxImg3" src="" alt="Photo 3">
+              <button class="btn-box-remove" id="btnRemoveBox3">&times;</button>
+              <span class="box-filename" id="boxFilename3">photo3.jpg</span>
+            </div>
+          </div>
+          <div class="slot-quality-badge badge-pending" id="directQualityBadge3" style="margin-top: 8px;">
+            ⏳ Quality: Optional Photo
+          </div>
+        </div>
       </div>
       <p class="quality-gate-hint" id="directQualityHint" style="text-align: center; margin-top: 10px;">
-        🔒 Verification locked: Both muzzle photos must achieve at least 80% biometric quality.
+        🔒 Verification locked: Upload at least 2 muzzle photos (minimum 50% quality required per photo).
       </p>
     </div>
 
@@ -502,28 +520,52 @@
         <input type="range" id="directThresholdSlider" min="0.25" max="0.75" step="0.01" value="0.40">
       </div>
 
-      <button id="btnRunDirectCompare" class="btn btn-primary" style="min-width: 220px;" disabled>
+      <button id="btnRunDirectCompare" class="btn btn-primary" style="min-width: 240px;" disabled>
         <span class="btn-spinner hidden" id="directCompareSpinner"></span>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        Compare Muzzles
+        Verify Muzzles & Check Duplicate
       </button>
     </div>
 
     <!-- Direct Comparison Results Container (Hidden initially) -->
     <div class="direct-results-card hidden" id="directResultsCard">
+      <!-- Verdict Banner -->
       <div class="verdict-banner" id="directVerdictBanner">
         <div class="verdict-icon-badge" id="directVerdictIcon">✅</div>
         <div class="verdict-details">
           <h3 id="directVerdictTitle">MATCH VERIFIED</h3>
-          <p id="directVerdictDesc">Both photographs belong to the SAME cattle with high biometric correlation.</p>
+          <p id="directVerdictDesc">All captures belong to the SAME cattle with high biometric correlation.</p>
         </div>
       </div>
 
+      <!-- Duplicate Check Banner -->
+      <div class="duplicate-check-banner hidden" id="directDuplicateBanner">
+        <div class="duplicate-badge-icon" id="directDuplicateIcon">⚠️</div>
+        <div class="duplicate-details">
+          <h4 id="directDuplicateTitle">ALREADY REGISTERED IN FARM DATABASE</h4>
+          <p id="directDuplicateDesc">Matches enrolled profile Tag: PK-SAH-001 (Similarity: 0.8841)</p>
+          <div class="duplicate-match-pill hidden" id="directDuplicatePill">
+            <img id="directDuplicateThumb" src="" alt="Enrolled Profile">
+            <div>
+              <strong id="directDuplicateName">Bella</strong> (<span id="directDuplicateTag">PK-SAH-001</span>)
+              <div class="text-xs text-muted" id="directDuplicateDate">Enrolled: 2026-09-24</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pairwise Consistency Matrix (For 3-shot verification) -->
+      <div class="pairwise-matrix-card hidden" id="directPairwiseCard">
+        <h4 class="text-xs text-muted font-semibold uppercase tracking-wider" style="margin-bottom: 8px;">Multi-Angle Pairwise Cross-Consistency:</h4>
+        <div class="pairwise-chips" id="directPairwiseChips"></div>
+      </div>
+
+      <!-- Metrics Grid -->
       <div class="direct-metrics-grid">
         <div class="metric-item">
-          <span class="metric-label">Cosine Similarity</span>
+          <span class="metric-label">Cosine Similarity (Primary / Avg)</span>
           <span class="metric-value font-mono" id="directMetricCosine">0.6512</span>
           <div class="metric-bar-bg">
             <div class="metric-bar-fill" id="directMetricBar" style="width: 82%;"></div>
@@ -539,6 +581,7 @@
         </div>
       </div>
 
+      <!-- Biometric Hashes -->
       <div class="direct-hashes-row">
         <div class="direct-hash-item">
           <span class="text-xs text-muted font-semibold">Photo 1 Biometric Hash:</span>
@@ -548,23 +591,34 @@
           <span class="text-xs text-muted font-semibold">Photo 2 Biometric Hash:</span>
           <div class="hash-box text-xs" id="directHash2">0x...</div>
         </div>
+        <div class="direct-hash-item hidden" id="directHash3Item">
+          <span class="text-xs text-muted font-semibold">Photo 3 Biometric Hash:</span>
+          <div class="hash-box text-xs" id="directHash3">0x...</div>
+        </div>
       </div>
 
       <!-- Mode 2 Quality & Anti-Spoofing Audit -->
       <div class="direct-quality-grid" id="directQualityGrid">
-        <div class="quality-mini-card">
+        <div class="quality-mini-card" id="directQ1Card">
           <div class="quality-title-row">
             <span class="text-xs text-muted font-semibold">Photo 1 Quality & Liveness</span>
             <span id="directQ1Score" class="quality-pill-score">98.5%</span>
           </div>
-          <p id="directQ1Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal (Sharpness: 240.2)</p>
+          <p id="directQ1Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
         </div>
-        <div class="quality-mini-card">
+        <div class="quality-mini-card" id="directQ2Card">
           <div class="quality-title-row">
             <span class="text-xs text-muted font-semibold">Photo 2 Quality & Liveness</span>
             <span id="directQ2Score" class="quality-pill-score">97.8%</span>
           </div>
-          <p id="directQ2Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal (Sharpness: 231.5)</p>
+          <p id="directQ2Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
+        </div>
+        <div class="quality-mini-card hidden" id="directQ3Card">
+          <div class="quality-title-row">
+            <span class="text-xs text-muted font-semibold">Photo 3 Quality & Liveness</span>
+            <span id="directQ3Score" class="quality-pill-score">96.4%</span>
+          </div>
+          <p id="directQ3Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
         </div>
       </div>
 
@@ -588,7 +642,7 @@
         </div>
 
         <div class="xai-tab-body hidden" id="xaiTabBodyHeatmaps">
-          <div class="dual-xai-grid">
+          <div class="dual-xai-grid" id="directHeatmapsGrid">
             <div class="xai-col">
               <span class="xai-label">Photo 1 Neural Heatmap</span>
               <img id="directHeatImg1" src="" alt="Photo 1 Heatmap" class="xai-thumb">
@@ -597,11 +651,15 @@
               <span class="xai-label">Photo 2 Neural Heatmap</span>
               <img id="directHeatImg2" src="" alt="Photo 2 Heatmap" class="xai-thumb">
             </div>
+            <div class="xai-col hidden" id="directHeatCol3">
+              <span class="xai-label">Photo 3 Neural Heatmap</span>
+              <img id="directHeatImg3" src="" alt="Photo 3 Heatmap" class="xai-thumb">
+            </div>
           </div>
         </div>
 
         <div class="xai-tab-body hidden" id="xaiTabBodyRidges">
-          <div class="dual-xai-grid">
+          <div class="dual-xai-grid" id="directRidgesGrid">
             <div class="xai-col">
               <span class="xai-label">Photo 1 Ridge Grooves</span>
               <img id="directRidgeImg1" src="" alt="Photo 1 Ridge Grooves" class="xai-thumb">
@@ -609,6 +667,10 @@
             <div class="xai-col">
               <span class="xai-label">Photo 2 Ridge Grooves</span>
               <img id="directRidgeImg2" src="" alt="Photo 2 Ridge Grooves" class="xai-thumb">
+            </div>
+            <div class="xai-col hidden" id="directRidgeCol3">
+              <span class="xai-label">Photo 3 Ridge Grooves</span>
+              <img id="directRidgeImg3" src="" alt="Photo 3 Ridge Grooves" class="xai-thumb">
             </div>
           </div>
         </div>
@@ -675,7 +737,7 @@
         ⏳ Quality: Awaiting Photo
       </div>
       <p class="quality-gate-hint" id="searchQualityHint" style="text-align: center; margin-top: 6px; font-size: 0.75rem;">
-        🔒 Minimum 80% biometric clarity required to execute registry match.
+        🔒 Minimum 50% biometric clarity required to execute registry match.
       </p>
 
       <div class="scanner-controls">

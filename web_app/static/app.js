@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const slotFiles = [null, null, null];
   const slotScores = [0, 0, 0];
   const slotPassed = [false, false, false];
+  const slotIssues = ['', '', ''];
 
   // -------------------------------------------------------------
   // Mode 2: Multi-Shot Comparison & Duplicate Check Elements
@@ -176,6 +177,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let directPass1 = false;
   let directPass2 = false;
   let directPass3 = false;
+  let directIssue1 = '';
+  let directIssue2 = '';
+  let directIssue3 = '';
+  let searchIssue = '';
 
   // -------------------------------------------------------------
   // Mode 3: Search & Verify Elements
@@ -282,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function runQualityAudit(file, badgeEl, onComplete) {
     if (!badgeEl) return;
     badgeEl.className = 'slot-quality-badge badge-checking';
-    badgeEl.innerHTML = '🔄 Auditing Quality...';
+    badgeEl.innerHTML = '🔄 Auditing Muzzle & Completeness...';
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -291,24 +296,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.ok && data.status === 'success') {
         const score = data.score;
         const meets = data.meets_production_threshold;
-        if (meets) {
-          badgeEl.className = 'slot-quality-badge badge-passed';
-          badgeEl.innerHTML = `✅ Quality: ${score}% (PASSED)`;
-          if (onComplete) onComplete(true, score);
-        } else {
+        const integrity = data.assessment?.muzzle_integrity;
+
+        if (integrity && integrity.is_valid === false) {
           badgeEl.className = 'slot-quality-badge badge-rejected';
-          badgeEl.innerHTML = `❌ Quality: ${score}% (REJECTED <50%)`;
-          if (onComplete) onComplete(false, score);
+          badgeEl.innerHTML = `❌ Half/Incomplete Muzzle (${score}%)`;
+          badgeEl.title = integrity.message || 'Muzzle is incomplete or not frontal.';
+          showToast(`⚠️ Photo Rejected: ${integrity.message || 'Incomplete muzzle detected. Please upload a clear frontal photo showing both nostrils.'}`, 6500);
+          if (onComplete) onComplete(false, score, integrity.message);
+        } else if (meets) {
+          badgeEl.className = 'slot-quality-badge badge-passed';
+          badgeEl.innerHTML = `✅ Complete Muzzle: ${score}% (PASSED)`;
+          badgeEl.title = 'Complete frontal muzzle detected with valid ridge pattern.';
+          if (onComplete) onComplete(true, score, '');
+        } else {
+          const reason = (data.assessment?.issues && data.assessment.issues[0]) || 'Low clarity / lighting';
+          badgeEl.className = 'slot-quality-badge badge-rejected';
+          badgeEl.innerHTML = `❌ Low Quality: ${score}% (REJECTED <50%)`;
+          badgeEl.title = reason;
+          showToast(`⚠️ Photo Quality Too Low (${score}%): ${reason}. Please upload a clearer photo.`, 5000);
+          if (onComplete) onComplete(false, score, reason);
         }
       } else {
         badgeEl.className = 'slot-quality-badge badge-rejected';
         badgeEl.innerHTML = '❌ Quality Check Failed';
-        if (onComplete) onComplete(false, 0);
+        if (onComplete) onComplete(false, 0, 'Quality Check Failed');
       }
     } catch (err) {
       badgeEl.className = 'slot-quality-badge badge-rejected';
       badgeEl.innerHTML = '❌ Quality Service Offline';
-      if (onComplete) onComplete(false, 0);
+      if (onComplete) onComplete(false, 0, 'Quality Service Offline');
     }
   }
 
@@ -368,9 +385,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       slotPreviews[idx].classList.remove('hidden');
 
       // Run instant real-time quality gate
-      runQualityAudit(file, slotBadges[idx], (passed, score) => {
+      runQualityAudit(file, slotBadges[idx], (passed, score, issue) => {
         slotPassed[idx] = passed;
         slotScores[idx] = score;
+        slotIssues[idx] = issue || '';
         updateMultiShotReadiness();
       });
     };
@@ -381,11 +399,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     slotFiles[idx] = null;
     slotScores[idx] = 0;
     slotPassed[idx] = false;
+    slotIssues[idx] = '';
     slotFileInputs[idx].value = '';
     slotPrompts[idx].classList.remove('hidden');
     slotPreviews[idx].classList.add('hidden');
     slotBadges[idx].className = 'slot-quality-badge badge-pending';
     slotBadges[idx].innerHTML = '⏳ Quality: Awaiting Photo';
+    slotBadges[idx].title = '';
     updateMultiShotReadiness();
   }
 
@@ -395,6 +415,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const readyCount = slotPassed.filter(p => p).length;
     const hasName = smartRegName.value.trim().length > 0;
 
+    // Check if any slot has an active rejected issue
+    const firstFailedIdx = slotFiles.findIndex((f, i) => f && !slotPassed[i]);
+
     if (readyCount === 3) {
       const avg = (slotScores[0] + slotScores[1] + slotScores[2]) / 3;
       multiQualityStatusText.className = 'text-success font-semibold';
@@ -402,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (hasName) {
         btnSubmitSmartRegister.disabled = false;
-        qualityGateHint.textContent = '✅ All 3 biometric captures validated (Min 50% met). Ready to enroll!';
+        qualityGateHint.textContent = '✅ All 3 biometric captures validated (Complete muzzles & Min 50% met). Ready to enroll!';
         qualityGateHint.style.color = '#34d399';
       } else {
         btnSubmitSmartRegister.disabled = true;
@@ -413,8 +436,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       multiQualityStatusText.className = 'text-warning font-semibold';
       multiQualityStatusText.textContent = `⏳ ${readyCount} of 3 Shots Passed 50% Gate`;
       btnSubmitSmartRegister.disabled = true;
-      qualityGateHint.textContent = '🔒 Register button is locked. Upload 3 clear muzzle shots (minimum 50% quality required per shot).';
-      qualityGateHint.style.color = '#94a3b8';
+      if (firstFailedIdx !== -1 && slotIssues[firstFailedIdx]) {
+        qualityGateHint.textContent = `🚫 Shot ${firstFailedIdx + 1} Rejected: ${slotIssues[firstFailedIdx]}. Please re-upload!`;
+        qualityGateHint.style.color = '#f87171';
+      } else {
+        qualityGateHint.textContent = '🔒 Register button is locked. Upload 3 complete frontal muzzle shots (minimum 50% quality required per shot).';
+        qualityGateHint.style.color = '#94a3b8';
+      }
     }
   }
 
@@ -701,8 +729,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         boxFilename1.textContent = file.name;
         boxPrompt1.classList.add('hidden');
         boxPreview1.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge1, (passed, score) => {
+        runQualityAudit(file, directQualityBadge1, (passed, score, issue) => {
           directPass1 = passed;
+          directIssue1 = issue || '';
           checkDirectReady();
         });
       } else if (boxNum === 2) {
@@ -711,8 +740,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         boxFilename2.textContent = file.name;
         boxPrompt2.classList.add('hidden');
         boxPreview2.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge2, (passed, score) => {
+        runQualityAudit(file, directQualityBadge2, (passed, score, issue) => {
           directPass2 = passed;
+          directIssue2 = issue || '';
           checkDirectReady();
         });
       } else if (boxNum === 3) {
@@ -721,8 +751,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         boxFilename3.textContent = file.name;
         boxPrompt3.classList.add('hidden');
         boxPreview3.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge3, (passed, score) => {
+        runQualityAudit(file, directQualityBadge3, (passed, score, issue) => {
           directPass3 = passed;
+          directIssue3 = issue || '';
           checkDirectReady();
         });
       }
@@ -735,32 +766,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (boxNum === 1) {
       directFile1 = null;
       directPass1 = false;
+      directIssue1 = '';
       compareFileInput1.value = '';
       boxPrompt1.classList.remove('hidden');
       boxPreview1.classList.add('hidden');
       if (directQualityBadge1) {
         directQualityBadge1.className = 'slot-quality-badge badge-pending';
         directQualityBadge1.innerHTML = '⏳ Quality: Awaiting Photo';
+        directQualityBadge1.title = '';
       }
     } else if (boxNum === 2) {
       directFile2 = null;
       directPass2 = false;
+      directIssue2 = '';
       compareFileInput2.value = '';
       boxPrompt2.classList.remove('hidden');
       boxPreview2.classList.add('hidden');
       if (directQualityBadge2) {
         directQualityBadge2.className = 'slot-quality-badge badge-pending';
         directQualityBadge2.innerHTML = '⏳ Quality: Awaiting Photo';
+        directQualityBadge2.title = '';
       }
     } else if (boxNum === 3) {
       directFile3 = null;
       directPass3 = false;
+      directIssue3 = '';
       compareFileInput3.value = '';
       boxPrompt3.classList.remove('hidden');
       boxPreview3.classList.add('hidden');
       if (directQualityBadge3) {
         directQualityBadge3.className = 'slot-quality-badge badge-pending';
         directQualityBadge3.innerHTML = '⏳ Quality: Optional Photo';
+        directQualityBadge3.title = '';
       }
     }
     checkDirectReady();
@@ -778,17 +815,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (directFile1 && directFile2) {
         if (ready) {
           if (box3Active) {
-            directQualityHint.textContent = '✅ All 3 muzzle captures passed the 50% quality gate. Ready to verify & check duplicate!';
+            directQualityHint.textContent = '✅ All 3 muzzle captures passed the quality & completeness gate. Ready to verify & check duplicate!';
           } else {
-            directQualityHint.textContent = '✅ Both muzzle photos passed the 50% quality gate (Photo 3 optional). Ready to verify!';
+            directQualityHint.textContent = '✅ Both muzzle photos passed the quality & completeness gate (Photo 3 optional). Ready to verify!';
           }
           directQualityHint.style.color = '#34d399';
         } else {
-          directQualityHint.textContent = '❌ Quality Check Failed: All uploaded photos must achieve at least 50% clarity.';
+          // Identify which box failed
+          let failMsg = '';
+          if (!directPass1 && directIssue1) failMsg = `Photo 1: ${directIssue1}`;
+          else if (!directPass2 && directIssue2) failMsg = `Photo 2: ${directIssue2}`;
+          else if (box3Active && !directPass3 && directIssue3) failMsg = `Photo 3: ${directIssue3}`;
+          else failMsg = 'Ensure all uploaded photos show complete frontal muzzles with >50% clarity.';
+
+          directQualityHint.textContent = `❌ Re-upload Required: ${failMsg}`;
           directQualityHint.style.color = '#f87171';
         }
       } else {
-        directQualityHint.textContent = '🔒 Verification locked: Upload at least 2 muzzle photos (minimum 50% quality required per photo).';
+        directQualityHint.textContent = '🔒 Verification locked: Upload at least 2 complete frontal muzzle photos (minimum 50% quality required per photo).';
         directQualityHint.style.color = '#94a3b8';
       }
     }
@@ -1061,15 +1105,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Real-time quality assessment
       btnScanVerify.disabled = true;
-      runQualityAudit(file, searchQualityBadge, (passed, score) => {
+      runQualityAudit(file, searchQualityBadge, (passed, score, issue) => {
         searchPassed = passed;
+        searchIssue = issue || '';
         btnScanVerify.disabled = !passed;
         if (searchQualityHint) {
           if (passed) {
-            searchQualityHint.textContent = '✅ Photo passed 50% quality gate. Ready to search registry.';
+            searchQualityHint.textContent = '✅ Photo passed quality & muzzle completeness gate. Ready to search registry.';
             searchQualityHint.style.color = '#34d399';
           } else {
-            searchQualityHint.textContent = '❌ Quality Check Failed (<50%): Cannot search database with blurry/low-contrast photo.';
+            searchQualityHint.textContent = `🚫 Re-upload Required: ${searchIssue || 'Cannot search database with incomplete muzzle or blurry/low-contrast photo.'}`;
             searchQualityHint.style.color = '#f87171';
           }
         }
@@ -1393,12 +1438,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg, duration = 3500) {
     toast.textContent = msg;
     toast.classList.remove('hidden');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toast.classList.add('hidden');
-    }, 3500);
+    }, duration);
   }
 });

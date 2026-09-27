@@ -161,11 +161,11 @@ async def check_image_quality(file: UploadFile = File(...)):
         bgr = bytes_to_cv2(content)
         assessment = quality_gate.assess_quality(bgr)
         score = float(assessment.get("overall_score", 0.0))
-        passed = bool(score >= 50.0 and assessment.get("passed", False))
+        passed = bool(assessment.get("passed", False) and score >= 50.0)
         return {
             "status": "success",
             "passed": passed,
-            "meets_production_threshold": bool(score >= 50.0),
+            "meets_production_threshold": passed,
             "score": round(score, 1),
             "min_required": 50.0,
             "assessment": assessment
@@ -203,13 +203,16 @@ async def compare_muzzles(
             q = quality_gate.assess_quality(bgr)
             score = float(q.get("overall_score", 0.0))
 
-            if score < 50.0:
+            if (not q.get("passed", False)) or score < 50.0:
+                integrity = q.get("muzzle_integrity", {})
+                reason = integrity.get("message") if not integrity.get("is_valid", True) else f"Photo {i+1} clarity scored {score:.1f}% (Minimum 50.0% required)."
                 return JSONResponse(status_code=400, content={
                     "status": "quality_rejected",
-                    "message": f"Biometric Quality Rejected! Photo {i+1} scored {score:.1f}% (Minimum 50.0% required). Please capture a clearer muzzle photo.",
+                    "message": f"Biometric Muzzle Rejected! {reason} Please capture a clear, centered frontal photo with both nostrils visible.",
                     "failed_slot": i + 1,
                     "scores": [score],
-                    "min_required": 50.0
+                    "min_required": 50.0,
+                    "muzzle_integrity": integrity
                 })
 
             raw_bgrs.append(bgr)
@@ -342,15 +345,18 @@ async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.60):
         content = await file.read()
         bgr_img = prepare_muzzle_crop(bytes_to_cv2(content))
 
-        # 1. Quality & Anti-Spoofing
+        # 1. Quality, Anti-Spoofing & Muzzle Completeness
         q_result = quality_gate.assess_quality(bgr_img)
         score = float(q_result.get("overall_score", 0.0))
-        if score < 50.0:
+        if (not q_result.get("passed", False)) or score < 50.0:
+            integrity = q_result.get("muzzle_integrity", {})
+            reason = integrity.get("message") if not integrity.get("is_valid", True) else f"Image clarity scored {score:.1f}% (Minimum 50.0% required)."
             return JSONResponse(status_code=400, content={
                 "status": "quality_rejected",
-                "message": f"Biometric Quality Rejected! Image scored {score:.1f}% (Minimum 50.0% required). Please capture a clearer muzzle photo.",
+                "message": f"Biometric Muzzle Rejected! {reason} Please capture a clear, centered frontal photo of the cattle nose.",
                 "quality_score": score,
-                "min_required": 50.0
+                "min_required": 50.0,
+                "muzzle_integrity": integrity
             })
 
         # 2. Texture enhancement & Embedding
@@ -469,18 +475,18 @@ async def smart_register(
             q_res = quality_gate.assess_quality(bgr)
             q_score = float(q_res.get("overall_score", 0.0))
 
-            # Strict 50% Quality Gate Enforcement
-            if q_score < 50.0:
+            # Strict 50% Quality & Muzzle Completeness Enforcement
+            if (not q_res.get("passed", False)) or q_score < 50.0:
+                integrity = q_res.get("muzzle_integrity", {})
+                reason = integrity.get("message") if not integrity.get("is_valid", True) else f"Shot {i+1} clarity scored {q_score:.1f}% (Minimum 50.0% required)."
                 return JSONResponse(status_code=400, content={
                     "status": "quality_rejected",
-                    "message": f"Biometric Quality Rejected! Shot {i+1} scored {q_score:.1f}% (Minimum 50.0% required). Please retake a clear, focused photo.",
+                    "message": f"Biometric Muzzle Rejected! {reason} Please capture a complete frontal photo with both nostrils visible.",
                     "failed_slot": i + 1,
                     "scores": [q_score],
-                    "min_required": 50.0
+                    "min_required": 50.0,
+                    "muzzle_integrity": integrity
                 })
-
-            raw_bgr_list.append(bgr)
-            quality_results.append(q_res)
 
             raw_bgr_list.append(bgr)
             quality_results.append(q_res)

@@ -80,19 +80,25 @@ class ImageQualityGate:
             is_pass = False
             feedbacks.append("Anti-Spoofing Alert: Digital screen moiré grid or artificial replay detected!")
 
-        # 6. Overall Quality Score (0 - 100%)
-        # Sharpness component (capped at 300)
+        # 6. Muzzle Completeness & Anatomical Integrity Check (Detects half/cut-off/non-muzzle)
+        muzzle_integrity = self.validate_muzzle_integrity(img_bgr)
+        if not muzzle_integrity["is_valid"]:
+            is_pass = False
+            feedbacks.append(f"⚠️ {muzzle_integrity['message']}")
+
+        # 7. Overall Quality Score (0 - 100%)
         sharp_norm = min(1.0, laplacian_var / 250.0) * 40.0
-        # Brightness component (optimal around 128)
         bright_dist = abs(mean_brightness - 128.0) / 128.0
         bright_norm = max(0.0, 1.0 - bright_dist) * 25.0
-        # Glare penalty
         glare_norm = max(0.0, 1.0 - (glare_pct / 15.0)) * 20.0
-        # Anti-spoof component
         spoof_norm = 15.0 if not spoof_check["is_spoof"] else 0.0
 
         overall_score = round(float(sharp_norm + bright_norm + glare_norm + spoof_norm), 1)
-        overall_score = max(5.0, min(100.0, overall_score))
+        # Severe penalty if incomplete or non-muzzle
+        if not muzzle_integrity["is_valid"]:
+            overall_score = min(25.0, overall_score)
+        else:
+            overall_score = max(5.0, min(100.0, overall_score))
 
         if is_pass and len(feedbacks) == 0:
             feedbacks.append("Image quality optimal. Muzzle biometric ridges clearly distinguished.")
@@ -107,7 +113,110 @@ class ImageQualityGate:
             "has_excessive_glare": has_excessive_glare,
             "resolution": f"{w}x{h}",
             "anti_spoofing": spoof_check,
+            "muzzle_integrity": muzzle_integrity,
             "feedback": feedbacks
+        }
+
+    def validate_muzzle_integrity(self, img_bgr: np.ndarray) -> Dict[str, Any]:
+        """
+        Validates anatomical muzzle completeness and biometric feasibility:
+        1. Aspect Ratio check (detects vertically sliced or horizontally sliced half-images).
+        2. Dermatoglyphic Ridge Energy (verifies bead/ridge texture vs blank/grass/fur).
+        3. Bilateral Nostril Landmarks (detects single-side or half-muzzle).
+        4. Peripheral Truncation (detects if muzzle is slammed against image border).
+        """
+        h, w = img_bgr.shape[:2]
+        aspect = w / float(h) if h > 0 else 1.0
+
+        # Check 1: Vertical or Horizontal Slicing
+        if aspect < 0.65:
+            return {
+                "is_valid": False,
+                "reason": "HALF_MUZZLE_VERTICAL_SLICE",
+                "message": "Incomplete Muzzle: Photo is vertically sliced or only half-visible. Please capture the entire nose with both nostrils in frame."
+            }
+        if aspect > 1.65:
+            return {
+                "is_valid": False,
+                "reason": "INCOMPLETE_HORIZONTAL_SLICE",
+                "message": "Incomplete Muzzle: Photo is horizontally cut off (only mouth or forehead). Please capture the full muzzle print."
+            }
+
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+
+        # Check 2: Ridge & Bead Micro-Texture Energy
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        ridge_energy = float(np.mean(np.sqrt(sobelx**2 + sobely**2)))
+        center_roi = gray[int(h*0.2):int(h*0.8), int(w*0.2):int(w*0.8)]
+        center_std = float(np.std(center_roi))
+
+        if ridge_energy < 28.0 or center_std < 20.0:
+            return {
+                "is_valid": False,
+                "reason": "NO_BIOMETRIC_RIDGE_PATTERN",
+                "message": "No biometric muzzle ridges detected. Please upload a clear, focused photograph of the cattle nose print."
+            }
+
+        # Check 3: Bilateral Nostril Landmark Analysis
+        smooth = cv2.bilateralFilter(gray, 9, 75, 75)
+        search_roi = smooth[:int(h*0.80), :]
+        mean_val = float(np.mean(search_roi))
+        thresh = max(18, int(mean_val * 0.45))
+        _, mask = cv2.threshold(search_roi, thresh, 255, cv2.THRESH_BINARY_INV)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        min_a = (h * w) * 0.007
+        max_a = (h * w) * 0.18
+
+        left_cands = []
+        right_cands = []
+        center_x = w // 2
+
+        for c in cnts:
+            a = cv2.contourArea(c)
+            if min_a < a < max_a:
+                x, y, bw, bh = cv2.boundingRect(c)
+                cx = x + bw // 2
+                cy = y + bh // 2
+                cand = {'x': x, 'y': y, 'w': bw, 'h': bh, 'cx': cx, 'cy': cy, 'area': a}
+                if cx < center_x:
+                    left_cands.append(cand)
+                else:
+                    right_cands.append(cand)
+
+        # Bilateral check
+        if len(left_cands) >= 1 and len(right_cands) == 0:
+            return {
+                "is_valid": False,
+                "reason": "HALF_MUZZLE_LEFT_ONLY",
+                "message": "Incomplete Muzzle: Right nostril is missing or cut off. Please capture both nostrils in a centered frontal photo."
+            }
+        if len(right_cands) >= 1 and len(left_cands) == 0:
+            return {
+                "is_valid": False,
+                "reason": "HALF_MUZZLE_RIGHT_ONLY",
+                "message": "Incomplete Muzzle: Left nostril is missing or cut off. Please capture both nostrils in a centered frontal photo."
+            }
+
+        # Check if photo is lower lip / chin only
+        if len(left_cands) == 0 and len(right_cands) == 0:
+            upper_half_std = float(np.std(gray[:int(h*0.5), :]))
+            if upper_half_std < 22.0:
+                return {
+                    "is_valid": False,
+                    "reason": "NOSTRILS_MISSING",
+                    "message": "Nostril landmarks missing: Photo appears to be mouth or chin only. Please include the nostrils and nose print."
+                }
+
+        return {
+            "is_valid": True,
+            "reason": "COMPLETE_MUZZLE_VERIFIED",
+            "message": "Complete muzzle verified with bilateral anatomical landmarks.",
+            "ridge_energy": round(ridge_energy, 1),
+            "nostrils_found": len(left_cands) > 0 and len(right_cands) > 0
         }
 
     def _check_screen_spoofing(self, gray: np.ndarray) -> Dict[str, Any]:

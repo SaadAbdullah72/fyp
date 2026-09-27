@@ -9,8 +9,19 @@ class LivestockMuzzleDetector:
     Locates the cattle muzzle in raw field images and safely crops it for ArcFace biometrics.
     Guarantees that pre-cropped close-up muzzle images are preserved without destructive chopping.
     """
-    def __init__(self, model_weights: str = "yolov8n.pt"):
-        print(f"[*] Initializing YOLO Muzzle Detector with: {model_weights}")
+    def __init__(self, model_weights: str = None):
+        custom_weights = os.path.join(os.path.dirname(__file__), "checkpoints", "best_muzzle_yolo.pt")
+        if model_weights is None:
+            if os.path.exists(custom_weights):
+                model_weights = custom_weights
+                self.is_custom_muzzle_model = True
+            else:
+                model_weights = "yolov8n.pt"
+                self.is_custom_muzzle_model = False
+        else:
+            self.is_custom_muzzle_model = ("muzzle" in model_weights.lower())
+
+        print(f"[*] Initializing YOLO Muzzle Detector with: {model_weights} (Custom Muzzle Model: {self.is_custom_muzzle_model})")
         self.model = YOLO(model_weights)
 
     def is_already_cropped_muzzle(self, image: np.ndarray) -> bool:
@@ -47,14 +58,13 @@ class LivestockMuzzleDetector:
         h, w, _ = image.shape
 
         # 1. If already a close-up muzzle photo, PRESERVE IT INTACT!
-        # Destructive re-cropping with thresholding strips genuine nostril/ridge anatomy.
         if self.is_already_cropped_muzzle(image):
             if save_crop_path:
                 os.makedirs(os.path.dirname(os.path.abspath(save_crop_path)), exist_ok=True)
                 cv2.imwrite(save_crop_path, image)
             return image
 
-        # 2. Run YOLO inference to check for full cow in scene
+        # 2. Run YOLO inference
         results = self.model(image, verbose=False)
         detected_cow_box = None
 
@@ -62,19 +72,26 @@ class LivestockMuzzleDetector:
             for box in r.boxes:
                 cls_id = int(box.cls[0].item())
                 conf = float(box.conf[0].item())
-                # If cow/sheep/horse detected with confidence >= 0.30
-                if cls_id in [19, 18, 17] and conf >= 0.30:
-                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                    box_w = x2 - x1
-                    box_h = y2 - y1
-                    # Only crop if detected animal is small in the scene (distant animal)
-                    if box_w < w * 0.85 and box_h < h * 0.85:
-                        muzzle_y1 = max(0, int(y1 + box_h * 0.45))
-                        muzzle_y2 = min(h, y2)
-                        muzzle_x1 = max(0, int(x1 + box_w * 0.15))
-                        muzzle_x2 = min(w, int(x2 - box_w * 0.15))
-                        detected_cow_box = [muzzle_x1, muzzle_y1, muzzle_x2, muzzle_y2]
+                
+                # A. Dedicated Fine-Tuned Muzzle Model (Class 0 = Muzzle)
+                if self.is_custom_muzzle_model:
+                    if cls_id == 0 and conf >= 0.25:
+                        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                        detected_cow_box = [x1, y1, x2, y2]
                         break
+                else:
+                    # B. COCO Fallback: If cow/sheep/horse detected with confidence >= 0.30
+                    if cls_id in [19, 18, 17] and conf >= 0.30:
+                        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                        box_w = x2 - x1
+                        box_h = y2 - y1
+                        if box_w < w * 0.85 and box_h < h * 0.85:
+                            muzzle_y1 = max(0, int(y1 + box_h * 0.45))
+                            muzzle_y2 = min(h, y2)
+                            muzzle_x1 = max(0, int(x1 + box_w * 0.15))
+                            muzzle_x2 = min(w, int(x2 - box_w * 0.15))
+                            detected_cow_box = [muzzle_x1, muzzle_y1, muzzle_x2, muzzle_y2]
+                            break
             if detected_cow_box:
                 break
 

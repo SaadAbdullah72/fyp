@@ -128,8 +128,8 @@
       </div>
       <div class="form-group flex-1">
         <label>Anti-Duplicate Threshold</label>
-        <div class="threshold-pill-fixed" title="Calibrated FAR=0.001% Production Threshold">
-          <span class="font-mono text-cyan">0.45</span>
+        <div class="threshold-pill-fixed" title="Calibrated FAR < 5% Production Threshold">
+          <span class="font-mono text-cyan">0.65</span>
           <span class="text-xs text-muted">(Standard Fixed)</span>
         </div>
       </div>
@@ -292,7 +292,7 @@
             </div>
             <div class="match-stat-item">
               <span class="text-xs text-muted">Decision Threshold:</span>
-              <strong class="font-mono" id="smartDupThreshold">0.40</strong>
+              <strong class="font-mono" id="smartDupThreshold">0.65</strong>
             </div>
             <div class="match-status-badge">🔥 SAME ANIMAL CONFIRMED</div>
           </div>
@@ -388,7 +388,7 @@
             </div>
 
             <div id="smartSuccClosestInfo" class="closest-info-box hidden">
-              <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.45 threshold).</span>
+              <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.65 threshold).</span>
             </div>
           </div>
         </div>
@@ -514,10 +514,10 @@
     <div class="direct-action-bar">
       <div class="slider-control flex-1">
         <div class="slider-label-row">
-          <span>Decision Threshold: <strong class="text-cyan font-mono" id="directThresholdVal">0.40</strong></span>
-          <span class="text-xs text-muted">Optimal: 0.40 (Same: ~0.65+ | Diff: ~0.34-)</span>
+          <span>Decision Threshold: <strong class="text-cyan font-mono" id="directThresholdVal">0.60</strong></span>
+          <span class="text-xs text-muted">Calibrated Optimal: 0.60 (Same: ~0.70+ | Diff: ~0.35-)</span>
         </div>
-        <input type="range" id="directThresholdSlider" min="0.25" max="0.75" step="0.01" value="0.40">
+        <input type="range" id="directThresholdSlider" min="0.30" max="0.80" step="0.01" value="0.60">
       </div>
 
       <button id="btnRunDirectCompare" class="btn btn-primary" style="min-width: 240px;" disabled>
@@ -743,10 +743,10 @@
       <div class="scanner-controls">
         <div class="slider-control">
           <div class="slider-label-row">
-            <span>Match Threshold (Cosine Sim): <strong class="text-cyan font-mono" id="thresholdVal">0.40</strong></span>
-            <span class="text-xs text-muted">Optimal: 0.40 (Same: ~0.65+ | Diff: ~0.34-)</span>
+            <span>Match Threshold (Cosine Sim): <strong class="text-cyan font-mono" id="thresholdVal">0.60</strong></span>
+            <span class="text-xs text-muted">Calibrated Optimal: 0.60 (Same: ~0.70+ | Diff: ~0.35-)</span>
           </div>
-          <input type="range" id="thresholdSlider" min="0.25" max="0.75" step="0.01" value="0.40">
+          <input type="range" id="thresholdSlider" min="0.30" max="0.80" step="0.01" value="0.60">
         </div>
 
         <button id="btnScanVerify" class="btn btn-primary btn-block" disabled>

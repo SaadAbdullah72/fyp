@@ -74,15 +74,12 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 def prepare_muzzle_crop(img_bgr: np.ndarray) -> np.ndarray:
-    """Auto-detects and crops muzzle if full cow image, else preserves aspect."""
-    h, w = img_bgr.shape[:2]
-    if 0.75 <= w / h <= 1.35 and max(h, w) <= 600:
-        return img_bgr
+    """Safely extracts muzzle ROI for wide field images, and preserves pre-cropped muzzle captures intact."""
     if detector is not None:
         try:
             return detector.detect_and_crop(img_bgr)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[!] Detection crop warning: {e}")
     return img_bgr
 
 
@@ -182,7 +179,7 @@ async def compare_muzzles(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),
     file3: Optional[UploadFile] = File(None),
-    threshold: float = 0.40
+    threshold: float = 0.60
 ):
     """
     Direct Biometric Verification & Duplicate Check (Supports 2 or 3 Muzzle Captures):
@@ -268,7 +265,7 @@ async def compare_muzzles(
         master_emb = master_emb / np.linalg.norm(master_emb)
         master_hash = BiometricHasher.generate_sha256_hash(master_emb)
 
-        search_res = vector_index.search(master_emb, top_k=1, threshold=0.45)
+        search_res = vector_index.search(master_emb, top_k=1, threshold=0.65)
         best_candidate = search_res["best_match"]
         enrolled_duplicate = None
         if best_candidate and best_candidate.get("is_match") and vector_index.count() > 0:
@@ -332,7 +329,7 @@ async def compare_muzzles(
 
 
 @app.post("/api/scan")
-async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.40):
+async def scan_muzzle(file: UploadFile = File(...), threshold: float = 0.60):
     """
     Scans a muzzle image with Full Suite:
     1. Pre-inference Strict 50% Quality Gate & Screen Replay Anti-Spoofing.
@@ -441,7 +438,7 @@ async def smart_register(
     name: str = Form(...),
     breed: str = Form("Sahiwal Cattle"),
     tag_id: Optional[str] = Form(None),
-    threshold: float = Form(0.45)
+    threshold: float = Form(0.65)
 ):
     """
     Production-Grade Smart Cattle Registration with:
@@ -449,7 +446,7 @@ async def smart_register(
     2. Strict Pre-Inference Quality Gate (Min 50% score required per shot).
     3. Biometric Internal Consistency Verification across shots.
     4. Centroid Master Embedding Normalization.
-    5. FAISS Vector Search for Strict Anti-Duplicate Protection (Threshold 0.45).
+    5. FAISS Vector Search for Strict Anti-Duplicate Protection (Threshold 0.65).
     """
     try:
         # Collect uploaded files (support 3-shot multi-image or fallback single file)

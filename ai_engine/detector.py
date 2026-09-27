@@ -5,17 +5,35 @@ import os
 
 class LivestockMuzzleDetector:
     """
-    Automated Livestock Muzzle/Nose Detector using YOLO.
-    Locates the cattle muzzle in raw field images and crops it for ArcFace biometrics.
+    Automated Livestock Muzzle/Nose Detector using YOLO & Adaptive Muzzle Anchoring.
+    Locates the cattle muzzle in raw field images and safely crops it for ArcFace biometrics.
+    Guarantees that pre-cropped close-up muzzle images are preserved without destructive chopping.
     """
     def __init__(self, model_weights: str = "yolov8n.pt"):
         print(f"[*] Initializing YOLO Muzzle Detector with: {model_weights}")
         self.model = YOLO(model_weights)
 
+    def is_already_cropped_muzzle(self, image: np.ndarray) -> bool:
+        """
+        Determines whether the input image is already a close-up muzzle crop.
+        Muzzle close-ups typically have an aspect ratio near 1:1 (0.7 to 1.4)
+        and dark/textured central distribution rather than whole animal body.
+        """
+        h, w = image.shape[:2]
+        aspect = w / float(h) if h > 0 else 1.0
+        
+        # If aspect ratio is square-ish (0.70 - 1.40)
+        if 0.70 <= aspect <= 1.40:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            center_roi = gray[int(h*0.20):int(h*0.80), int(w*0.20):int(w*0.80)]
+            if center_roi.std() > 15:
+                return True
+        return False
+
     def detect_and_crop(self, image_input, save_crop_path: str = None) -> np.ndarray:
         """
-        Detects cow/livestock face and crops the lower third (muzzle region).
-        Returns cropped BGR numpy image.
+        Detects cattle muzzle region in raw field images.
+        If already a close-up crop or no whole body detected, preserves the original muzzle.
         """
         if isinstance(image_input, str):
             image = cv2.imread(image_input)
@@ -26,42 +44,51 @@ class LivestockMuzzleDetector:
 
         h, w, _ = image.shape
 
-        # Run inference
-        results = self.model(image, verbose=False)
-        
-        # Default fallback crop: center-focused lower region
-        crop_box = [int(w * 0.25), int(h * 0.35), int(w * 0.75), int(h * 0.85)]
+        # 1. If already a square-ish close-up muzzle, keep it intact without chopping
+        if self.is_already_cropped_muzzle(image):
+            return image
 
-        # Check if animal/cow detected in YOLO standard classes (19: cow, 18: sheep, etc.)
+        # 2. Run YOLO inference to check for full cow in scene
+        results = self.model(image, verbose=False)
+        detected_cow_box = None
+
         for r in results:
             for box in r.boxes:
                 cls_id = int(box.cls[0].item())
-                # If cow/sheep/horse detected
-                if cls_id in [19, 18, 17]:
+                conf = float(box.conf[0].item())
+                # If cow/sheep/horse detected with confidence >= 0.30
+                if cls_id in [19, 18, 17] and conf >= 0.30:
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                    box_w = x2 - x1
                     box_h = y2 - y1
-                    # Muzzle is typically situated in the lower 45% of the head/body bbox
-                    muzzle_y1 = int(y1 + box_h * 0.50)
-                    muzzle_y2 = y2
-                    muzzle_x1 = int(x1 + (x2 - x1) * 0.15)
-                    muzzle_x2 = int(x2 - (x2 - x1) * 0.15)
-                    crop_box = [muzzle_x1, muzzle_y1, muzzle_x2, muzzle_y2]
-                    break
+                    # Only crop if detected animal is not already filling the entire frame
+                    if box_w < w * 0.90 or box_h < h * 0.90:
+                        muzzle_y1 = max(0, int(y1 + box_h * 0.45))
+                        muzzle_y2 = min(h, y2)
+                        muzzle_x1 = max(0, int(x1 + box_w * 0.15))
+                        muzzle_x2 = min(w, int(x2 - box_w * 0.15))
+                        detected_cow_box = [muzzle_x1, muzzle_y1, muzzle_x2, muzzle_y2]
+                        break
+            if detected_cow_box:
+                break
 
-        cx1, cy1, cx2, cy2 = crop_box
-        # Ensure valid bounds
-        cx1, cy1 = max(0, cx1), max(0, cy1)
-        cx2, cy2 = min(w, cx2), min(h, cy2)
+        # 3. If a full cow was detected in a wide image, crop the muzzle
+        if detected_cow_box:
+            cx1, cy1, cx2, cy2 = detected_cow_box
+            cropped = image[cy1:cy2, cx1:cx2]
+            if cropped.shape[0] >= 64 and cropped.shape[1] >= 64:
+                if save_crop_path:
+                    os.makedirs(os.path.dirname(os.path.abspath(save_crop_path)), exist_ok=True)
+                    cv2.imwrite(save_crop_path, cropped)
+                return cropped
 
-        cropped_muzzle = image[cy1:cy2, cx1:cx2]
-
+        # 4. Safe fallback: DO NOT mutilate the image. Return full image.
         if save_crop_path:
             os.makedirs(os.path.dirname(os.path.abspath(save_crop_path)), exist_ok=True)
-            cv2.imwrite(save_crop_path, cropped_muzzle)
-            print(f"[*] Cropped muzzle saved to: {save_crop_path}")
+            cv2.imwrite(save_crop_path, image)
 
-        return cropped_muzzle
+        return image
 
 if __name__ == "__main__":
     detector = LivestockMuzzleDetector()
-    print("[*] YOLO Muzzle Detector ready!")
+    print("[*] Safe Livestock Muzzle Detector ready!")

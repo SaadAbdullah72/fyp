@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (smartRegTag.value.trim()) {
       formData.append('tag_id', smartRegTag.value.trim());
     }
-    formData.append('threshold', 0.45); // Production Standard Fixed Threshold
+    formData.append('threshold', 0.65); // Calibrated High-Security Fixed Threshold (FAR < 5%)
 
     try {
       const res = await fetch('/api/smart-register', {

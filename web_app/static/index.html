@@ -3,951 +3,1049 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Livestock Muzzle Biometric Intelligence System | FYP</title>
-  <!-- Google Fonts -->
+  <title>HalalChain — Livestock Biometric & Ethereum Registry</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="/static/vendor/ethers/ethers.umd.min.js"></script>
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css" />
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* HalalChain Home Page Matched Luxury Theme */
+    body {
+      color: #1A251E;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 80% 10%, #FBFDF9 0%, #EEF2EB 100%) !important;
+      min-height: 100vh;
+    }
+
+    /* Executive Cream & White Surface Cards */
+    .glass-card {
+      background: #FFFFFF !important;
+      border: 1px solid #E2E8DE !important;
+      box-shadow: 0 10px 30px -4px rgba(10, 43, 24, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03) !important;
+      backdrop-filter: blur(14px);
+      border-radius: 20px !important;
+    }
+
+    /* Form Inputs */
+    input[type="text"], input[type="number"], select {
+      background: #FFFFFF !important;
+      border: 1.5px solid #E2E8DE !important;
+      color: #1A251E !important;
+      border-radius: 8px !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      transition: all 0.2s ease;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: #0A4325 !important;
+      box-shadow: 0 0 0 3px rgba(10, 67, 37, 0.12) !important;
+      outline: none;
+    }
+
+    /* High-Contrast Section Headings */
+    .section-headline {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #0A4325 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 3.5px solid #0A4325;
+      padding-left: 12px;
+      text-shadow: none;
+    }
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0A4325;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .map-wrapper {
+      position: relative;
+      margin-top: 10px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid #E2E8DE;
+      background: #FFFFFF;
+    }
+    #farmMap {
+      width: 100%;
+      height: 240px;
+      z-index: 1;
+    }
+    .map-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #FFFFFF;
+      border-top: 1px solid #E2E8DE;
+      font-size: 0.82rem;
+      color: #5E7265;
+    }
+    .btn-action-ghost {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8DE;
+      color: #0A4325;
+      border-radius: 9999px;
+      padding: 7px 16px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(10, 43, 24, 0.04);
+    }
+    .btn-action-ghost:hover {
+      background: #0A4325;
+      border-color: #0A4325;
+      color: #FFFFFF;
+    }
+    .eth-badge-header {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8DE;
+      color: #0A4325;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(10, 43, 24, 0.04);
+    }
+    .eth-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+    .btn-home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #0A4325;
+      text-decoration: none;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 9999px;
+      background: rgba(10, 67, 37, 0.06);
+      border: 1px solid rgba(10, 67, 37, 0.16);
+      transition: all 0.2s ease;
+    }
+    .btn-home-link:hover {
+      background: #0A4325;
+      border-color: #0A4325;
+      color: #FFFFFF;
+    }
+    .passport-container {
+      background: #FFFFFF;
+      border: 1px solid #E2E8DE;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 18px;
+      box-shadow: 0 10px 30px -4px rgba(10, 43, 24, 0.08);
+    }
+    .hash-display {
+      font-family: 'JetBrains Mono', monospace;
+      background: #F4F6F2;
+      border: 1px solid #E2E8DE;
+      padding: 5px 10px;
+      border-radius: 6px;
+      color: #0A4325;
+      font-size: 0.8rem;
+      word-break: break-all;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
-  <!-- Background Glow Effects -->
-  <div class="glow-orb orb-1"></div>
-  <div class="glow-orb orb-2"></div>
-
-  <!-- Header Navigation -->
-  <header class="app-header">
+  <!-- Clean Header Navigation -->
+  <header class="app-header" style="background: #FFFFFF; border-bottom: 1.5px solid #E2E8DE; box-shadow: 0 4px 18px rgba(10, 43, 24, 0.05); padding: 14px 32px;">
     <div class="brand-section">
-      <div class="brand-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path>
-          <path d="M12 6a6 6 0 0 1 6 6c0 2.22-1.2 4.16-3 5.19"></path>
-          <path d="M8 12a4 4 0 0 1 4-4"></path>
-          <circle cx="12" cy="12" r="1.5"></circle>
-        </svg>
+      <div class="brand-logo" style="background: transparent; border: none; box-shadow: none; padding: 0; display: flex; align-items: center;">
+        <img src="/static/images/logo_tight.png?v=8" alt="HalalChain Logo" style="width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(6, 75, 45, 0.15));">
       </div>
       <div>
-        <h1 class="brand-title">MuzzleScan <span class="badge-ai">ArcFace AI</span></h1>
-        <p class="brand-subtitle">Livestock Muzzle Biometric Intelligence & Anti-Duplicate System</p>
+        <h1 class="brand-title" style="font-size: 1.55rem; line-height: 1.1; letter-spacing: 0.05em; text-transform: uppercase; color: #064B2D;">HALAL <span style="color: #064B2D;">CHAIN</span> <span style="font-size: 0.72rem; color: #064B2D; border: 1.5px solid rgba(6, 75, 45, 0.3); background: rgba(6, 75, 45, 0.08); padding: 3px 8px; border-radius: 6px; vertical-align: middle; letter-spacing: 0.08em; font-weight: 800;">REGISTRY</span></h1>
+        <p class="brand-subtitle" style="color: #56655B; font-size: 0.82rem; font-weight: 600;">Livestock Biometric Intelligence & Ethereum Halal Traceability</p>
       </div>
     </div>
 
-    <div class="header-actions">
-      <div class="status-pill status-faiss" title="Sub-millisecond vector indexing active">
-        <span class="faiss-bolt">⚡</span>
-        <span>FAISS: <strong>Active</strong></span>
-      </div>
-      <div class="status-pill status-shield" title="2D FFT Moiré Screen Replay Detection Active">
-        <span>🛡️ Anti-Spoof: <strong>Active</strong></span>
-      </div>
-      <div class="status-pill status-xai" title="Grad-CAM Deep Activation Heatmaps">
-        <span>🧠 XAI Heatmap: <strong>Live</strong></span>
-      </div>
-      <div class="status-pill registry-counter">
-        <span>Enrolled Cattle: <strong id="headerRegistryCount">0</strong></span>
-      </div>
-      <button id="btnResetAll" class="btn btn-danger-ghost" title="Wipe local registry and start fresh from zero">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <!-- Header Actions with Live MetaMask Connection -->
+    <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+      <div class="eth-badge-header" id="networkBadge">
+        <span class="eth-dot"></span>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="color: #064B2D;">
+          <path d="M12 1.5L4.5 13.5L12 17.5L19.5 13.5L12 1.5Z"></path>
+          <path d="M12 18.5L4.5 14.5L12 22.5L19.5 14.5L12 18.5Z" opacity="0.6"></path>
         </svg>
-        Wipe Registry (Fresh Start)
+        <span id="networkNameText">Ethereum Sepolia</span>
+      </div>
+
+      <!-- MetaMask Connect Button -->
+      <div id="walletBtnContainer" style="display: flex; align-items: center; gap: 6px;">
+        <button id="btnConnectWallet" class="btn-action-ghost" style="padding: 7px 16px; border-radius: 9999px; font-weight: 700; background: rgba(0, 245, 160, 0.12); border-color: #064B2D; color: #064B2D; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+          <span id="walletBtnText"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin-right: 6px;"><path d="M21.16 7.62l-2.02-6.52c-.12-.38-.56-.56-.91-.37L12 4.3 5.77.73c-.35-.19-.79-.01-.91.37L2.84 7.62c-.17.55.08 1.15.58 1.41L12 13.78l8.58-4.75c.5-.26.75-.86.58-1.41z" fill="#E2761B"/><path d="M12 13.78L3.42 9.03 2.14 17.5c-.07.45.18.88.58 1.03L11.5 22.8c.32.12.68.12 1 0l8.78-4.27c.4-.15.65-.58.58-1.03l-1.28-8.47L12 13.78z" fill="#E4761B"/><path d="M8.5 12.5l-3.5 1.5 1 4.5 4.5-2.5-2-3.5zm7 0l2 3.5 4.5 2.5 1-4.5-3.5-1.5H15.5z" fill="#D7C1B3"/><path d="M8.5 16l3.5 4.5 3.5-4.5-3.5-2-3.5 2z" fill="#233447"/></svg> Connect MetaMask</span>
+        </button>
+        <button id="btnSwitchAccount" class="btn-action-ghost" style="display: none; padding: 7px 12px; border-radius: 9999px; font-weight: 600; background: #FFFFFF; border: 1.5px solid #BAE6FD; color: #0369A1; cursor: pointer; font-size: 0.78rem; transition: all 0.2s ease;" title="Switch / Choose different MetaMask Account">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg> Switch</span>
+        </button>
+        <button id="btnDisconnectWallet"  class="btn-action-ghost" style="display: none; padding: 7px 14px; border-radius: 9999px; font-weight: 600; background: #FFFFFF; border: 1.5px solid #FECACA; color: #DC2626; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease;" title="Disconnect Connected Wallet">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Disconnect</span>
+        </button>
+      </div>
+
+      <!-- Role Badge -->
+      <div id="roleBadgeContainer" style="display: none; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); padding: 5px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700;">
+        <span id="roleBadgeText"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Cattle Owner</span>
+      </div>
+
+      <!-- Navigation Portals Controlled by RBAC -->
+      <button id="btnOpenAdminPanel" class="btn-action-ghost" style="display: none !important; padding: 7px 18px; border-radius: 9999px; font-weight: 700; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; cursor: pointer;" title="Admin Portal: Whitelist Slaughterhouses & Shopkeepers">
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Admin Portal</span>
+      </button>
+
+      <button id="btnOpenSlaughterhousePanel" class="btn-action-ghost" style="display: none !important; padding: 7px 18px; border-radius: 9999px; font-weight: 700; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; cursor: pointer;" title="Manage Slaughterhouses, Halal Sign-off & Meat Packaging">
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg> Slaughterhouse Portal</span>
+      </button>
+
+      <button id="btnOpenRetailPanel" class="btn-action-ghost" style="display: none !important; padding: 7px 18px; border-radius: 9999px; font-weight: 700; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; cursor: pointer;" title="Retail Supermarket Receiving (Metro, Imtiaz, etc.)">
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Supermarket Portal</span>
+      </button>
+
+      <button id="btnDeployContract"  class="btn-action-ghost" style="display: none; padding: 7px 14px; border-radius: 9999px; font-weight: 600; background: #FFFFFF; border: 1.5px solid #BFDBFE; color: #1D4ED8;" title="Deploy HalalChain Smart Contract to Sepolia Testnet">
+        <span id="deployBtnText"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg> Deploy Contract</span>
+      </button>
+
+      <a href="/" class="btn-home-link" id="btnBackToHome">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+
+      <button id="btnResetAll" style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+        Reset
       </button>
     </div>
   </header>
 
-  <!-- Quick Mode Tabs -->
-  <div class="mode-tabs-container">
-    <button class="mode-tab active" id="tabSmartRegister">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-      </svg>
-      Mode 1: Smart Cattle Registration (Anti-Duplicate AI)
-    </button>
-    <button class="mode-tab" id="tabDirectCompare">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
-      </svg>
-      Mode 2: Direct 1-to-1 Comparison (Photo A vs Photo B)
-    </button>
-    <button class="mode-tab" id="tabSearchVerify">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      Mode 3: Search & Verify Cattle (Database Lookup)
-    </button>
-  </div>
-
   <!-- ============================================================== -->
-  <!-- MODE 1: SMART CATTLE REGISTRATION WITH ANTI-DUPLICATE AI      -->
+  <!-- MAIN REGISTRATION PORTAL                                      -->
   <!-- ============================================================== -->
-  <section class="smart-register-section glass-card" id="smartRegisterSection">
-    <div class="card-header">
-      <div class="header-icon scanner-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <path d="M9 12l2 2 4-4"></path>
-        </svg>
-      </div>
-      <div class="flex-1">
-        <div class="title-row">
-          <h2>Smart Cattle Biometric Registration</h2>
-          <span class="badge-ai-shield">Production 3-Shot Enrollment</span>
-        </div>
-        <p>Production software quality: Upload <strong>3 distinct muzzle captures</strong> (Center, Angle A, Angle B). Each shot must pass the <strong>Strict 50% Quality Gate</strong>. The engine computes a normalized 512-D centroid master template with zero-duplicate protection!</p>
-      </div>
-    </div>
-
-    <!-- Quick 1-Click Viva Presets Row -->
-    <div class="smart-presets-row">
-      <span class="text-xs text-muted font-semibold">⚡ 1-Click Production Viva Presets:</span>
-      <button class="btn-preset btn-preset-step1" id="btnSmartPreset1">
-        🟢 Step 1: Enroll Cow-001 [3 Shots] as "Bella"
-      </button>
-      <button class="btn-preset btn-preset-step2" id="btnSmartPreset2">
-        ⛔ Step 2: Try Registering Cow-001 [3 Shots] as "Daisy" (Triggers Duplicate Alert!)
-      </button>
-      <button class="btn-preset btn-preset-step3" id="btnSmartPreset3">
-        🔵 Step 3: Enroll Cow-002 [3 Shots] as "Thunder" (Unique Animal Match)
-      </button>
-    </div>
-
-    <!-- Registration Metadata Form -->
-    <div class="smart-metadata-bar">
-      <div class="form-group flex-2">
-        <label for="smartRegName">Animal Name / Identifier <span class="text-danger">*</span></label>
-        <input type="text" id="smartRegName" placeholder="e.g. Bella, Sahiwal-01, Thunder" required>
-      </div>
-      <div class="form-group flex-1">
-        <label for="smartRegBreed">Breed / Category</label>
-        <input type="text" id="smartRegBreed" placeholder="e.g. Sahiwal Cattle" value="Sahiwal Cattle">
-      </div>
-      <div class="form-group flex-1">
-        <label for="smartRegTag">Custom Tag ID (Optional)</label>
-        <input type="text" id="smartRegTag" placeholder="Auto-generated">
-      </div>
-      <div class="form-group flex-1">
-        <label>Anti-Duplicate Threshold</label>
-        <div class="threshold-pill-fixed" title="Calibrated FAR < 5% Production Threshold">
-          <span class="font-mono text-cyan">0.65</span>
-          <span class="text-xs text-muted">(Standard Fixed)</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3-Shot Multi-Angle Dropzone Grid -->
-    <div class="multi-shot-wrapper">
-      <div class="multi-shot-header">
-        <div class="shot-guidance-pill">
-          <span class="pulse-dot"></span>
-          <span><strong>Mandatory 3-Angle Muzzle Capture:</strong> Minimum 50% sharpness & lighting required per shot to unlock registration.</span>
-        </div>
-        <div class="quality-overall-summary" id="multiQualitySummary">
-          <span id="multiQualityStatusText" class="text-warning">⏳ 0 of 3 Shots Ready</span>
-        </div>
-      </div>
-
-      <div class="multi-shot-grid">
-        <!-- Shot 1 -->
-        <div class="shot-card" id="shotCard1">
-          <div class="shot-card-header">
-            <span class="shot-number">Shot 01</span>
-            <span class="shot-type">Center Frontal</span>
+  <main class="app-main-layout" style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+    <section class="smart-register-section glass-card" id="smartRegisterSection" style="background: rgba(8, 24, 16, 0.85); border: 1px solid rgba(0, 245, 160, 0.18);">
+      <div class="card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 16px;">
+        <div class="flex-1">
+          <div class="title-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: #FFFFFF;">Livestock Biometric Entry & Ethereum Registry</h2>
+            <span style="font-size: 0.75rem; color: #064B2D; border: 1px solid rgba(0, 245, 160, 0.3); padding: 4px 10px; border-radius: 9999px;">ANTI-DUPLICATE AI ACTIVE</span>
           </div>
-          <div class="dropzone slot-dropzone" id="slotDrop1">
-            <input type="file" id="slotFileInput1" accept="image/*" class="file-input-hidden">
-            <div class="slot-prompt" id="slotPrompt1">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
+          <p style="color: #56655B; font-size: 0.88rem; margin-top: 4px;">Enroll livestock credentials, specify farm location coordinates, and record biometric muzzle identity to the immutable Ethereum ledger.</p>
+        </div>
+      </div>
+
+      <!-- SECTION 1: Farmer & Farm Location -->
+      <div style="margin-top: 24px;">
+        <div class="section-headline">1. Farm & Owner Credentials</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label for="smartOwnerName" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Farmer / Owner Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="smartOwnerName" placeholder="e.g. Muhammad Ali, Tariq Mahmood" value="" required style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 14px; border-radius: 8px; width: 100%;">
+          </div>
+          <div class="form-group">
+            <label for="smartFarmName" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Farm / Ranch Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="smartFarmName" placeholder="e.g. Al-Barakah Dairy Farm" value="Al-Barakah Dairy Farm" required style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 14px; border-radius: 8px; width: 100%;">
+          </div>
+          <div class="form-group">
+            <label for="smartOwnerAddress" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Owner Ethereum Wallet <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="smartOwnerAddress" placeholder="Connect MetaMask or enter 0x..." value="" required style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px 14px; border-radius: 8px; width: 100%;">
+          </div>
+        </div>
+
+        <!-- Location Controls & Interactive Map -->
+        <div class="form-group" style="margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="smartLocation" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Farm Location Address <span style="color: #ef4444;">*</span></label>
+            <button type="button" class="btn-action-ghost" id="btnDetectGps">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="12" x2="2" y2="12"></line>
+                <line x1="12" y1="6" x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
               </svg>
-              <span class="slot-prompt-text">Upload Front Shot</span>
-              <span class="slot-prompt-sub">Click or Drag</span>
-            </div>
-            <div class="slot-preview hidden" id="slotPreview1">
-              <img id="slotImg1" src="" alt="Shot 1 Preview">
-              <button type="button" class="btn-remove-slot" id="btnRemoveSlot1" title="Remove">&times;</button>
-              <div class="slot-overlay-name" id="slotName1">shot1.jpg</div>
-            </div>
+              <span>Detect Farm GPS</span>
+            </button>
           </div>
-          <div class="slot-quality-badge badge-pending" id="slotQualityBadge1">
-            ⏳ Quality: Awaiting Photo
-          </div>
-        </div>
 
-        <!-- Shot 2 -->
-        <div class="shot-card" id="shotCard2">
-          <div class="shot-card-header">
-            <span class="shot-number">Shot 02</span>
-            <span class="shot-type">Angle A / Detail</span>
+          <div style="display: grid; grid-template-columns: 200px 1fr; gap: 12px; margin-bottom: 8px;">
+            <select id="quickRegionSelect" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem;">
+              <option value="sargodha">Sargodha, Punjab</option>
+              <option value="faisalabad">Faisalabad, Punjab</option>
+              <option value="sahiwal">Sahiwal, Punjab</option>
+              <option value="multan">Multan, Punjab</option>
+              <option value="karachi">Karachi Livestock Hub</option>
+              <option value="texas">Texas Ranch Grade, USA</option>
+              <option value="custom">Custom Location</option>
+            </select>
+            <input type="text" id="smartLocation" placeholder="Enter farm address / city" value="Sargodha Road, Punjab, Pakistan" required style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 14px; border-radius: 8px;">
           </div>
-          <div class="dropzone slot-dropzone" id="slotDrop2">
-            <input type="file" id="slotFileInput2" accept="image/*" class="file-input-hidden">
-            <div class="slot-prompt" id="slotPrompt2">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-              <span class="slot-prompt-text">Upload Angle A</span>
-              <span class="slot-prompt-sub">Click or Drag</span>
-            </div>
-            <div class="slot-preview hidden" id="slotPreview2">
-              <img id="slotImg2" src="" alt="Shot 2 Preview">
-              <button type="button" class="btn-remove-slot" id="btnRemoveSlot2" title="Remove">&times;</button>
-              <div class="slot-overlay-name" id="slotName2">shot2.jpg</div>
-            </div>
-          </div>
-          <div class="slot-quality-badge badge-pending" id="slotQualityBadge2">
-            ⏳ Quality: Awaiting Photo
-          </div>
-        </div>
 
-        <!-- Shot 3 -->
-        <div class="shot-card" id="shotCard3">
-          <div class="shot-card-header">
-            <span class="shot-number">Shot 03</span>
-            <span class="shot-type">Angle B / Grooves</span>
-          </div>
-          <div class="dropzone slot-dropzone" id="slotDrop3">
-            <input type="file" id="slotFileInput3" accept="image/*" class="file-input-hidden">
-            <div class="slot-prompt" id="slotPrompt3">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-              <span class="slot-prompt-text">Upload Angle B</span>
-              <span class="slot-prompt-sub">Click or Drag</span>
-            </div>
-            <div class="slot-preview hidden" id="slotPreview3">
-              <img id="slotImg3" src="" alt="Shot 3 Preview">
-              <button type="button" class="btn-remove-slot" id="btnRemoveSlot3" title="Remove">&times;</button>
-              <div class="slot-overlay-name" id="slotName3">shot3.jpg</div>
+          <!-- Leaflet Interactive Map -->
+          <!-- Embedded Live Map Engine (Instant 0-lag execution) -->
+          <div class="map-wrapper" style="position: relative; margin-top: 10px; border-radius: 16px; overflow: hidden; border: 1.5px solid #D5DEC0; background: #FFFFFF; box-shadow: 0 4px 16px rgba(6, 75, 45, 0.06);">
+            <div id="farmMap" style="width: 100%; height: 280px; min-height: 280px; background: #EBF0E6;"></div>
+            <div class="map-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #FFFFFF; border-top: 1.5px solid #E2E8DE; font-size: 0.85rem; color: #56655B;">
+              <span style="font-weight: 600;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#064B2D" stroke-width="2.2" style="vertical-align: -2px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg> Click or drag GPS marker to set ranch boundary</span>
+              <span>Latitude: <strong id="lblLat" style="color: #064B2D; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">32.0836</strong> &bull; Longitude: <strong id="lblLng" style="color: #064B2D; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">72.6711</strong></span>
             </div>
           </div>
-          <div class="slot-quality-badge badge-pending" id="slotQualityBadge3">
-            ⏳ Quality: Awaiting Photo
+          <input type="hidden" id="smartLatitude" value="32.0836">
+          <input type="hidden" id="smartLongitude" value="72.6711">
+
+          <script>
+            (function initLiveFarmMap() {
+              function loadMap() {
+                var el = document.getElementById('farmMap');
+                if (!el || typeof L === 'undefined') {
+                  setTimeout(loadMap, 100);
+                  return;
+                }
+                try {
+                  var initialLat = 32.0836;
+                  var initialLng = 72.6711;
+                  window.halalFarmMap = L.map('farmMap', {
+                    zoomControl: true,
+                    attributionControl: false
+                  }).setView([initialLat, initialLng], 12);
+
+                  // Esri World Street Map (Unrestricted, 0-Lag, No API Key Required)
+                  // High-resolution realistic satellite imagery for authentic ranch view
+                  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '&copy; Esri Livestock Geolocation'
+                  }).addTo(window.halalFarmMap);
+
+                  var pinIcon = L.divIcon({
+                    className: 'emerald-pin',
+                    html: '<div style="background: #064B2D; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #FFFFFF; box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 12px rgba(201,162,63,0.8); display: flex; align-items: center; justify-content: center;"><div style=\"width: 8px; height: 8px; border-radius: 50%; background: #C9A23F;\"></div></div>',
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                  });
+
+                  window.halalFarmMarker = L.marker([initialLat, initialLng], {
+                    draggable: true,
+                    icon: pinIcon
+                  }).addTo(window.halalFarmMap);
+
+                  function syncCoords(lat, lng) {
+                    var sLat = document.getElementById('smartLatitude');
+                    var sLng = document.getElementById('smartLongitude');
+                    var lLat = document.getElementById('lblLat');
+                    var lLng = document.getElementById('lblLng');
+                    if (sLat) sLat.value = lat.toFixed(5);
+                    if (sLng) sLng.value = lng.toFixed(5);
+                    if (lLat) lLat.textContent = lat.toFixed(4);
+                    if (lLng) lLng.textContent = lng.toFixed(4);
+                  }
+
+                  window.halalFarmMarker.on('dragend', function (e) {
+                    var pos = e.target.getLatLng();
+                    syncCoords(pos.lat, pos.lng);
+                  });
+
+                  window.halalFarmMap.on('click', function (e) {
+                    window.halalFarmMarker.setLatLng(e.latlng);
+                    syncCoords(e.latlng.lat, e.latlng.lng);
+                  });
+
+                  [100, 300, 600, 1200].forEach(function(d) {
+                    setTimeout(function() {
+                      if (window.halalFarmMap) window.halalFarmMap.invalidateSize();
+                    }, d);
+                  });
+                } catch(e) {
+                  console.error('Map init error:', e);
+                }
+              }
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadMap);
+              } else {
+                loadMap();
+              }
+            })();
+          </script>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Cattle Profile & Unique Tag -->
+      <div style="margin-top: 28px;">
+        <div class="section-headline">2. Livestock Profile & Digital Tag</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label for="smartRegName" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Animal Name / Identifier <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="smartRegName" placeholder="e.g. Bella, Sultan, Raaju" value="" required style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 14px; border-radius: 8px; width: 100%;">
+          </div>
+          <div class="form-group">
+            <label for="smartRegBreed" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Breed <span style="color: #ef4444;">*</span></label>
+            <select id="smartRegBreed" style="width: 100%; padding: 10px 14px; background: #FFFFFF; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #121A15; font-size: 0.95rem;">
+              <option value="Sahiwal Cattle" selected>Sahiwal Cattle</option>
+              <option value="Red Sindhi">Red Sindhi</option>
+              <option value="Cholistani">Cholistani</option>
+              <option value="Black Angus">Black Angus</option>
+              <option value="Brahman">Brahman</option>
+              <option value="Holstein-Friesian">Holstein-Friesian</option>
+              <option value="Simmental">Simmental</option>
+              <option value="Hereford">Hereford</option>
+              <option value="Wagyu">Wagyu</option>
+              <option value="Other">Other / Crossbred</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="smartRegTag" style="color: #56655B; font-size: 0.85rem; font-weight: 600;">Unique Cattle Tag ID</label>
+              <button type="button" id="btnGenCowId" style="background: none; border: none; color: #064B2D; font-size: 0.78rem; cursor: pointer; text-decoration: underline;">
+                Generate New ID
+              </button>
+            </div>
+            <input type="text" id="smartRegTag" placeholder="Click Generate New ID" value="" readonly style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 10px 14px; border-radius: 8px; width: 100%;">
           </div>
         </div>
       </div>
 
-      <!-- Action Button Locked by Quality Gate -->
-      <div class="multi-shot-action-row">
-        <button id="btnSubmitSmartRegister" class="btn btn-primary btn-block btn-lg" disabled>
-          <span class="btn-spinner hidden" id="smartRegisterSpinner"></span>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="M12 8v8M8 12h8"></path>
-          </svg>
-          Register Cattle (3-Shot Centroid Master Template)
+      <!-- SECTION 3: Muzzle Biometric Capture -->
+      <div style="margin-top: 28px;">
+        <div class="section-headline">3. Biometric Muzzle Ridge Capture</div>
+        <p style="color: #56655B; font-size: 0.82rem; margin-bottom: 14px;">Upload frontal and angle captures. Minimum 50% ridge clarity required for neural feature extraction.</p>
+
+        <div class="multi-shot-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+          <!-- Slot 1 -->
+          <div class="shot-card" id="shotCard1" style="background: #FAFBF8; border: 1.5px dashed #D5DEC0; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: #56655B; margin-bottom: 8px; font-weight: 600;">Frontal Capture (Center)</div>
+            <div class="shot-dropzone" id="shotDrop1">
+              <input type="file" id="shotFile1" accept="image/*" hidden>
+              <div class="shot-empty-state">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" style="color: #064B2D; margin-bottom: 6px;">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #121A15;">Select Center Shot</div>
+                <div style="font-size: 0.75rem; color: #7D8F82;">Muzzle Facing Straight</div>
+              </div>
+              <div class="shot-preview-state hidden">
+                <img class="shot-img" id="shotImg1" alt="Muzzle 1" style="width: 100%; height: 130px; object-fit: cover; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                  <span id="slotQualityBadge1" style="font-size: 0.75rem; font-weight: 700; color: #064B2D;">Loaded</span>
+                  <button type="button" class="btn-shot-remove" data-slot="1" style="background: none; border: none; color: #ef4444; font-size: 0.85rem; cursor: pointer;">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slot 2 -->
+          <div class="shot-card" id="shotCard2" style="background: #FAFBF8; border: 1.5px dashed #D5DEC0; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: #56655B; margin-bottom: 8px; font-weight: 600;">Left Angle Capture</div>
+            <div class="shot-dropzone" id="shotDrop2">
+              <input type="file" id="shotFile2" accept="image/*" hidden>
+              <div class="shot-empty-state">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" style="color: #064B2D; margin-bottom: 6px;">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #121A15;">Select Left Shot</div>
+                <div style="font-size: 0.75rem; color: #7D8F82;">Slight Left Angle</div>
+              </div>
+              <div class="shot-preview-state hidden">
+                <img class="shot-img" id="shotImg2" alt="Muzzle 2" style="width: 100%; height: 130px; object-fit: cover; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                  <span id="slotQualityBadge2" style="font-size: 0.75rem; font-weight: 700; color: #064B2D;">Loaded</span>
+                  <button type="button" class="btn-shot-remove" data-slot="2" style="background: none; border: none; color: #ef4444; font-size: 0.85rem; cursor: pointer;">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slot 3 -->
+          <div class="shot-card" id="shotCard3" style="background: #FAFBF8; border: 1.5px dashed #D5DEC0; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: #56655B; margin-bottom: 8px; font-weight: 600;">Right Angle Capture</div>
+            <div class="shot-dropzone" id="shotDrop3">
+              <input type="file" id="shotFile3" accept="image/*" hidden>
+              <div class="shot-empty-state">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" style="color: #064B2D; margin-bottom: 6px;">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #121A15;">Select Right Shot</div>
+                <div style="font-size: 0.75rem; color: #7D8F82;">Slight Right Angle</div>
+              </div>
+              <div class="shot-preview-state hidden">
+                <img class="shot-img" id="shotImg3" alt="Muzzle 3" style="width: 100%; height: 130px; object-fit: cover; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                  <span id="slotQualityBadge3" style="font-size: 0.75rem; font-weight: 700; color: #064B2D;">Loaded</span>
+                  <button type="button" class="btn-shot-remove" data-slot="3" style="background: none; border: none; color: #ef4444; font-size: 0.85rem; cursor: pointer;">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="margin-top: 28px; text-align: center;">
+        <button class="btn btn-primary" id="btnSubmitSmartRegister" disabled style="padding: 16px 48px; font-size: 1.08rem; background: linear-gradient(135deg, #064B2D 0%, #023B25 100%); color: #FFFFFF; font-weight: 800; letter-spacing: 0.03em; border-radius: 9999px; border: 2px solid #C9A23F; cursor: pointer; transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 8px 24px rgba(6, 75, 45, 0.22), 0 0 16px rgba(201, 162, 63, 0.15); font-family: 'Manrope', -apple-system, sans-serif; display: inline-flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Verify Biometrics & Mint on Ethereum
         </button>
-        <p class="quality-gate-hint" id="qualityGateHint">
-          🔒 Register button is locked. Please enter animal name and upload 3 clear muzzle shots (minimum 50% quality required per shot).
-        </p>
-      </div>
-    </div>
-
-    <!-- ============================================================== -->
-    <!-- SMART REGISTRATION RESULTS CONTAINER                          -->
-    <!-- ============================================================== -->
-    <div class="smart-result-card hidden" id="smartResultCard">
-
-      <!-- CASE A: DUPLICATE DETECTED (Already Registered!) -->
-      <div class="smart-duplicate-view hidden" id="smartDuplicateView">
-        <div class="verdict-banner banner-duplicate">
-          <div class="verdict-icon-badge">⛔</div>
-          <div class="verdict-details">
-            <div class="badge-duplicate-tag">DUPLICATE REGISTRATION REJECTED</div>
-            <h3 id="dupBannerTitle">Sorry! This animal is ALREADY registered!</h3>
-            <p id="dupBannerDesc">Biometric ridge patterns match an existing enrolled animal in your farm database with high confidence.</p>
-          </div>
-        </div>
-
-        <div class="duplicate-comparison-grid">
-          <!-- Left: New Upload Attempt -->
-          <div class="dup-box dup-box-upload">
-            <div class="dup-box-header">
-              <span class="dup-status-badge badge-rejected">New Upload Attempt</span>
-              <span class="text-xs text-muted">Status: Rejected</span>
-            </div>
-            <img id="smartDupUploadThumb" src="" alt="Attempted Upload" class="dup-avatar">
-            <div class="dup-box-meta">
-              <span class="meta-label">Entered Name:</span>
-              <h4 id="smartDupUploadName">Daisy</h4>
-              <span class="meta-note text-danger font-semibold">❌ Duplicate Biometrics Detected</span>
-            </div>
-          </div>
-
-          <!-- Center: Biometric Correlation Match -->
-          <div class="dup-match-center">
-            <div class="match-score-circle">
-              <span class="score-percent" id="smartDupConfidence">84.5%</span>
-              <span class="score-label">Match Score</span>
-            </div>
-            <div class="match-stat-item">
-              <span class="text-xs text-muted">Cosine Similarity:</span>
-              <strong class="font-mono text-cyan" id="smartDupCosine">0.6512</strong>
-            </div>
-            <div class="match-stat-item">
-              <span class="text-xs text-muted">Decision Threshold:</span>
-              <strong class="font-mono" id="smartDupThreshold">0.65</strong>
-            </div>
-            <div class="match-status-badge">🔥 SAME ANIMAL CONFIRMED</div>
-          </div>
-
-          <!-- Right: Existing Enrolled Record -->
-          <div class="dup-box dup-box-matched">
-            <div class="dup-box-header">
-              <span class="dup-status-badge badge-matched">Existing Database Record</span>
-              <span class="text-xs text-muted">Enrolled Cattle</span>
-            </div>
-            <img id="smartDupMatchedThumb" src="" alt="Enrolled Cattle" class="dup-avatar">
-            <div class="dup-box-meta">
-              <span class="meta-label">Already Registered As:</span>
-              <h4 id="smartDupMatchedName" class="text-success">Bella</h4>
-              <p class="text-xs">Tag ID: <strong id="smartDupMatchedTag" class="font-mono text-cyan">CATTLE-001</strong></p>
-              <p class="text-xs">Breed: <span id="smartDupMatchedBreed">Sahiwal Cattle</span></p>
-              <p class="text-xs text-muted">Enrolled: <span id="smartDupMatchedDate">2026-09-24</span></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- XAI Pairwise Explainability Visualizer for Duplicate Confirmation -->
-        <div class="xai-explain-card" id="smartDupXaiCard">
-          <div class="xai-card-header">
-            <span class="xai-badge">EXPLAINABLE AI (XAI) CONFIRMATION</span>
-            <h4>Deep Ridge Alignment & Spatial Attention Map</h4>
-            <p class="text-xs text-muted">Grad-CAM deep feature activations reveal matching micro-pore clusters and ridge textures between the attempted upload and enrolled animal:</p>
-          </div>
-          <div class="xai-canvas-wrapper">
-            <img id="smartDupXaiCanvas" src="" alt="XAI Correspondence Canvas" class="xai-canvas-img">
-          </div>
-        </div>
-
-        <div class="dup-footer-alert">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <span><strong>Anti-Fraud Protection:</strong> Each cattle's muzzle print is unique like a human fingerprint. To prevent double-tagging or fake subsidies, registration of this identical muzzle is blocked.</span>
+        <div style="margin-top: 8px; font-size: 0.78rem; color: #7D8F82;">
+          Automated verification against duplicate registrations, quality gate screening, and Ethereum smart contract minting.
         </div>
       </div>
 
-      <!-- CASE B: NEW CATTLE REGISTERED SUCCESSFULLY -->
-      <div class="smart-success-view hidden" id="smartSuccessView">
-        <div class="verdict-banner banner-new-success">
-          <div class="verdict-icon-badge">🎉</div>
-          <div class="verdict-details">
-            <div class="badge-success-tag">NEW ANIMAL ENROLLED</div>
-            <h3 id="succBannerTitle">Animal Registered Successfully!</h3>
-            <p id="succBannerDesc">No matching biometric was found in database. Animal has been assigned a unique Tag ID and enrolled into the registry.</p>
-          </div>
+      <!-- Spinner -->
+      <div class="loading-spinner-overlay hidden" id="smartRegisterSpinner">
+        <div class="spinner-box" style="background: rgba(6, 21, 14, 0.95); border: 1px solid #00F5A0;">
+          <div class="spinner"></div>
+          <div class="spinner-text" style="color: #121A15; font-size: 0.9rem;">Processing Biometrics & Broadcasting Transaction...</div>
         </div>
+      </div>
 
-        <div class="success-profile-card">
-          <img id="smartSuccThumb" src="" alt="Registered Cattle" class="success-avatar">
-          <div class="success-meta">
-            <div class="meta-top-row">
-              <h4 id="smartSuccName">Bella</h4>
-              <span class="tag-badge" id="smartSuccTag">CATTLE-89B4C1</span>
-            </div>
-            <p class="text-muted">Breed: <strong id="smartSuccBreed">Sahiwal Cattle</strong></p>
-            
-            <!-- Quality & FAISS Badges -->
-            <div class="quality-badges-row">
-              <div class="quality-chip">
-                <span class="text-xs text-muted">Quality Score:</span>
-                <strong id="smartSuccQualityScore" class="text-cyan font-mono">98.5%</strong>
-              </div>
-              <div class="quality-chip">
-                <span class="text-xs text-muted">Liveness:</span>
-                <span id="smartSuccLiveness" class="text-success text-xs font-semibold">✅ Authentic Live Animal</span>
-              </div>
-              <div class="quality-chip">
-                <span class="text-xs text-muted">FAISS Search:</span>
-                <span id="smartSuccFaissLatency" class="text-primary font-mono text-xs">⚡ 1.2ms</span>
+      <!-- RESULTS CONTAINER -->
+      <div class="smart-result-card hidden" id="smartResultCard" style="margin-top: 28px;">
+        <!-- DUPLICATE CONFLICT VIEW -->
+        <div class="smart-duplicate-view hidden" id="smartDuplicateView">
+          <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; border-radius: 10px; padding: 16px 20px; margin-bottom: 18px;">
+            <h3 id="dupBannerTitle" style="color: #ef4444; font-size: 1.25rem; font-weight: 800; font-family: 'Outfit', sans-serif;">BIOMETRIC CONFLICT: DUPLICATE CATTLE DETECTED</h3>
+            <p id="dupBannerDesc" style="color: #cbd5e1; font-size: 0.85rem; margin-top: 4px;">This muzzle ridge pattern matches an existing registered animal on the Ethereum blockchain. Registration has been blocked.</p>
+          </div>
+
+          <div class="duplicate-compare-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <!-- Uploaded Attempt -->
+            <div style="background: rgba(4, 16, 10, 0.6); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 14px;">
+              <h4 style="font-size: 0.85rem; color: #ef4444; margin-bottom: 10px; text-transform: uppercase;">Rejected Registration Attempt</h4>
+              <img id="smartDupUploadThumb" alt="Attempted" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
+              <div style="font-size: 0.82rem; margin-top: 10px; color: #56655B;">
+                <div>Name: <strong id="smartDupUploadName" style="color: #121A15;">-</strong></div>
+                <div>Similarity: <strong id="smartDupConfidence" style="color: #ef4444;">-</strong></div>
+                <div>Cosine Score: <strong id="smartDupCosine" style="color: #064B2D; font-family: monospace;">-</strong></div>
               </div>
             </div>
 
-            <div class="hash-row">
-              <span class="text-xs text-muted font-semibold">Biometric SHA-256 Hash:</span>
-              <div class="hash-box" id="smartSuccHash">0x...</div>
-            </div>
-
-            <div class="gallery-preview-row" id="smartSuccGalleryRow">
-              <span class="text-xs text-muted font-semibold">Enrolled 3-Shot Muzzle Gallery:</span>
-              <div class="gallery-thumbs-grid" id="smartSuccGalleryThumbs"></div>
-            </div>
-
-            <div class="vector-preview-row">
-              <span class="text-xs text-muted font-semibold">512-D Centroid Master Vector Preview:</span>
-              <div class="vector-chips" id="smartSuccVectorChips"></div>
-            </div>
-
-            <div id="smartSuccClosestInfo" class="closest-info-box hidden">
-              <span class="text-xs text-muted">Closest animal in database had similarity: <strong id="smartSuccClosestSim" class="font-mono">0.12</strong> (Well below 0.65 threshold).</span>
+            <!-- Existing Animal On Ethereum -->
+            <div style="background: rgba(4, 16, 10, 0.6); border: 1px solid rgba(0, 245, 160, 0.3); border-radius: 10px; padding: 14px;">
+              <h4 style="font-size: 0.85rem; color: #064B2D; margin-bottom: 10px; text-transform: uppercase;">Matched Record on Ethereum</h4>
+              <img id="smartDupMatchedThumb" alt="Matched" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
+              <div style="font-size: 0.82rem; margin-top: 10px; color: #56655B;">
+                <div>Cow ID: <strong id="smartDupMatchedTag" style="color: #064B2D; font-family: monospace;">-</strong></div>
+                <div>Name: <strong id="smartDupMatchedName" style="color: #121A15;">-</strong></div>
+                <div>Owner: <strong id="smartDupMatchedOwner" style="color: #121A15;">-</strong></div>
+                <div>Farm: <strong id="smartDupMatchedFarm" style="color: #121A15;">-</strong></div>
+                <div>Breed: <strong id="smartDupMatchedBreed" style="color: #121A15;">-</strong></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Success XAI Attention Heatmap Row -->
-        <div class="succ-xai-card" id="smartSuccXaiCard">
-          <div class="xai-card-header">
-            <span class="xai-badge">XAI FEATURE ACTIVATION</span>
-            <h4>Grad-CAM Muzzle Ridge Attention Heatmap</h4>
-            <p class="text-xs text-muted">Neural network feature activations concentrated across biometric ridges & sweat pores:</p>
-          </div>
-          <div class="succ-xai-thumb-box">
-            <img id="smartSuccXaiThumb" src="" alt="Grad-CAM Attention Heatmap" class="succ-xai-thumb">
+          <div style="margin-top: 16px;">
+            <h4 style="font-size: 0.82rem; color: #56655B; margin-bottom: 6px; text-transform: uppercase;">Grad-CAM Deep Activation Heatmap Match</h4>
+            <img id="smartDupXaiCanvas" alt="XAI Correspondence" style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
           </div>
         </div>
-      </div>
 
-    </div>
-  </section>
+        <!-- NEW ANIMAL APPROVED VIEW -->
+        <div class="smart-success-view hidden" id="smartSuccessView">
+          <div style="background: rgba(0, 245, 160, 0.1); border: 1px solid #00F5A0; border-radius: 10px; padding: 16px 20px; margin-bottom: 18px;">
+            <h3 id="succBannerTitle" style="color: #064B2D; font-size: 1.25rem; font-weight: 800; font-family: 'Outfit', sans-serif;">BIOMETRICS VERIFIED & MINTED TO ETHEREUM</h3>
+            <p id="succBannerDesc" style="color: #e2e8f0; font-size: 0.85rem; margin-top: 4px;">Zero duplicates confirmed. Immutable 512-D identity registered on smart contract.</p>
+          </div>
 
-
-  <!-- ============================================================== -->
-  <!-- MODE 2: MULTI-SHOT MUZZLE COMPARISON & DUPLICATE CHECK         -->
-  <!-- ============================================================== -->
-  <section class="direct-compare-section glass-card hidden" id="directCompareSection">
-    <div class="card-header">
-      <div class="header-icon scanner-icon">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-      </div>
-      <div>
-        <h2>Multi-Shot Muzzle Comparison & Duplicate Registry Check</h2>
-        <p>Drop <strong>2 or 3 muzzle captures</strong> to verify <strong>same animal cross-consistency</strong> and check for <strong>duplicate registration</strong> against the farm registry</p>
-      </div>
-    </div>
-
-    <!-- Quick Test Pair Buttons -->
-    <div class="quick-pairs-row">
-      <span class="text-xs text-muted font-semibold">Instant Test Presets:</span>
-      <button class="btn-preset btn-preset-match" id="btnPresetSame">
-        🟢 Load Cattle-001 (3 Shots) — Same Cow Match & Duplicate Check
-      </button>
-      <button class="btn-preset btn-preset-diff" id="btnPresetDiff">
-        🔴 Load Cattle-001 vs Cattle-002 — Different Cows Mismatch
-      </button>
-    </div>
-
-    <!-- Triple Dropzone Grid with Quality Assurance -->
-    <div class="dual-drop-wrapper">
-      <div class="triple-drop-grid">
-        <!-- Box 1 -->
-        <div class="compare-col">
-          <div class="compare-box" id="boxCompare1">
-            <input type="file" id="compareFileInput1" accept="image/*" class="file-input-hidden">
-            <div class="compare-box-prompt" id="boxPrompt1">
-              <span class="box-badge">Photo 1 (Frontal / Center)</span>
-              <div class="upload-icon-small">📁</div>
-              <p class="font-semibold">Drop or Click Photo 1</p>
-              <span class="text-xs text-muted">Primary Reference Muzzle</span>
+          <div class="passport-container">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px; margin-bottom: 16px;">
+              <div>
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: #56655B; letter-spacing: 0.08em;">Official HalalChain Digital Passport</span>
+                <h3 id="smartSuccName" style="font-size: 1.5rem; color: #FFFFFF; font-weight: 800; margin-top: 2px;">Bella</h3>
+                <span class="hash-display" id="smartSuccTag">HC-ETH-89412</span>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 0.75rem; color: #064B2D; border: 1px solid #00F5A0; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; font-weight: 700;">ON-CHAIN VERIFIED</span>
+                <div style="font-size: 0.75rem; color: #56655B; margin-top: 6px;" id="smartSuccDate">-</div>
+              </div>
             </div>
-            <div class="compare-box-preview hidden" id="boxPreview1">
-              <img id="boxImg1" src="" alt="Photo 1">
-              <button class="btn-box-remove" id="btnRemoveBox1">&times;</button>
-              <span class="box-filename" id="boxFilename1">photo1.jpg</span>
+
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 20px;">
+              <div>
+                <img id="smartSuccThumb" alt="Enrolled Muzzle" style="width: 140px; height: 140px; object-fit: cover; border-radius: 10px; border: 1.5px solid #00F5A0;">
+                <div id="smartSuccGalleryThumbs" style="display: flex; gap: 4px; margin-top: 8px;"></div>
+              </div>
+              <div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.88rem; margin-bottom: 14px;">
+                  <div><span style="color: #56655B;">Owner:</span> <strong id="smartSuccOwner" style="color: #FFFFFF; display: block;">Muhammad Ali</strong></div>
+                  <div><span style="color: #56655B;">Farm:</span> <strong id="smartSuccFarm" style="color: #FFFFFF; display: block;">Al-Barakah Ranch</strong></div>
+                  <div><span style="color: #56655B;">Location:</span> <strong id="smartSuccLocation" style="color: #FFFFFF; display: block;">Sargodha, Punjab</strong></div>
+                  <div><span style="color: #56655B;">Breed:</span> <strong id="smartSuccBreed" style="color: #064B2D; display: block;">Sahiwal Cattle</strong></div>
+                  <div><span style="color: #56655B;">Ridge Clarity:</span> <strong id="smartSuccQualityScore" style="color: #38bdf8; display: block;">98.4%</strong></div>
+                  <div><span style="color: #56655B;">Search Latency:</span> <strong id="smartSuccLatency" style="color: #facc15; display: block;">0.8 ms</strong></div>
+                </div>
+
+                <div style="background: rgba(0, 0, 0, 0.4); padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(0,245,160,0.25);">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 6px;">
+                    <span style="color: #56655B;">Ethereum Tx Hash:</span>
+                    <a href="https://sepolia.etherscan.io" target="_blank" id="smartSuccEtherscanLink" style="color: #064B2D; text-decoration: underline;">View on Etherscan &rarr;</a>
+                  </div>
+                  <div class="hash-display" id="smartSuccTxHash">0x7f481c9a...</div>
+                  <div style="font-size: 0.75rem; color: #56655B; margin-top: 6px;">
+                    Biometric Hash: <span id="smartSuccHash" style="color: #e2e8f0; font-family: monospace;">-</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="slot-quality-badge badge-pending" id="directQualityBadge1" style="margin-top: 8px;">
-            ⏳ Quality: Awaiting Photo
-          </div>
-        </div>
-
-        <!-- Box 2 -->
-        <div class="compare-col">
-          <div class="compare-box" id="boxCompare2">
-            <input type="file" id="compareFileInput2" accept="image/*" class="file-input-hidden">
-            <div class="compare-box-prompt" id="boxPrompt2">
-              <span class="box-badge">Photo 2 (Side / Angle A)</span>
-              <div class="upload-icon-small">📁</div>
-              <p class="font-semibold">Drop or Click Photo 2</p>
-              <span class="text-xs text-muted">Second Angle Muzzle</span>
-            </div>
-            <div class="compare-box-preview hidden" id="boxPreview2">
-              <img id="boxImg2" src="" alt="Photo 2">
-              <button class="btn-box-remove" id="btnRemoveBox2">&times;</button>
-              <span class="box-filename" id="boxFilename2">photo2.jpg</span>
-            </div>
-          </div>
-          <div class="slot-quality-badge badge-pending" id="directQualityBadge2" style="margin-top: 8px;">
-            ⏳ Quality: Awaiting Photo
-          </div>
-        </div>
-
-        <!-- Box 3 -->
-        <div class="compare-col">
-          <div class="compare-box" id="boxCompare3">
-            <input type="file" id="compareFileInput3" accept="image/*" class="file-input-hidden">
-            <div class="compare-box-prompt" id="boxPrompt3">
-              <span class="box-badge">Photo 3 (Angle B / Optional)</span>
-              <div class="upload-icon-small">📁</div>
-              <p class="font-semibold">Drop or Click Photo 3</p>
-              <span class="text-xs text-muted">3rd Angle Verification</span>
-            </div>
-            <div class="compare-box-preview hidden" id="boxPreview3">
-              <img id="boxImg3" src="" alt="Photo 3">
-              <button class="btn-box-remove" id="btnRemoveBox3">&times;</button>
-              <span class="box-filename" id="boxFilename3">photo3.jpg</span>
-            </div>
-          </div>
-          <div class="slot-quality-badge badge-pending" id="directQualityBadge3" style="margin-top: 8px;">
-            ⏳ Quality: Optional Photo
-          </div>
-        </div>
-      </div>
-      <p class="quality-gate-hint" id="directQualityHint" style="text-align: center; margin-top: 10px;">
-        🔒 Verification locked: Upload at least 2 muzzle photos (minimum 50% quality required per photo).
-      </p>
-    </div>
-
-    <!-- Direct Compare Action Bar -->
-    <div class="direct-action-bar">
-      <div class="slider-control flex-1">
-        <div class="slider-label-row">
-          <span>Decision Threshold: <strong class="text-cyan font-mono" id="directThresholdVal">0.60</strong></span>
-          <span class="text-xs text-muted">Calibrated Optimal: 0.60 (Same: ~0.70+ | Diff: ~0.35-)</span>
-        </div>
-        <input type="range" id="directThresholdSlider" min="0.30" max="0.80" step="0.01" value="0.60">
-      </div>
-
-      <button id="btnRunDirectCompare" class="btn btn-primary" style="min-width: 240px;" disabled>
-        <span class="btn-spinner hidden" id="directCompareSpinner"></span>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        Verify Muzzles & Check Duplicate
-      </button>
-    </div>
-
-    <!-- Direct Comparison Results Container (Hidden initially) -->
-    <div class="direct-results-card hidden" id="directResultsCard">
-      <!-- Verdict Banner -->
-      <div class="verdict-banner" id="directVerdictBanner">
-        <div class="verdict-icon-badge" id="directVerdictIcon">✅</div>
-        <div class="verdict-details">
-          <h3 id="directVerdictTitle">MATCH VERIFIED</h3>
-          <p id="directVerdictDesc">All captures belong to the SAME cattle with high biometric correlation.</p>
-        </div>
-      </div>
-
-      <!-- Duplicate Check Banner -->
-      <div class="duplicate-check-banner hidden" id="directDuplicateBanner">
-        <div class="duplicate-badge-icon" id="directDuplicateIcon">⚠️</div>
-        <div class="duplicate-details">
-          <h4 id="directDuplicateTitle">ALREADY REGISTERED IN FARM DATABASE</h4>
-          <p id="directDuplicateDesc">Matches enrolled profile Tag: PK-SAH-001 (Similarity: 0.8841)</p>
-          <div class="duplicate-match-pill hidden" id="directDuplicatePill">
-            <img id="directDuplicateThumb" src="" alt="Enrolled Profile">
-            <div>
-              <strong id="directDuplicateName">Bella</strong> (<span id="directDuplicateTag">PK-SAH-001</span>)
-              <div class="text-xs text-muted" id="directDuplicateDate">Enrolled: 2026-09-24</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pairwise Consistency Matrix (For 3-shot verification) -->
-      <div class="pairwise-matrix-card hidden" id="directPairwiseCard">
-        <h4 class="text-xs text-muted font-semibold uppercase tracking-wider" style="margin-bottom: 8px;">Multi-Angle Pairwise Cross-Consistency:</h4>
-        <div class="pairwise-chips" id="directPairwiseChips"></div>
-      </div>
-
-      <!-- Metrics Grid -->
-      <div class="direct-metrics-grid">
-        <div class="metric-item">
-          <span class="metric-label">Cosine Similarity (Primary / Avg)</span>
-          <span class="metric-value font-mono" id="directMetricCosine">0.6512</span>
-          <div class="metric-bar-bg">
-            <div class="metric-bar-fill" id="directMetricBar" style="width: 82%;"></div>
-          </div>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">Biometric Confidence</span>
-          <span class="metric-value" id="directMetricConfidence">82.6%</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">Angular Separation</span>
-          <span class="metric-value" id="directMetricAngular">49.4°</span>
-        </div>
-      </div>
-
-      <!-- Biometric Hashes -->
-      <div class="direct-hashes-row">
-        <div class="direct-hash-item">
-          <span class="text-xs text-muted font-semibold">Photo 1 Biometric Hash:</span>
-          <div class="hash-box text-xs" id="directHash1">0x...</div>
-        </div>
-        <div class="direct-hash-item">
-          <span class="text-xs text-muted font-semibold">Photo 2 Biometric Hash:</span>
-          <div class="hash-box text-xs" id="directHash2">0x...</div>
-        </div>
-        <div class="direct-hash-item hidden" id="directHash3Item">
-          <span class="text-xs text-muted font-semibold">Photo 3 Biometric Hash:</span>
-          <div class="hash-box text-xs" id="directHash3">0x...</div>
-        </div>
-      </div>
-
-      <!-- Mode 2 Quality & Anti-Spoofing Audit -->
-      <div class="direct-quality-grid" id="directQualityGrid">
-        <div class="quality-mini-card" id="directQ1Card">
-          <div class="quality-title-row">
-            <span class="text-xs text-muted font-semibold">Photo 1 Quality & Liveness</span>
-            <span id="directQ1Score" class="quality-pill-score">98.5%</span>
-          </div>
-          <p id="directQ1Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
-        </div>
-        <div class="quality-mini-card" id="directQ2Card">
-          <div class="quality-title-row">
-            <span class="text-xs text-muted font-semibold">Photo 2 Quality & Liveness</span>
-            <span id="directQ2Score" class="quality-pill-score">97.8%</span>
-          </div>
-          <p id="directQ2Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
-        </div>
-        <div class="quality-mini-card hidden" id="directQ3Card">
-          <div class="quality-title-row">
-            <span class="text-xs text-muted font-semibold">Photo 3 Quality & Liveness</span>
-            <span id="directQ3Score" class="quality-pill-score">96.4%</span>
-          </div>
-          <p id="directQ3Live" class="text-xs text-success font-semibold">✅ Authentic Live Animal</p>
-        </div>
-      </div>
-
-      <!-- Mode 2 XAI Visualizer Section with Interactive Tabs -->
-      <div class="direct-xai-card" id="directXaiCard">
-        <div class="direct-xai-header">
-          <div>
-            <span class="xai-badge">EXPLAINABLE AI (XAI) VISUALIZER</span>
-            <h4>Grad-CAM Ridge Alignment & Pore Correspondence</h4>
-            <p class="text-xs text-muted">Examine the spatial neural activation maps and pairwise ridge correlation:</p>
-          </div>
-          <div class="xai-view-tabs">
-            <button class="xai-tab active" id="btnTabXaiCorr" type="button">Alignment Map</button>
-            <button class="xai-tab" id="btnTabXaiHeatmaps" type="button">Heatmap Layers</button>
-            <button class="xai-tab" id="btnTabXaiRidges" type="button">Ridge Texture</button>
-          </div>
-        </div>
-
-        <div class="xai-tab-body" id="xaiTabBodyCorr">
-          <img id="directXaiCorrImg" src="" alt="Pairwise Alignment Map" class="xai-canvas-img">
-        </div>
-
-        <div class="xai-tab-body hidden" id="xaiTabBodyHeatmaps">
-          <div class="dual-xai-grid" id="directHeatmapsGrid">
-            <div class="xai-col">
-              <span class="xai-label">Photo 1 Neural Heatmap</span>
-              <img id="directHeatImg1" src="" alt="Photo 1 Heatmap" class="xai-thumb">
-            </div>
-            <div class="xai-col">
-              <span class="xai-label">Photo 2 Neural Heatmap</span>
-              <img id="directHeatImg2" src="" alt="Photo 2 Heatmap" class="xai-thumb">
-            </div>
-            <div class="xai-col hidden" id="directHeatCol3">
-              <span class="xai-label">Photo 3 Neural Heatmap</span>
-              <img id="directHeatImg3" src="" alt="Photo 3 Heatmap" class="xai-thumb">
-            </div>
-          </div>
-        </div>
-
-        <div class="xai-tab-body hidden" id="xaiTabBodyRidges">
-          <div class="dual-xai-grid" id="directRidgesGrid">
-            <div class="xai-col">
-              <span class="xai-label">Photo 1 Ridge Grooves</span>
-              <img id="directRidgeImg1" src="" alt="Photo 1 Ridge Grooves" class="xai-thumb">
-            </div>
-            <div class="xai-col">
-              <span class="xai-label">Photo 2 Ridge Grooves</span>
-              <img id="directRidgeImg2" src="" alt="Photo 2 Ridge Grooves" class="xai-thumb">
-            </div>
-            <div class="xai-col hidden" id="directRidgeCol3">
-              <span class="xai-label">Photo 3 Ridge Grooves</span>
-              <img id="directRidgeImg3" src="" alt="Photo 3 Ridge Grooves" class="xai-thumb">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ============================================================== -->
-  <!-- MODE 3: SEARCH & VERIFY CATTLE (DATABASE LOOKUP)               -->
-  <!-- ============================================================== -->
-  <section class="samples-bar glass-card hidden" id="searchSamplesBar">
-    <div class="samples-header">
-      <span class="samples-label">⚡ 1-Click Live Test Cases:</span>
-      <span class="samples-hint">Directly click sample images to test genuine match vs impostor flag</span>
-    </div>
-    <div class="samples-container" id="samplesContainer">
-      <div class="sample-skeleton">Loading test samples...</div>
-    </div>
-  </section>
-
-  <main class="main-layout hidden" id="searchVerifyLayout">
-    <!-- Left: Scanner & Image Input -->
-    <section class="scanner-card glass-card">
-      <div class="card-header">
-        <div class="header-icon scanner-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
-        </div>
-        <div>
-          <h2>Muzzle Biometric Scanner</h2>
-          <p>Upload a muzzle photo to search if this animal is registered in the farm database</p>
-        </div>
-      </div>
-
-      <div class="dropzone" id="dropZone">
-        <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
-        <div class="dropzone-content" id="dropzonePrompt">
-          <div class="upload-icon-circle">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-          </div>
-          <p class="dropzone-title">Drag & drop muzzle image here</p>
-          <p class="dropzone-subtitle">or <span class="highlight-link">Browse from computer</span></p>
-          <span class="format-badge">Supports: JPG, PNG, JPEG (512x512 recommended)</span>
-        </div>
-
-        <div class="dropzone-preview hidden" id="dropzonePreview">
-          <img id="previewImg" src="" alt="Muzzle Preview">
-          <button id="btnRemoveImg" class="btn-remove-img" title="Remove image">&times;</button>
-          <div class="preview-overlay-info">
-            <span id="previewFilename">image.jpg</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="slot-quality-badge badge-pending" id="searchQualityBadge" style="margin-top: 10px;">
-        ⏳ Quality: Awaiting Photo
-      </div>
-      <p class="quality-gate-hint" id="searchQualityHint" style="text-align: center; margin-top: 6px; font-size: 0.75rem;">
-        🔒 Minimum 50% biometric clarity required to execute registry match.
-      </p>
-
-      <div class="scanner-controls">
-        <div class="slider-control">
-          <div class="slider-label-row">
-            <span>Match Threshold (Cosine Sim): <strong class="text-cyan font-mono" id="thresholdVal">0.60</strong></span>
-            <span class="text-xs text-muted">Calibrated Optimal: 0.60 (Same: ~0.70+ | Diff: ~0.35-)</span>
-          </div>
-          <input type="range" id="thresholdSlider" min="0.30" max="0.80" step="0.01" value="0.60">
-        </div>
-
-        <button id="btnScanVerify" class="btn btn-primary btn-block" disabled>
-          <span class="btn-spinner hidden" id="scanSpinner"></span>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          Scan & Match in Registry
-        </button>
-      </div>
-
-      <!-- 4-Way Multi-Modal Inspection Grid (Raw, CLAHE, Grad-CAM XAI, Ridge Detail) -->
-      <div class="dual-inspection hidden" id="dualInspectionCard">
-        <div class="inspection-header-row">
-          <h3 class="inspection-title">Biometric Explainability & Ridge Analysis</h3>
-          <span class="badge-ai-shield">Grad-CAM XAI</span>
-        </div>
-        <div class="quad-images-grid">
-          <div class="quad-col">
-            <span class="dual-label">1. Raw Muzzle</span>
-            <img id="rawThumb" src="" alt="Raw Image" class="quad-thumb">
-          </div>
-          <div class="quad-col">
-            <span class="dual-label">2. CLAHE Texture</span>
-            <img id="claheThumb" src="" alt="CLAHE Enhanced" class="quad-thumb">
-          </div>
-          <div class="quad-col">
-            <span class="dual-label">3. XAI Heatmap</span>
-            <img id="scanHeatThumb" src="" alt="Grad-CAM Heatmap" class="quad-thumb">
-          </div>
-          <div class="quad-col">
-            <span class="dual-label">4. Ridge Grooves</span>
-            <img id="scanRidgeThumb" src="" alt="Ridge Grooves" class="quad-thumb">
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Right: Match Verdict & Details -->
-    <section class="results-card glass-card">
-      <div class="card-header">
-        <div class="header-icon verdict-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-        </div>
-        <div>
-          <h2>Biometric Verification Verdict</h2>
-          <p>Real-time ArcFace hyperspherical distance & registry lookup</p>
+    <!-- LEDGER TABLE -->
+    <section class="registry-section glass-card" id="registrySection" style="margin-top: 32px; background: rgba(8, 24, 16, 0.85); border: 1px solid rgba(0, 245, 160, 0.18);">
+      <div class="card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px;">
+        <div class="title-row" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: #FFFFFF;">Ethereum Cattle Registry Ledger</h2>
+          <span id="registryTotalBadge" style="font-size: 0.78rem; color: #064B2D; border: 1px solid rgba(0, 245, 160, 0.3); padding: 3px 10px; border-radius: 9999px;">0 Cattle On-Chain</span>
         </div>
       </div>
 
-      <div class="verdict-banner banner-idle" id="verdictBanner">
-        <div class="verdict-icon-badge" id="verdictIcon">🔍</div>
-        <div class="verdict-details">
-          <h3 id="verdictTitle">Awaiting Input</h3>
-          <p id="verdictDescription">Upload a muzzle photo or choose a 1-click sample above to extract features and test matching.</p>
-        </div>
-      </div>
-
-      <div class="metrics-grid hidden" id="metricsGrid">
-        <div class="metric-item">
-          <span class="metric-label">Cosine Similarity</span>
-          <span class="metric-value font-mono" id="metricCosine">-</span>
-          <div class="metric-bar-bg">
-            <div class="metric-bar-fill" id="metricCosineBar"></div>
-          </div>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">Biometric Confidence</span>
-          <span class="metric-value" id="metricConfidence">-</span>
-        </div>
-        <div class="metric-item">
-          <span class="metric-label">Angular Separation</span>
-          <span class="metric-value" id="metricAngular">-</span>
-        </div>
-      <!-- Mode 3 Quality Gate Audit -->
-      <div class="quality-audit-card hidden" id="scanQualityCard">
-        <div class="quality-card-header">
-          <span class="xai-badge">SMART QUALITY GATE & ANTI-SPOOFING</span>
-          <div class="quality-score-badge">
-            Score: <strong id="scanQualityScore" class="font-mono">98.5%</strong>
-          </div>
-        </div>
-        <div class="quality-metrics-mini">
-          <div class="quality-stat">
-            <span class="text-xs text-muted">Ridge Sharpness:</span>
-            <strong id="scanSharpnessVal" class="text-cyan font-mono">245.8</strong>
-          </div>
-          <div class="quality-stat">
-            <span class="text-xs text-muted">Specular Glare:</span>
-            <strong id="scanGlareVal" class="font-mono">0.8%</strong>
-          </div>
-          <div class="quality-stat">
-            <span class="text-xs text-muted">Anti-Spoofing:</span>
-            <span id="scanLivenessVal" class="text-success text-xs font-semibold">✅ Authentic Live Animal</span>
-          </div>
-        </div>
-        <p id="scanQualityFeedback" class="text-xs text-muted quality-feedback-text">Optimal sharpness & lighting.</p>
-      </div>
-
-      <!-- FAISS High-Speed Vector Retrieval Card -->
-      <div class="faiss-ranking-card hidden" id="scanFaissCard">
-        <div class="faiss-header-row">
-          <div class="faiss-title-group">
-            <span class="faiss-bolt">⚡</span>
-            <span class="font-semibold text-sm">FAISS Vector Search Performance</span>
-          </div>
-          <div class="faiss-latency-pill">
-            <span id="scanFaissEngine">FAISS-FlatIP</span> &bull; Latency: <strong id="scanFaissLatency" class="text-cyan">0.85 ms</strong>
-          </div>
-        </div>
-        <div class="faiss-candidates-list" id="scanFaissCandidates">
-          <!-- Dynamically populated top 5 candidates -->
-        </div>
-      </div>
-
-      <div class="matched-profile hidden" id="matchedProfileCard">
-        <div class="matched-profile-header">
-          <span class="matched-badge">IDENTIFIED CATTLE</span>
-          <span class="matched-tag" id="matchedTagId">COW-001</span>
-        </div>
-        <div class="matched-profile-body">
-          <img id="matchedThumb" src="" alt="Enrolled Muzzle" class="matched-avatar">
-          <div class="matched-meta">
-            <h4 id="matchedName">Sahiwal Cow #01</h4>
-            <p>Status: <span class="text-success font-semibold">Biometrically Verified Match</span></p>
-            <p class="text-muted text-xs">Matching fingerprint pattern found in local database</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="biometric-fingerprint hidden" id="fingerprintSection">
-        <div class="fingerprint-header">
-          <span class="section-title">Cryptographic Biometric Hash (SHA-256)</span>
-          <button id="btnCopyHash" class="btn-copy" title="Copy Hash">Copy</button>
-        </div>
-        <div class="hash-box" id="displayHash">0x...</div>
-
-        <div class="vector-header">
-          <span class="section-title">Deep Embedding (512-D L2-Normalized Vector)</span>
-          <span class="text-xs text-muted">ArcFace Metric Space</span>
-        </div>
-        <div class="vector-chips" id="vectorChips"></div>
+      <div style="overflow-x: auto; margin-top: 14px;">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background: #FFFFFF; border-radius: 14px; overflow: hidden; border: 1.5px solid #E2E8DE; box-shadow: 0 2px 8px rgba(10,43,24,0.04);">
+          <thead>
+            <tr style="background: #F8FAF6; border-bottom: 1.5px solid #E2E8DE; text-align: left; font-size: 0.8rem; font-weight: 800; color: #064B2D; text-transform: uppercase; letter-spacing: 0.05em;">
+              <th style="padding: 14px 16px;">Muzzle</th>
+              <th style="padding: 14px 16px;">Cow ID</th>
+              <th style="padding: 14px 16px;">Animal Name</th>
+              <th style="padding: 14px 16px;">Owner</th>
+              <th style="padding: 14px 16px;">Farm & Location</th>
+              <th style="padding: 14px 16px;">Breed</th>
+              <th style="padding: 14px 16px;">Ethereum Tx</th>
+              <th style="padding: 14px 16px;">Date</th>
+              <th style="padding: 14px 16px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="registryTableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 28px; color: #7D8F82; font-size: 0.85rem;">
+                No cattle registered yet. Enroll an animal using the form above.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
+  
+    <!-- ============================================================== -->
+    <!-- WALLET SEARCH & ETHEREUM OWNERSHIP AUDIT SECTION               -->
+    <!-- ============================================================== -->
+    <section class="glass-card" id="searchAuditSection" style="margin-top: 32px; background: rgba(8, 24, 16, 0.85); border: 1px solid rgba(0, 245, 160, 0.18); padding: 24px;">
+      <div class="card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px;">
+        <div class="title-row" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: #FFFFFF;">Wallet Portfolio & Ownership Audit</h2>
+          <span style="font-size: 0.75rem; color: #064B2D; border: 1px solid rgba(0, 245, 160, 0.3); padding: 3px 10px; border-radius: 9999px;">ON-CHAIN AUDIT</span>
+        </div>
+        <p style="color: #56655B; font-size: 0.85rem; margin-top: 4px;">Search any Ethereum wallet address (0x...) or Cow ID to audit currently owned cattle, registration proofs, and ownership transfer history.</p>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 18px;">
+        <input type="text" id="walletSearchInput" placeholder="Enter Ethereum Address (0x...) or Cow ID (HC-SEP-...)" style="flex: 1; background: #FFFFFF; border: 1px solid rgba(0, 245, 160, 0.3); color: #121A15; font-family: 'JetBrains Mono', monospace; padding: 12px 16px; border-radius: 8px; font-size: 0.9rem;">
+        <button id="btnSearchWallet" class="btn" style="padding: 12px 28px; background: linear-gradient(135deg, #00E676 0%, #00B050 100%); color: #04190c; font-weight: 800; border-radius: 8px; border: none; cursor: pointer;">
+          Audit Wallet
+        </button>
+      </div>
+
+      <!-- Search Results Container -->
+      <div id="walletSearchResults" class="hidden" style="margin-top: 20px;">
+        <div id="walletSearchHeader" style="font-size: 0.95rem; font-weight: 700; color: #064B2D; margin-bottom: 12px;"></div>
+        <div id="walletSearchGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- ON-CHAIN OWNERSHIP TRANSFER & ETH PAYMENT MODAL                -->
+    <!-- ============================================================== -->
+    <div id="transferModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+      <div style="background: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; border: 1.5px solid #00F5A0; border-radius: 16px; padding: 24px; max-width: 520px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(0,245,160,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; color: #121A15; font-weight: 800;">Transfer Cattle Ownership</h3>
+          <button id="btnCloseTransferModal" style="background: none; border: none; color: #56655B; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <div style="font-size: 0.88rem; color: #56655B; margin-bottom: 16px;">
+          Transferring: <strong id="modalTransferCowName" style="color: #121A15;">-</strong> (<span id="modalTransferCowId" style="color: #064B2D; font-family: monospace;">-</span>)
+        </div>
+
+        <!-- Transfer Mode: Single vs Batch -->
+        <div style="margin-bottom: 14px; background: rgba(0, 245, 160, 0.05); border: 1px solid rgba(0, 245, 160, 0.2); padding: 10px 12px; border-radius: 8px;">
+          <label style="color: #064B2D; font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 6px;">Transfer Mode</label>
+          <div style="display: flex; gap: 14px; font-size: 0.85rem;">
+            <label style="color: #121A15; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="transferMode" value="SINGLE" checked id="radioModeSingle"> Single Animal Transfer
+            </label>
+            <label style="color: #38bdf8; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="transferMode" value="BATCH" id="radioModeBatch"> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> Batch Transfer (Multi-Animal)
+            </label>
+          </div>
+        </div>
+
+        <!-- Batch Transfer Selection Container -->
+        <div id="batchSelectContainer" style="display: none; margin-bottom: 14px; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px; border-radius: 8px;">
+          <label style="color: #38bdf8; font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 4px;">Mandatory Batch Number <span style="color: #ef4444;">*</span></label>
+          <input type="text" id="batchIdInput" placeholder="e.g. BATCH-LHR-2026-001" style="width: 100%; background: #04100a; border: 1px solid #38bdf8; color: #38bdf8; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 10px;">
+          <label style="color: #56655B; font-size: 0.8rem; display: block; margin-bottom: 6px;">Select Additional Owned Cattle for this Batch:</label>
+          <div id="batchCattleCheckboxList" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;"></div>
+        </div>
+
+        <!-- Transfer Destination Type -->
+        <div style="margin-bottom: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 8px;">
+          <label style="color: #56655B; font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 6px;">Transfer Destination</label>
+          <div style="display: flex; gap: 14px; font-size: 0.85rem;">
+            <label style="color: #121A15; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="transferDestType" value="WALLET" checked id="radioDestWallet"> Aam User / Farmer Wallet
+            </label>
+            <label style="color: #fde047; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="transferDestType" value="SLAUGHTERHOUSE" id="radioDestSlaughterhouse"> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg> Certified Slaughterhouse
+            </label>
+          </div>
+        </div>
+
+        <div id="slaughterhouseSelectBox" style="display: none; margin-bottom: 14px;">
+          <label style="color: #fde047; font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Select Certified Slaughterhouse</label>
+          <select id="modalSlaughterhouseSelect" style="width: 100%; background: #04100a; border: 1px solid rgba(234, 179, 8, 0.5); color: #fde047; padding: 10px; border-radius: 8px; font-size: 0.85rem;">
+            <option value="">-- Choose Whitelisted Slaughterhouse --</option>
+          </select>
+          <div style="margin-top: 8px;">
+            <label style="color: #56655B; font-size: 0.78rem;">Batch Reference Tag</label>
+            <input type="text" id="modalBatchId" placeholder="e.g. BATCH-LHR-2026-001" style="width: 100%; background: #FFFFFF; border: 1px solid rgba(234, 179, 8, 0.4); color: #121A15; padding: 8px; border-radius: 6px; font-size: 0.82rem;">
+          </div>
+        </div>
+
+        <div id="walletAddressBox" style="margin-bottom: 14px;">
+          <label style="color: #56655B; font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Recipient Ethereum Address (0x...) <span style="color: #ef4444;">*</span></label>
+          <input type="text" id="modalRecipientAddress" placeholder="0x..." style="width: 100%; background: #FFFFFF; border: 1px solid rgba(0,245,160,0.3); color: #064B2D; font-family: 'JetBrains Mono', monospace; padding: 10px 14px; border-radius: 8px; font-size: 0.88rem;">
+        </div>
+
+        <!-- Physical Condition & Wound Log (Recorded On-Chain) -->
+        <div style="margin-bottom: 14px; background: rgba(0, 245, 160, 0.05); border: 1px solid rgba(0, 245, 160, 0.2); padding: 12px; border-radius: 8px;">
+          <label style="color: #064B2D; font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 4px;">Animal Physical Condition at Transfer (Recorded On-Chain)</label>
+          <select id="modalConditionSelect" style="width: 100%; background: #04100a; border: 1px solid rgba(0,245,160,0.3); color: #121A15; padding: 8px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 8px;">
+            <option value="Healthy / Fully Verified">Healthy / Prime Condition (No Disease)</option>
+            <option value="Normal / No Disease Symptoms">Normal / Healthy Active</option>
+            <option value="Minor Leg Scratch / Wounded">Minor Injury / Surface Scratch (Logged)</option>
+            <option value="Vaccinated / FMD Cleared">Vaccinated / FMD & Lumpy Skin Cleared</option>
+            <option value="Under Veterinary Care">Under Veterinary Quarantine</option>
+          </select>
+          <label style="color: #56655B; font-size: 0.78rem; display: block; margin-bottom: 4px;">Health & Disease Notes</label>
+          <textarea id="modalHealthNotes" rows="2" placeholder="e.g. Cleared by Dr. Tariq, temperature normal, vaccinated on 01 Nov 2026." style="width: 100%; background: #FFFFFF; border: 1px solid rgba(0,245,160,0.25); color: #121A15; padding: 8px; border-radius: 6px; font-size: 0.8rem; resize: none;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+          <label style="color: #56655B; font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Transfer Price (Sepolia ETH) <span style="color: #7D8F82;">(0 if direct transfer)</span></label>
+          <input type="number" step="0.001" id="modalTransferPrice" placeholder="0.00" value="0.00" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btnConfirmTransfer" class="btn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #00E676 0%, #00B050 100%); color: #04190c; font-weight: 800; border-radius: 8px; border: none; cursor: pointer;">
+            Confirm Transfer on Sepolia
+          </button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
+  <script src="/static/app.js?v=35.0"></script>
 
-  <!-- ============================================================== -->
-  <!-- LIVE CATTLE REGISTRY DATABASE TABLE (ALWAYS ACCESSIBLE)        -->
-  <!-- ============================================================== -->
-  <section class="registry-section glass-card" id="registrySection">
-    <div class="registry-header-row">
-      <div class="registry-title-col">
-        <div class="registry-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
+    <!-- ==============================================================
+         ADMIN PORTAL MODAL (Whitelist Slaughterhouses & Shopkeepers)
+         ============================================================== -->
+    <div id="adminModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+      <div style="background: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; border: 1.5px solid #D5DEC0; box-shadow: 0 20px 60px rgba(10, 43, 24, 0.15); border-radius: 16px; padding: 26px; max-width: 650px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(96, 165, 250, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; color: #064B2D; font-weight: 800;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> HalalChain Master Admin Portal</h3>
+            <p style="font-size: 0.78rem; color: #56655B;">Authorize Slaughterhouses & Whitelist Certified Retail Stores / Supermarkets on Sepolia.</p>
+          </div>
+          <button id="btnCloseAdminModal" style="background: none; border: none; color: #56655B; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
-        <div>
-          <h2>Enrolled Cattle Database</h2>
-          <p class="text-muted">Live biometric registry: Stored 512-D ArcFace vectors and cryptographic hashes for anti-duplicate matching</p>
+
+        <!-- Section A: Whitelist Slaughterhouse -->
+        <div style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.25); border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+          <h4 style="font-size: 0.95rem; color: #fde047; font-weight: 700; margin-bottom: 8px;">1. Whitelist Certified Slaughterhouse</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="adminShWallet" placeholder="Slaughterhouse Wallet Address (0x...)" style="grid-column: 1 / -1; background: #04100a; border: 1px solid rgba(234, 179, 8, 0.3); color: #121A15; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShName" placeholder="Facility Name (e.g. Punjab Halal Slaughterhouse)" style="background: #04100a; border: 1px solid rgba(234, 179, 8, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShLicense" placeholder="License (e.g. PHDA-SL-2026-01)" style="background: #04100a; border: 1px solid rgba(234, 179, 8, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShLocation" placeholder="Location (e.g. Lahore, Punjab)" style="grid-column: 1 / -1; background: #04100a; border: 1px solid rgba(234, 179, 8, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+          </div>
+          <button id="btnAdminAuthSlaughterhouse" style="background: #eab308; color: #000; font-weight: 700; border: none; padding: 8px 18px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Authorize Slaughterhouse on-chain
+          </button>
         </div>
-      </div>
-      <div class="registry-actions-col">
-        <div class="registry-badge">
-          <span id="registryCountBadge">0 Animals Enrolled</span>
+
+        <!-- Section B: Whitelist Retail Shopkeeper / Supermarket -->
+        <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 10px; padding: 14px;">
+          <h4 style="font-size: 0.95rem; color: #d8b4fe; font-weight: 700; margin-bottom: 8px;">2. Whitelist Certified Retail Shop / Supermarket</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="adminShopWallet" placeholder="Shopkeeper Wallet Address (0x...)" style="grid-column: 1 / -1; background: #04100a; border: 1px solid rgba(168, 85, 247, 0.3); color: #121A15; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShopName" placeholder="Store Brand (e.g. Metro Cash & Carry - Model Town)" style="background: #04100a; border: 1px solid rgba(168, 85, 247, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShopLicense" placeholder="Retail Reg No (e.g. PHDA-RET-2026-88)" style="background: #04100a; border: 1px solid rgba(168, 85, 247, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="adminShopLocation" placeholder="Branch Address (e.g. Model Town Link Road, Lahore)" style="grid-column: 1 / -1; background: #04100a; border: 1px solid rgba(168, 85, 247, 0.3); color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+          </div>
+          <button id="btnAdminAuthShopkeeper" style="background: #a855f7; color: #121A15; font-weight: 700; border: none; padding: 8px 18px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Authorize Shopkeeper on-chain
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="registry-table-container">
-      <table class="registry-table" id="registryTable">
-        <thead>
-          <tr>
-            <th>Photo</th>
-            <th>Tag / RFID</th>
-            <th>Animal Name</th>
-            <th>Breed</th>
-            <th>Biometric SHA-256 Hash</th>
-            <th>Registered At</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="registryTableBody">
-          <tr class="empty-row">
-            <td colspan="7" class="text-center">No animals registered yet. Use Mode 1 above to register your first cattle!</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- ==============================================================
+         SLAUGHTERHOUSE PORTAL MODAL (Dedicated for Slaughterhouses)
+         ============================================================== -->
+    <div id="slaughterhouseModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+      <div style="background: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; border: 1.5px solid #D5DEC0; box-shadow: 0 20px 60px rgba(10, 43, 24, 0.15); border-radius: 16px; padding: 26px; max-width: 680px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(234, 179, 8, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; color: #064B2D; font-weight: 800;">Slaughterhouse Operations & Halal Portal</h3>
+            <p style="font-size: 0.78rem; color: #56655B;">Whitelist facilities, sign halal slaughter on-chain, and generate child meat cut packages.</p>
+          </div>
+          <button id="btnCloseSlaughterhouseModal" style="background: none; border: none; color: #56655B; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <!-- Section 1: Slaughterhouse Operator Halal Sign-off -->
+        <div style="background: #F8FAF6; border: 1.5px solid #E2E8DE; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+          <h4 style="font-size: 0.95rem; color: #064B2D; font-weight: 700; margin-bottom: 8px;">1. Select Owned Cattle for Islamic Halal Slaughter</h4>
+          
+          <div style="margin-bottom: 10px;">
+            <label style="color: #56655B; font-size: 0.8rem; display: block; margin-bottom: 4px;">Choose from your Custody / Transferred Animals:</label>
+            <select id="shSelectOwnedCattle" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem;">
+              <option value="">-- Select Cattle in Your Custody --</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="color: #56655B; font-size: 0.78rem;">Animal ID</label>
+              <input type="text" id="shSignCowId" placeholder="Animal Cow ID (HC-ETH-89412)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
+            <div>
+              <label style="color: #56655B; font-size: 0.78rem;">Batch Reference (Auto-Attached)</label>
+              <input type="text" id="shSignBatchId" readonly placeholder="Auto from Transfer" style="width: 100%; background: #F4F6F2; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label style="color: #56655B; font-size: 0.78rem;">Halal Slaughter Certificate Number</label>
+              <input type="text" id="shHalalCertNo" placeholder="Halal Certificate No (PHDA-HALAL-992)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label style="color: #56655B; font-size: 0.78rem;">Inspector & Mufti Notes</label>
+              <input type="text" id="shInspectorNotes" placeholder="Inspector Notes (e.g. 100% Manual Islamic Zibah Verified with sharp knife)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
+          </div>
+          <button id="btnSignHalalSlaughter" style="background: linear-gradient(135deg, #064B2D 0%, #023B25 100%); color: #FFFFFF; font-weight: 800; border: 1.5px solid #C9A23F; padding: 12px 24px; border-radius: 9999px; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,75,45,0.2); width: 100%;">
+            Sign Halal Slaughter Verification
+          </button>
+        </div>
+
+        <!-- Section 2: Meat Cuts Packaging (Custom Types & Weights) -->
+        <div style="background: #FAFBF8; border: 1.5px solid #E2E8DE; border-radius: 10px; padding: 14px;">
+          <h4 style="font-size: 0.95rem; color: #064B2D; font-weight: 700; margin-bottom: 8px;">2. Generate Custom Child Meat Packages (Batch-Gated)</h4>
+          <p style="font-size: 0.78rem; color: #56655B; margin-bottom: 10px;">
+            <span style="color: #064B2D; font-weight: 700;">Batch Rule:</span> Packages can only be generated after <strong>ALL</strong> animals in the batch have been slaughtered.
+          </p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="pkgBatchId" placeholder="Batch ID (e.g. BATCH-LHR-2026-001)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <input type="text" id="pkgParentCowId" placeholder="Parent Cow ID (e.g. HC-ETH-89412)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <div style="grid-column: 1 / -1;">
+              <label style="color: #064B2D; font-size: 0.78rem;">Destination Authorized Shopkeeper / Supermarket:</label>
+              <select id="pkgShopkeeperSelect" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem;">
+                <option value="">-- Choose Verified Shopkeeper / Supermarket --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Custom Package Types List -->
+          <div style="margin-bottom: 10px;">
+            <label style="color: #56655B; font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 6px;">Configure Package Types & Weights (kg):</label>
+            <div id="customPackageRows" style="display: flex; flex-direction: column; gap: 6px;">
+              <div class="pkg-row" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px;">
+                <input type="text" class="pkg-cut-name" value="Legs Cut" placeholder="Cut Type (e.g. Legs Cut)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <input type="number" step="0.5" class="pkg-cut-weight" value="15.0" placeholder="Weight (kg)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <span style="color: #56655B; font-size: 0.75rem; align-self: center;">kg</span>
+              </div>
+              <div class="pkg-row" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px;">
+                <input type="text" class="pkg-cut-name" value="Chest Pieces" placeholder="Cut Type (e.g. Chest Pieces)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <input type="number" step="0.5" class="pkg-cut-weight" value="12.5" placeholder="Weight (kg)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <span style="color: #56655B; font-size: 0.75rem; align-self: center;">kg</span>
+              </div>
+              <div class="pkg-row" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px;">
+                <input type="text" class="pkg-cut-name" value="Neck & Ribs" placeholder="Cut Type (e.g. Neck & Ribs)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <input type="number" step="0.5" class="pkg-cut-weight" value="10.0" placeholder="Weight (kg)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <span style="color: #56655B; font-size: 0.75rem; align-self: center;">kg</span>
+              </div>
+            </div>
+            <button type="button" id="btnAddPackageRow" style="margin-top: 6px; background: transparent; border: 1.5px dashed #D5DEC0; color: #064B2D; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+              + Add Another Custom Cut Size
+            </button>
+          </div>
+
+          <button id="btnGenerateMeatPackages" style="background: linear-gradient(135deg, #064B2D 0%, #023B25 100%); color: #FFFFFF; font-weight: 800; border: 1.5px solid #C9A23F; padding: 12px 24px; border-radius: 9999px; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,75,45,0.2); width: 100%; margin-top: 10px;">
+            Generate Verified Meat Packages & Transfer to Retail
+          </button>
+        </div>
+      </div>
     </div>
-  </section>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast hidden"></div>
+    <!-- ==============================================================
+         RETAIL SUPERMARKET PORTAL MODAL (Metro, Imtiaz, Carrefour)
+         ============================================================== -->
+    <div id="retailModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+      <div style="background: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; border: 1.5px solid #D5DEC0; box-shadow: 0 20px 60px rgba(10, 43, 24, 0.15); border-radius: 16px; padding: 26px; max-width: 680px; width: 95%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(168, 85, 247, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; color: #064B2D; font-weight: 800;">Supermarket & Shop Receiving Portal</h3>
+            <p style="font-size: 0.78rem; color: #56655B;">Inspect packages from verified Slaughterhouses, trace parent cow & farm origin, and sign delivery arrival.</p>
+          </div>
+          <button id="btnCloseRetailModal" style="background: none; border: none; color: #56655B; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
 
-  <script src="/static/app.js"></script>
+        <!-- Incoming Packages Section -->
+        <div style="margin-bottom: 18px; background: #FAFBF8; border: 1.5px solid #E2E8DE; border-radius: 10px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="color: #064B2D; font-size: 0.85rem; font-weight: 700;">Packages Transferred to Your Store Inventory</label>
+            <span id="retailPackageCountBadge" style="background: #F4F6F2; color: #064B2D; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">0 Packages</span>
+          </div>
+          
+          <!-- Dropdown to pick package -->
+          <select id="retailPackageSelect" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px;">
+            <option value="">-- Select Incoming Meat Package to Inspect & Receive --</option>
+          </select>
+
+          <!-- Complete Farm-to-Fork Ancestry Card -->
+          <div id="retailAncestryCard" style="display: none; background: #FFFFFF; border: 1.5px solid #D5DEC0; border-radius: 8px; padding: 12px; font-size: 0.82rem; line-height: 1.6;">
+            <div style="color: #064B2D; font-weight: 700; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 4px;">
+              Complete Halal Provenance & Ancestry Chain:
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div><span style="color: #56655B;">Cut Type:</span> <strong id="ancCutName" style="color: #121A15;">-</strong> (<span id="ancWeight" style="color: #064B2D;">- kg</span>)</div>
+              <div><span style="color: #56655B;">Batch ID:</span> <span id="ancBatchId" style="color: #064B2D; font-family: monospace;">-</span></div>
+              <div><span style="color: #56655B;">Parent Cow:</span> <strong id="ancCowName" style="color: #121A15;">-</strong> (<span id="ancCowId" style="color: #064B2D; font-family: monospace;">-</span>)</div>
+              <div><span style="color: #56655B;">Breed:</span> <span id="ancBreed" style="color: #121A15;">-</span></div>
+              <div><span style="color: #56655B;">Origin Farm:</span> <strong id="ancFarmName" style="color: #121A15;">-</strong></div>
+              <div><span style="color: #56655B;">Original Farmer:</span> <span id="ancFarmerName" style="color: #121A15;">-</span></div>
+              <div style="grid-column: 1 / -1;"><span style="color: #56655B;">Slaughterhouse:</span> <strong id="ancSlaughterhouse" style="color: #064B2D;">-</strong></div>
+              <div style="grid-column: 1 / -1;"><span style="color: #56655B;">Halal Certificate:</span> <span id="ancHalalCert" style="color: #064B2D; font-family: monospace;">-</span> | <span id="ancMuftiNotes" style="color: #56655B; font-style: italic;">-</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label style="color: #56655B; font-size: 0.82rem; display: block; margin-bottom: 4px;">Selected Package ID</label>
+            <input type="text" id="retailPkgIdInput" readonly placeholder="Pick from dropdown above" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+          </div>
+          <div>
+            <label style="color: #56655B; font-size: 0.82rem; display: block; margin-bottom: 4px;">Supermarket / Store Brand Name</label>
+            <input type="text" id="retailShopNameInput" placeholder="e.g. Imtiaz Super Market" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="color: #56655B; font-size: 0.82rem; display: block; margin-bottom: 4px;">Receiving Store Manager / Inspector Name</label>
+          <input type="text" id="retailReceiverNameInput" placeholder="e.g. Saad Abdullah (Store Meat Quality Manager)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+        </div>
+
+        <button id="btnSignRetailReceiving" style="width: 100%; background: linear-gradient(135deg, #064B2D 0%, #023B25 100%); color: #FFFFFF; font-weight: 800; border: 1.5px solid #C9A23F; padding: 14px 28px; border-radius: 9999px; font-size: 0.94rem; cursor: pointer; box-shadow: 0 4px 14px rgba(6,75,45,0.2); width: 100%; margin-bottom: 20px;">
+          Sign Delivery Receipt on Blockchain & Activate Public QR
+        </button>
+
+        <!-- Finalized & Traceable Inventory (With Verified QR Codes) -->
+        <div style="background: #F8FAF6; border: 1.5px solid #E2E8DE; border-radius: 10px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="color: #064B2D; font-size: 0.88rem; font-weight: 700;">Store Inventory & Active QR Verification Codes</label>
+            <span id="retailInventoryCount" style="color: #56655B; font-size: 0.75rem;">0 Items</span>
+          </div>
+          <p style="color: #56655B; font-size: 0.78rem; margin-bottom: 12px;">Customers can scan these official QRs on packaging to inspect full farm-to-fork Islamic provenance & Sepolia transaction proofs.</p>
+          <div id="retailInventoryList" style="display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         NFT IMPORT GUIDELINE MODAL (MetaMask Step-by-Step Instructions)
+         ============================================================== -->
+    <div id="nftGuidelineModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;">
+      <div style="background: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; border: 1.5px solid #00F5A0; border-radius: 16px; padding: 26px; max-width: 520px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(0, 245, 160, 0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; color: #064B2D; font-weight: 800;">Import Animal NFT to MetaMask</h3>
+            <p style="font-size: 0.78rem; color: #56655B;">Follow these simple steps to display your official ERC-721 biometric passport NFT in your wallet.</p>
+          </div>
+          <button id="btnCloseNftModal" style="background: none; border: none; color: #56655B; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <div style="background: rgba(0,245,160,0.06); border: 1px solid rgba(0,245,160,0.25); border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 0.85rem; line-height: 1.6;">
+          <div style="margin-bottom: 8px;">
+            <span style="color: #56655B;">Contract Address:</span><br>
+            <strong id="nftModalContractAddr" style="font-family: monospace; color: #38bdf8; word-break: break-all;">0xFD874bF55Ca6Ffa77061390a56f343901f6dA468</strong>
+            <button id="btnCopyNftContract" style="margin-left: 6px; padding: 2px 8px; font-size: 0.72rem; background: rgba(56,189,248,0.2); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 4px; cursor: pointer;">Copy</button>
+          </div>
+          <div>
+            <span style="color: #56655B;">Your Animal Token ID:</span><br>
+            <strong id="nftModalTokenId" style="font-family: monospace; color: #064B2D; font-size: 1.1rem;">1</strong>
+            <button id="btnCopyNftTokenId" style="margin-left: 6px; padding: 2px 8px; font-size: 0.72rem; background: rgba(0,245,160,0.2); border: 1.5px solid #D5DEC0; box-shadow: 0 20px 60px rgba(10, 43, 24, 0.15); color: #064B2D; border-radius: 4px; cursor: pointer;">Copy</button>
+          </div>
+        </div>
+
+        <ol style="font-size: 0.82rem; color: #e2e8f0; line-height: 1.7; padding-left: 18px; margin-bottom: 18px;">
+          <li>Open your <strong>MetaMask Extension / Mobile App</strong>.</li>
+          <li>Ensure you are on the <strong>Sepolia Test Network</strong>.</li>
+          <li>Click on the <strong>"NFTs"</strong> tab (next to Tokens).</li>
+          <li>Scroll down and click <strong>"Import NFT"</strong>.</li>
+          <li>Paste the <strong>Contract Address</strong> and enter the <strong>Token ID</strong> shown above.</li>
+          <li>Click <strong>"Import"</strong> — your verified HalalChain Biometric Cattle Passport will immediately appear in your wallet!</li>
+        </ol>
+
+        <button id="btnDismissNftModal" style="width: 100%; background: #00F5A0; color: #04190c; font-weight: 800; border: none; padding: 12px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Got It, I Understand
+        </button>
+      </div>
+    </div>
+
 </body>
 </html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HalalChain — Public Livestock Digital Passport & Halal Traceability Audit</title>
+  <link rel="icon" type="image/png" href="/static/images/halalchain_logo_colored.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-green: #0A4325;
+      --forest-green-dark: #062B18;
+      --leaf-green: #2B7A4B;
+      --accent-gold: #C99738;
+      --accent-gold-dark: #8C6D2D;
+      --bg-cream: #F4F6F2;
+      --bg-surface: #FFFFFF;
+      --text-dark: #1A251E;
+      --text-muted: #5E7265;
+      --border-subtle: #E2E8DE;
+      --shadow-card: 0 10px 30px -4px rgba(10, 43, 24, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 80% 10%, #FBFDF9 0%, #EEF2EB 100%), var(--bg-cream);
+      color: var(--text-dark);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* Top Header Bar */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .brand-header-flex {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-header-flex img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .badge-verified {
+      background: rgba(10, 67, 37, 0.08);
+      border: 1.5px solid var(--forest-green);
+      color: var(--forest-green);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-verified svg {
+      color: var(--forest-green);
+    }
+
+    /* Universal Surface Card */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-profile {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .muzzle-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 2px solid var(--border-subtle);
+      box-shadow: 0 4px 14px rgba(10, 43, 24, 0.08);
+    }
+
+    .cow-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--forest-green);
+      line-height: 1.2;
+    }
+
+    .tag-badge {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--leaf-green);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .grid-2, .hero-profile { flex-direction: column; grid-template-columns: 1fr; }
+    }
+
+    .info-box {
+      background: #F8FAF6;
+      border: 1px solid var(--border-subtle);
+      padding: 14px 18px;
+      border-radius: 12px;
+    }
+
+    .info-lbl {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .info-val {
+      font-size: 0.94rem;
+      color: var(--text-dark);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .hash-val {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--forest-green);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Timeline */
+    .timeline-item {
+      position: relative;
+      padding-left: 32px;
+      padding-bottom: 22px;
+      border-left: 2px solid var(--border-subtle);
+    }
+
+    .timeline-item:last-child {
+      border-left: 2px solid transparent;
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -8px;
+      top: 0;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--forest-green);
+      box-shadow: 0 0 0 4px #FFFFFF;
+    }
+
+    .btn-download-cert {
+      background: linear-gradient(135deg, var(--forest-green) 0%, var(--forest-green-dark) 100%);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.92rem;
+      padding: 14px 32px;
+      border-radius: 9999px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1.5px solid var(--accent-gold);
+      box-shadow: 0 6px 20px rgba(10, 67, 37, 0.25);
+      transition: all 0.22s ease;
+      cursor: pointer;
+    }
+
+    .btn-download-cert:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(10, 67, 37, 0.35);
+      border-color: #E2B968;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Top Header -->
+    <div class="header-bar">
+      <div class="brand-header-flex">
+        <img src="/static/images/halalchain_logo_colored.png" alt="HalalChain">
+        <div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--forest-green);">
+            HALAL CHAIN <span style="color: var(--accent-gold-dark);">VERIFICATION</span>
+          </h2>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Decentralized Livestock Passport & Halal Traceability Audit</p>
+        </div>
+      </div>
+      <div class="badge-verified">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>ON-CHAIN VERIFIED</span>
+      </div>
+    </div>
+
+    <!-- Animal Hero Card -->
+    <div class="card">
+      <div class="hero-profile">
+        <img id="verifyMuzzleImg" src="/static/images/farm_hero.jpg" class="muzzle-img" alt="Muzzle Capture">
+        <div style="flex: 1;">
+          <h1 id="verifyAnimalName" class="cow-title">Loading Identity...</h1>
+          <div id="verifyCowTag" class="tag-badge">HC-ETH-00000</div>
+          <p id="verifyBreed" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 6px;">Breed: Sahiwal Cattle</p>
+          <div style="margin-top: 10px;">
+            <span style="font-size: 0.78rem; background: rgba(10, 67, 37, 0.08); color: var(--forest-green); padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(10,67,37,0.2); font-weight: 700;">
+              ArcFace 512-D Biometric Hash Anchored
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="info-box">
+          <div class="info-lbl">Verified Current Owner</div>
+          <div id="verifyOwnerAddr" class="info-val hash-val">0x0000...0000</div>
+        </div>
+        <div class="info-box">
+          <div class="info-lbl">Farm & Location</div>
+          <div id="verifyFarmLoc" class="info-val">Punjab, Pakistan</div>
+        </div>
+        <div class="info-box">
+          <div class="info-lbl">Consensus Network</div>
+          <div class="info-val">Ethereum Sepolia Testnet (11155111)</div>
+        </div>
+        <div class="info-box">
+          <div class="info-lbl">NFT Token ID</div>
+          <div id="verifyTokenId" class="info-val">Token #1</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;" class="info-box">
+        <div class="info-lbl">Biometric SHA-256 Fingerprint Hash</div>
+        <div id="verifyBioHash" class="hash-val" style="word-break: break-all;">0x0000000000000000000000000000000000000000</div>
+      </div>
+    </div>
+
+    <!-- Official Certificate Download Card -->
+    <div class="card" style="text-align: center; border-color: rgba(201, 151, 56, 0.4); background: #FAFBF8;">
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--forest-green); margin-bottom: 6px;">Official Digital Ownership Transfer Certificate</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px;">
+        Cryptographically signed PDF certificate confirming legal livestock title and cryptographic provenance.
+      </p>
+      <a id="btnDownloadCertPdf" href="#" target="_blank" class="btn-download-cert">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Download Official Ownership Certificate (PDF)</span>
+      </a>
+    </div>
+
+    <!-- Ownership Provenance Timeline Card -->
+    <div class="card">
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--forest-green); margin-bottom: 20px;">Immutable On-Chain Provenance Chain</h3>
+      <div id="provenanceTimeline">
+        <div style="color: var(--text-muted); font-size: 0.88rem;">Loading ownership blockchain events...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function loadPublicPassport() {
+      const parts = window.location.pathname.split('/');
+      const cowId = parts[parts.length - 1];
+
+      try {
+        const res = await fetch(`/api/passport/${cowId}`);
+        if (!res.ok) throw new Error("Passport record not found");
+        const data = await res.json();
+
+        document.getElementById('verifyAnimalName').textContent = data.name || "Livestock Animal";
+        document.getElementById('verifyCowTag').textContent = data.cow_id;
+        document.getElementById('verifyBreed').textContent = `Breed: ${data.breed || 'Cattle'}`;
+        if (data.thumbnail) document.getElementById('verifyMuzzleImg').src = data.thumbnail;
+        
+        document.getElementById('verifyOwnerAddr').textContent = data.owner_address || "0x40Ff533fb7469ee39eF687BCa28750cB0795b722";
+        document.getElementById('verifyFarmLoc').textContent = `${data.farm_name || 'Ranch'} (${data.location || 'Punjab'})`;
+        document.getElementById('verifyTokenId').textContent = `ERC-721 Token #${data.token_id || '1'}`;
+        document.getElementById('verifyBioHash').textContent = data.biometric_hash || data.hash || '0x5e235ba0faa28ac6f305f9c197909a62e1c0698d30f9bc58ebba4daf0c160b11';
+
+        // Certificate link
+        const btnCert = document.getElementById('btnDownloadCertPdf');
+        btnCert.href = `/api/passport/certificate/${data.cow_id}`;
+
+        // Timeline
+        const timeline = document.getElementById('provenanceTimeline');
+        timeline.innerHTML = '';
+
+        const history = data.provenance_history || [];
+        if (history.length === 0) {
+          timeline.innerHTML = `
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: var(--forest-green);">Genesis Registration & Biometric Enrollment</div>
+              <div style="font-size: 0.84rem; color: var(--text-muted); margin-top: 2px;">Owner: ${data.owner_address}</div>
+              <div style="font-size: 0.78rem; color: var(--leaf-green); margin-top: 2px;">Block Confirmed on Ethereum Sepolia</div>
+            </div>
+          `;
+        } else {
+          history.forEach((rec, idx) => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            const dateStr = rec.timestamp ? new Date(rec.timestamp * 1000).toLocaleString() : 'Confirmed';
+            item.innerHTML = `
+              <div class="timeline-dot"></div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: var(--forest-green);">${idx === 0 ? 'Genesis Registration' : 'Ownership Title Transfer'}</div>
+              <div style="font-size: 0.84rem; color: var(--text-dark); margin-top: 3px;">
+                From: <span style="font-family: monospace; color: var(--text-muted);">${rec.from_address || rec.from || 'Genesis'}</span>
+                &rarr; To: <span style="font-family: monospace; color: var(--forest-green); font-weight: 700;">${rec.to_address || rec.to}</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">
+                Certificate: <strong style="color: var(--forest-green);">${rec.certificate_id || 'CERT-VERIFIED'}</strong>
+                ${rec.price_eth ? `&bull; Price: ${rec.price_eth} Sepolia ETH` : ''}
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${dateStr}</div>
+            `;
+            timeline.appendChild(item);
+          });
+        }
+      } catch (err) {
+        console.error("Passport load error:", err);
+      }
+    })();
+  </script>
+</body>
+</html>

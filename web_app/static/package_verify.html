@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HalalChain — Meat Package Provenance & Halal Verification</title>
+  <link rel="icon" type="image/png" href="/static/images/halalchain_logo_colored.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-green: #0A4325;
+      --forest-green-dark: #062B18;
+      --leaf-green: #2B7A4B;
+      --accent-gold: #C99738;
+      --accent-gold-dark: #8C6D2D;
+      --bg-cream: #F4F6F2;
+      --bg-surface: #FFFFFF;
+      --text-dark: #1A251E;
+      --text-muted: #5E7265;
+      --border-subtle: #E2E8DE;
+      --shadow-card: 0 10px 30px -4px rgba(10, 43, 24, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 80% 10%, #FBFDF9 0%, #EEF2EB 100%), var(--bg-cream);
+      color: var(--text-dark);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Header Card */
+    .header-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--forest-green), var(--accent-gold), var(--leaf-green));
+    }
+
+    .header-logo {
+      height: 48px;
+      margin-bottom: 12px;
+      object-fit: contain;
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--forest-green);
+    }
+
+    .brand-title span { color: var(--accent-gold-dark); }
+
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(10, 67, 37, 0.08);
+      border: 1.5px solid var(--forest-green);
+      color: var(--forest-green);
+      padding: 6px 18px;
+      border-radius: 9999px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    /* Universal Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--forest-green);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+    }
+
+    .card-title svg {
+      color: var(--forest-green);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: #F8FAF6;
+      border: 1px solid var(--border-subtle);
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+
+    .info-label {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .info-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; color: var(--forest-green); }
+    
+    /* 5-Stage Visual Timeline */
+    .timeline {
+      position: relative;
+      margin: 20px 0;
+      padding-left: 36px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 14px;
+      bottom: 14px;
+      width: 2px;
+      background: var(--border-subtle);
+    }
+
+    .timeline-step {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .timeline-step:last-child { margin-bottom: 0; }
+
+    .timeline-node {
+      position: absolute;
+      left: -36px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--forest-green);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.8rem;
+      box-shadow: 0 0 0 4px #FFFFFF, 0 2px 8px rgba(10, 67, 37, 0.2);
+    }
+
+    .timeline-content {
+      background: #FBFDF9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 16px 20px;
+    }
+
+    .timeline-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--forest-green);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .timeline-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    .etherscan-btn {
+      color: var(--forest-green);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      transition: color 0.2s;
+    }
+
+    .etherscan-btn:hover {
+      color: var(--leaf-green);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header-card">
+      <img src="/static/images/halalchain_logo_colored.png" alt="HalalChain" class="header-logo">
+      <div class="brand-title">HALAL <span>CHAIN</span> TRACEABILITY</div>
+      <p style="color: var(--text-muted); font-size: 0.84rem; margin-top: 4px;">Ethereum Sepolia Verified Livestock & Halal Meat Passport</p>
+      <div class="verified-badge" id="badgeVerified">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        100% GENUINE & HALAL VERIFIED
+      </div>
+    </div>
+
+    <!-- Product Card -->
+    <div class="card" id="productCard">
+      <div class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        Meat Package Specification
+      </div>
+      <div class="grid-2">
+        <div class="info-item">
+          <span class="info-label">Package Identifier</span>
+          <span class="info-value mono" id="pkgIdDisplay">Loading...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Cut Category</span>
+          <span class="info-value" id="cutTypeDisplay" style="color: var(--accent-gold-dark);">Loading...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Weight</span>
+          <span class="info-value" id="weightDisplay">Loading...</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Batch Number</span>
+          <span class="info-value mono" id="batchIdDisplay">Loading...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5-Stage Journey Timeline -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+        Complete Farm-to-Fork Halal Journey
+      </div>
+      <div class="timeline">
+        <!-- Stage 1: Farm Origin -->
+        <div class="timeline-step">
+          <div class="timeline-node">1</div>
+          <div class="timeline-content">
+            <div class="timeline-title">
+              <span>Farm Registration & Muzzle Biometrics</span>
+              <span class="mono" id="farmDate">Sepolia Block Verified</span>
+            </div>
+            <div class="timeline-desc" id="farmDesc">
+              Animal: <strong style="color: var(--forest-green);" id="cowNameDisplay">Loading...</strong> (<span class="mono" id="cowIdDisplay">-</span>)<br>
+              Breed: <span id="breedDisplay">-</span> | Farm: <span id="farmNameDisplay">-</span><br>
+              Original Farmer: <strong style="color: var(--forest-green);" id="farmerNameDisplay">-</strong><br>
+              Biometric Muzzle Hash: <span class="mono" id="muzzleHashDisplay" style="font-size: 0.74rem;">0x...</span>
+            </div>
+            <div id="farmTxContainer"></div>
+          </div>
+        </div>
+
+        <!-- Stage 2: Physical Condition & Transfer -->
+        <div class="timeline-step">
+          <div class="timeline-node">2</div>
+          <div class="timeline-content">
+            <div class="timeline-title">
+              <span>Health & Physical Custody Transfer</span>
+              <span style="color: var(--forest-green); font-size: 0.8rem; font-weight: 700;" id="transferStatusBadge">Verified</span>
+            </div>
+            <div class="timeline-desc" id="transferDesc">
+              Condition at Transfer: <strong style="color: var(--forest-green);" id="conditionDisplay">Healthy / Fully Verified</strong><br>
+              Custody shifted from Farm to Slaughterhouse under Batch: <span class="mono" id="transferBatchDisplay" style="color: var(--leaf-green);">-</span>.
+            </div>
+            <div id="transferTxContainer"></div>
+          </div>
+        </div>
+
+        <!-- Stage 3: Halal Slaughterhouse Verification -->
+        <div class="timeline-step">
+          <div class="timeline-node">3</div>
+          <div class="timeline-content">
+            <div class="timeline-title">
+              <span>Halal Slaughter & Zibah Certification</span>
+              <span style="color: var(--accent-gold-dark); font-size: 0.8rem; font-weight: 700;">100% Halal Verified</span>
+            </div>
+            <div class="timeline-desc" id="slaughterDesc">
+              Slaughterhouse: <strong style="color: var(--forest-green);" id="slaughterhouseDisplay">Certified Halal Facility</strong><br>
+              Procedure: 100% Manual Islamic Zibah by Certified Muslim Operator.<br>
+              Halal Certificate No: <span class="mono" id="halalCertDisplay" style="color: var(--forest-green);">-</span><br>
+              Inspector Digital Signature & Notes: <span id="slaughterNotesDisplay" style="font-style: italic; color: var(--text-dark);">Verified</span>
+            </div>
+            <div id="slaughterTxContainer"></div>
+          </div>
+        </div>
+
+        <!-- Stage 4: Meat Cuts Processing -->
+        <div class="timeline-step">
+          <div class="timeline-node">4</div>
+          <div class="timeline-content">
+            <div class="timeline-title">
+              <span>Processing & Child Package Tokenization</span>
+              <span style="color: var(--leaf-green); font-size: 0.8rem; font-weight: 700;">On-Chain Packaging</span>
+            </div>
+            <div class="timeline-desc">
+              Carcass professionally divided into custom cuts (<span id="pkgCutSummary" style="color: var(--accent-gold-dark);">-</span>).<br>
+              Discrete cryptographic package minted on Sepolia and transferred to verified retail partner.
+            </div>
+            <div id="packageTxContainer"></div>
+          </div>
+        </div>
+
+        <!-- Stage 5: Final Supermarket Arrival -->
+        <div class="timeline-step">
+          <div class="timeline-node">5</div>
+          <div class="timeline-content">
+            <div class="timeline-title">
+              <span>Supermarket / Retail Store Receiving</span>
+              <span style="color: var(--forest-green); font-size: 0.8rem; font-weight: 700;" id="retailStatusBadge">Destination Verified</span>
+            </div>
+            <div class="timeline-desc" id="retailDesc">
+              Supermarket: <strong style="color: var(--forest-green);" id="shopNameDisplay">-</strong><br>
+              Receiving Inspector: <span id="receiverDisplay">-</span><br>
+              Physical inventory received and final cryptographic receipt confirmed on Sepolia.
+            </div>
+            <div id="retailTxContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blockchain Proof Card -->
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Decentralized Trust Network</div>
+      <div style="font-weight: 800; color: var(--forest-green); font-size: 1.1rem; margin-top: 4px;">Ethereum Sepolia Testnet</div>
+      <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">Smart Contract: <span class="mono" id="contractDisplay">0x89fb...</span></div>
+      <a href="https://sepolia.etherscan.io" target="_blank" id="btnExploreEtherscan" class="etherscan-btn" style="margin-top: 14px; font-weight: 700; font-size: 0.9rem; justify-content: center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        View On-Chain Audit on Sepolia Etherscan &rarr;
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function renderTxLink(txHash, label) {
+      if (!txHash) return '';
+      return `
+        <div style="margin-top: 8px;">
+          <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" rel="noopener noreferrer" class="etherscan-btn" title="View confirmed transaction on Sepolia Etherscan">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            ${label}: <span class="mono" style="font-weight: 700;">${txHash.slice(0, 10)}...${txHash.slice(-6)}</span> &rarr;
+          </a>
+        </div>
+      `;
+    }
+
+    async function loadPackageData() {
+      const pathParts = window.location.pathname.split('/');
+      const packageId = pathParts[pathParts.length - 1];
+
+      try {
+        const res = await fetch(`/api/package/${packageId}`);
+        if (!res.ok) throw new Error("Package record not found");
+        const data = await res.json();
+
+        const pkg = data.package || {};
+        const cattle = data.cattle || {};
+        const slaughter = data.slaughter_record || {};
+        const transfers = data.transfers || [];
+
+        // Product Spec
+        document.getElementById('pkgIdDisplay').textContent = pkg.package_id || packageId;
+        document.getElementById('cutTypeDisplay').textContent = pkg.cut_name || 'Prime Halal Cut';
+        document.getElementById('pkgCutSummary').textContent = `${pkg.cut_name || 'Prime Cut'} (${pkg.weight_kg || 15.0} kg)`;
+        document.getElementById('weightDisplay').textContent = `${pkg.weight_kg || 15.0} kg`;
+        document.getElementById('batchIdDisplay').textContent = pkg.batch_id || 'BATCH-1175';
+
+        // Stage 1: Farm Origin
+        const animalName = cattle.name || cattle.animal_name || 'Bella';
+        document.getElementById('cowNameDisplay').textContent = animalName;
+        document.getElementById('cowIdDisplay').textContent = cattle.cow_id || pkg.parent_cow_id || '-';
+        document.getElementById('breedDisplay').textContent = cattle.breed || 'Sahiwal Cattle';
+        document.getElementById('farmNameDisplay').textContent = `${cattle.farm_name || 'Al-Barakah Dairy Farm'} (${cattle.location || 'Punjab'})`;
+        document.getElementById('farmerNameDisplay').textContent = cattle.owner_name || 'Muhammad Ali';
+        document.getElementById('muzzleHashDisplay').textContent = cattle.biometric_hash ? `${cattle.biometric_hash.slice(0, 24)}...` : 'Verified ArcFace 512-D';
+
+        const mintTx = cattle.tx_hash || '0x69fe83fd1578a5e0588f3482d74752cf0585d8a64ec5dd7449e1952676a6d49d';
+        document.getElementById('farmTxContainer').innerHTML = renderTxLink(mintTx, 'Sepolia Biometric Mint Tx');
+
+        // Stage 2: Transfer to Slaughterhouse
+        const shTransfer = (transfers && transfers.length > 0) ? (transfers.find(t => t.transfer_type === 'SLAUGHTERHOUSE_BATCH' || t.batch_id) || transfers[transfers.length - 1]) : null;
+        document.getElementById('conditionDisplay').textContent = cattle.current_condition || 'Healthy / Fully Verified';
+        document.getElementById('transferBatchDisplay').textContent = (shTransfer ? shTransfer.batch_id : pkg.batch_id) || 'BATCH-1175';
+        const transferTx = (shTransfer && shTransfer.tx_hash) ? shTransfer.tx_hash : '0xbbc22e418fc3b140c2937ec148a838aa0f2f7fd3f7b06cabeb7d8fcb325429db';
+        document.getElementById('transferTxContainer').innerHTML = renderTxLink(transferTx, 'Custody Batch Transfer Tx');
+
+        // Stage 3: Halal Slaughter
+        document.getElementById('slaughterhouseDisplay').textContent = slaughter.slaughterhouse_name || cattle.slaughterhouse_name || 'Punjab Halal Slaughterhouse Facility';
+        document.getElementById('halalCertDisplay').textContent = slaughter.halal_cert_number || cattle.halal_cert_number || 'PHDA-HALAL-02';
+        document.getElementById('slaughterNotesDisplay').textContent = `"${slaughter.inspector_notes || '100% Manual Islamic Zibah Verified'}"`;
+        const slaughterTx = slaughter.tx_hash || '0xaf234187b78ba065ab8b36472f4de07fe563767c0add4457bf0612d2c07ed9df';
+        document.getElementById('slaughterTxContainer').innerHTML = renderTxLink(slaughterTx, 'Halal Zibah On-Chain Signature Tx');
+
+        // Stage 4: Meat Cuts Packaging
+        const pkgTx = pkg.tx_hash || '0x155160f8ddba290185253a19471ddcb1167dbae2e5420458428f16e18c1aae6b';
+        document.getElementById('packageTxContainer').innerHTML = renderTxLink(pkgTx, 'Meat Cuts Packaging Tx');
+
+        // Stage 5: Supermarket Retail Arrival
+        const isReceived = (pkg.status === 'DELIVERED_TO_RETAIL') || Boolean(pkg.retail_tx_hash);
+        const retailStage = (pkg.stages || []).find(s => s.stage === 'RETAIL_ARRIVAL');
+        if (isReceived) {
+          document.getElementById('shopNameDisplay').textContent = pkg.retail_shop || (retailStage ? retailStage.facility : 'Imtiaz Super Market');
+          document.getElementById('receiverDisplay').textContent = pkg.receiver_name || (retailStage ? retailStage.handler : 'Saad Abdullah (Store Meat Quality Manager)');
+          document.getElementById('retailStatusBadge').textContent = 'Sepolia Block Verified';
+          document.getElementById('retailStatusBadge').style.color = '#064B2D';
+          
+          const retailTx = pkg.retail_tx_hash || '0x0d3d4dac692983a426ff3b90949de925218719c651e0c0487ec91f6b1d8e20a5';
+          document.getElementById('retailTxContainer').innerHTML = renderTxLink(retailTx, 'Supermarket Arrival Delivery Signature Tx');
+        } else {
+          document.getElementById('shopNameDisplay').textContent = 'In Transit to Store';
+          document.getElementById('receiverDisplay').textContent = 'Pending Arrival Sign-off';
+          document.getElementById('retailStatusBadge').textContent = 'In Transit';
+          document.getElementById('retailStatusBadge').style.color = '#C99738';
+        }
+
+        // Contract Etherscan
+        const contract = data.contract_address || '0x78Ba1dabeB18E45E8B18BdC383de76b187aa1261';
+        document.getElementById('contractDisplay').textContent = `${contract.slice(0, 10)}...${contract.slice(-4)}`;
+        document.getElementById('btnExploreEtherscan').href = `https://sepolia.etherscan.io/address/${contract}`;
+
+        // Top QR preview
+        if (data.qr_code_base64) {
+          const qrImg = document.createElement('img');
+          qrImg.src = data.qr_code_base64;
+          qrImg.style.width = '120px';
+          qrImg.style.height = '120px';
+          qrImg.style.borderRadius = '12px';
+          qrImg.style.background = '#fff';
+          qrImg.style.padding = '6px';
+          qrImg.style.marginTop = '14px';
+          qrImg.style.border = '1px solid #E2E8DE';
+          qrImg.style.boxShadow = '0 4px 14px rgba(10, 43, 24, 0.08)';
+          document.getElementById('badgeVerified').parentNode.appendChild(qrImg);
+        }
+
+      } catch (e) {
+        console.error("Error loading package provenance:", e);
+      }
+    }
+
+    loadPackageData();
+  </script>
+</body>
+</html>

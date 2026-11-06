@@ -1,112 +1,815 @@
 /* ==========================================================================
-   Livestock Muzzle Biometric Web Interface - Design System & Styles
+   HalalChain Global Design System & Variables (Tokens)
+   Single Source of Truth: HalalChain Landing Page Visual Identity
    ========================================================================== */
 
 :root {
-  --bg-dark: #0a0e1a;
-  --bg-card: rgba(19, 27, 46, 0.72);
-  --bg-card-hover: rgba(26, 38, 64, 0.85);
-  --bg-card-border: rgba(255, 255, 255, 0.08);
-  
-  --primary: #06b6d4;
-  --primary-glow: rgba(6, 182, 212, 0.28);
-  --accent: #6366f1;
-  --accent-glow: rgba(99, 102, 241, 0.25);
-  
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.28);
-  --warning: #f59e0b;
-  --warning-glow: rgba(245, 158, 11, 0.25);
-  --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, 0.28);
+  /* Brand Core Palette */
+  --forest-green: #0A4325;
+  --forest-green-dark: #062B18;
+  --forest-green-light: #0F5831;
+  --leaf-green: #2B7A4B;
+  --emerald-accent: #10B981;
+  --emerald-glow: rgba(16, 185, 129, 0.25);
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  /* Gold Luxury Accents */
+  --accent-gold: #C99738;
+  --accent-gold-light: #DFB460;
+  --accent-gold-dark: #8C6D2D;
+  --accent-gold-glow: rgba(201, 151, 56, 0.28);
 
-  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Warm Cream & Natural Surfaces */
+  --bg-cream: #F4F6F2;
+  --bg-cream-alt: #EBF0E6;
+  --bg-cream-soft: #F9FAF7;
+  --bg-surface-white: #FFFFFF;
+  --bg-surface-card: #FFFFFF;
+  --bg-surface-muted: #F5F7F3;
+
+  /* Typography / Text Colors */
+  --text-dark: #1A251E;
+  --text-heading: #0A4325;
+  --text-body: #2D3A32;
+  --text-muted: #5E7265;
+  --text-dim: #84968B;
+  --text-inverse: #FFFFFF;
+
+  /* Borders & Dividers */
+  --border-subtle: #E2E8DE;
+  --border-light: #D5DEC0;
+  --border-green: rgba(10, 67, 37, 0.16);
+  --border-green-focus: #0A4325;
+  --border-gold: rgba(201, 151, 56, 0.4);
+
+  /* Functional Status Colors */
+  --status-success-bg: #ECFDF5;
+  --status-success-text: #065F46;
+  --status-success-border: #A7F3D0;
+
+  --status-warning-bg: #FFFBEB;
+  --status-warning-text: #92400E;
+  --status-warning-border: #FDE68A;
+
+  --status-danger-bg: #FEF2F2;
+  --status-danger-text: #991B1B;
+  --status-danger-border: #FECACA;
+
+  --status-info-bg: #F0FDF4;
+  --status-info-text: #166534;
+  --status-info-border: #BBF7D0;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 6px rgba(10, 43, 24, 0.04);
+  --shadow-card: 0 10px 30px -4px rgba(10, 43, 24, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 18px 40px -6px rgba(10, 43, 24, 0.14), 0 6px 16px -2px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 24px 60px -8px rgba(10, 43, 24, 0.22), 0 10px 24px -4px rgba(0, 0, 0, 0.08);
+  --shadow-btn: 0 4px 14px rgba(10, 67, 37, 0.2);
+
+  /* Typography System */
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Border Radii */
+  --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Transitions */
+  --transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Base Reset & Core Canvas */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body {
-  font-family: var(--font-main);
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+html, body {
+  width: 100%;
   min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-  padding: 24px 32px;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.10) 0px, transparent 50%);
+  font-family: var(--font-main);
+  background-color: var(--bg-cream);
+  background: radial-gradient(circle at 80% 10%, #FBFDF9 0%, #EEF2EB 100%);
+  color: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
-/* Background Ambient Orbs */
-.glow-orb {
+/* Background Natural Organic Accents */
+body::before {
+  content: "";
   position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
+  top: 0;
+  right: 0;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle at 100% 0%, rgba(43, 122, 75, 0.08) 0%, rgba(201, 151, 56, 0.03) 50%, transparent 75%);
+  border-radius: 0 0 0 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.5;
 }
-.orb-1 {
-  width: 500px;
-  height: 500px;
-  top: -100px;
-  left: -100px;
-  background: radial-gradient(circle, #6366f1 0%, transparent 70%);
-}
-.orb-2 {
-  width: 450px;
-  height: 450px;
+
+body::after {
+  content: "";
+  position: fixed;
   bottom: 0;
-  right: -50px;
-  background: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+  left: 0;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle at 0% 100%, rgba(10, 67, 37, 0.09) 0%, rgba(43, 122, 75, 0.04) 55%, transparent 80%);
+  border-radius: 0 100% 0 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Glass Card Base */
-.glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--bg-card-border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.45);
-  position: relative;
-  z-index: 1;
-  transition: var(--transition);
-}
+/* ==========================================================================
+   Header & Navigation
+   ========================================================================== */
 
-/* Header Styles */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 4px 20px rgba(10, 43, 24, 0.04);
+  padding: 14px 32px !important;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  position: relative;
-  z-index: 10;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 16px;
 }
 
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(10, 67, 37, 0.15));
+}
+
+.brand-title {
+  font-family: var(--font-heading) !important;
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  color: var(--forest-green) !important;
+  line-height: 1.1;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-title span.title-accent {
+  color: var(--leaf-green);
+}
+
+.brand-title span.badge-tag {
+  font-size: 0.72rem !important;
+  color: var(--forest-green) !important;
+  border: 1px solid rgba(10, 67, 37, 0.25) !important;
+  background: rgba(10, 67, 37, 0.06) !important;
+  padding: 2px 8px !important;
+  border-radius: var(--radius-xs) !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.brand-subtitle {
+  color: var(--text-muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Network Status Badge */
+.eth-badge-header {
+  background: var(--bg-surface-white) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--forest-green) !important;
+  padding: 6px 14px !important;
+  border-radius: var(--radius-full) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.eth-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: var(--emerald-accent) !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Nav Action Ghost / Pill Buttons */
+.btn-action-ghost {
+  background: var(--bg-surface-white) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--forest-green) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 7px 16px !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition) !important;
+  text-decoration: none;
+}
+
+.btn-action-ghost:hover {
+  background: var(--forest-green) !important;
+  border-color: var(--forest-green) !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-action-ghost:hover svg {
+  stroke: #FFFFFF;
+}
+
+.btn-home-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: var(--forest-green) !important;
+  text-decoration: none !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  padding: 7px 16px !important;
+  border-radius: var(--radius-full) !important;
+  background: rgba(10, 67, 37, 0.05) !important;
+  border: 1px solid rgba(10, 67, 37, 0.15) !important;
+  transition: var(--transition) !important;
+}
+
+.btn-home-link:hover {
+  background: var(--forest-green) !important;
+  border-color: var(--forest-green) !important;
+  color: #FFFFFF !important;
+}
+
+/* Role Badges */
+#roleBadgeContainer {
+  background: rgba(201, 151, 56, 0.1) !important;
+  border: 1px solid rgba(201, 151, 56, 0.3) !important;
+  color: var(--accent-gold-dark) !important;
+  padding: 5px 14px !important;
+  border-radius: var(--radius-full) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   Layout & Cards
+   ========================================================================== */
+
+.main-content, .dashboard-container, .container {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+/* Universal Premium Card */
+.glass-card, .card, .panel, .dashboard-card {
+  background: var(--bg-surface-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 24px !important;
+  margin-bottom: 24px !important;
+  transition: var(--transition);
+  position: relative;
+}
+
+.glass-card:hover, .card:hover {
+  border-color: rgba(10, 67, 37, 0.18) !important;
+  box-shadow: var(--shadow-card-hover) !important;
+}
+
+/* Card Headers & Headlines */
+.section-headline, .card-title, .panel-title {
+  font-family: var(--font-heading) !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  color: var(--forest-green) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-left: 3.5px solid var(--forest-green) !important;
+  padding-left: 12px !important;
+  border-bottom: none !important;
+  text-shadow: none !important;
+}
+
+.section-headline svg, .card-title svg {
+  color: var(--forest-green);
+  flex-shrink: 0;
+}
+
+/* Top Accent Line on Primary Cards */
+.card-accent-top {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-accent-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--forest-green) 0%, var(--accent-gold) 50%, var(--leaf-green) 100%);
+}
+
+/* ==========================================================================
+   Form Controls & Inputs
+   ========================================================================== */
+
+label, .form-label {
+  display: block;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: var(--forest-green) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  background: var(--bg-surface-white) !important;
+  border: 1.5px solid var(--border-subtle) !important;
+  color: var(--text-dark) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-main) !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  padding: 10px 14px !important;
+  height: 44px;
+  transition: var(--transition) !important;
+}
+
+textarea {
+  height: auto !important;
+  min-height: 80px;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--forest-green) !important;
+  box-shadow: 0 0 0 3px rgba(10, 67, 37, 0.12) !important;
+  outline: none !important;
+  background: #FFFFFF !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-dim) !important;
+  font-weight: 400;
+}
+
+select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230A4325%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  padding-right: 36px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Radio & Checkbox Groups */
+input[type="radio"], input[type="checkbox"] {
+  accent-color: var(--forest-green);
+  cursor: pointer;
+}
+
+/* Form Grids */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .form-grid-2, .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Primary Submit & Action Buttons */
+.btn-primary, button[type="submit"], .btn-submit-action {
+  background: linear-gradient(135deg, var(--forest-green) 0%, var(--forest-green-dark) 100%) !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid var(--accent-gold) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-main) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(10, 67, 37, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition) !important;
+  text-decoration: none;
+}
+
+.btn-primary:hover, button[type="submit"]:hover, .btn-submit-action:hover {
+  background: linear-gradient(135deg, var(--forest-green-light) 0%, var(--forest-green) 100%) !important;
+  border-color: var(--accent-gold-light) !important;
+  box-shadow: 0 10px 24px rgba(10, 67, 37, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--bg-surface-white) !important;
+  color: var(--forest-green) !important;
+  border: 1.5px solid var(--border-subtle) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 10px 24px !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: var(--transition) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-cream) !important;
+  border-color: var(--forest-green) !important;
+}
+
+/* ==========================================================================
+   Map & Geolocation Controls
+   ========================================================================== */
+
+.map-wrapper {
+  position: relative;
+  margin-top: 10px;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+  border: 1.5px solid var(--border-subtle) !important;
+  background: #FFFFFF !important;
+  box-shadow: var(--shadow-sm);
+}
+
+#farmMap {
+  width: 100%;
+  height: 240px;
+  z-index: 1;
+}
+
+.map-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px !important;
+  background: #FFFFFF !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  font-size: 0.82rem !important;
+  color: var(--text-muted) !important;
+}
+
+/* ==========================================================================
+   Tables & Blockchain Registry Ledger
+   ========================================================================== */
+
+table, .registry-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 12px;
+  background: #FFFFFF;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+thead th {
+  background: var(--bg-cream-soft);
+  color: var(--forest-green);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+tbody td {
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: var(--text-body);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background: rgba(10, 67, 37, 0.02);
+}
+
+/* Table Badge & Monospace Elements */
+.hash-display, .mono-code {
+  font-family: var(--font-mono) !important;
+  background: var(--bg-cream) !important;
+  border: 1px solid var(--border-subtle) !important;
+  padding: 4px 8px !important;
+  border-radius: var(--radius-xs) !important;
+  color: var(--forest-green) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.status-badge-alive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-badge-slaughtered {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Modals & Popups
+   ========================================================================== */
+
+.modal-backdrop, .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 43, 24, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-content, .modal-dialog {
+  background: #FFFFFF !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-modal) !important;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px !important;
+  position: relative;
+  animation: modalEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-close, .btn-close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-cream);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dark);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modal-close:hover, .btn-close-modal:hover {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   Biometric Muzzle Capture Shots
+   ========================================================================== */
+
+.shot-card {
+  background: var(--bg-surface-white);
+  border: 1.5px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.shot-card:hover {
+  border-color: var(--forest-green);
+  background: rgba(10, 67, 37, 0.02);
+}
+
+.shot-card.active-shot {
+  border-color: var(--forest-green);
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(10, 67, 37, 0.1);
+}
+
+/* ==========================================================================
+   Public Verification & Passport Timeline Components
+   ========================================================================== */
+
+.timeline-v {
+  position: relative;
+  padding-left: 32px;
+  margin: 20px 0;
+}
+
+.timeline-v::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--border-subtle);
+}
+
+.timeline-v-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.timeline-v-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-v-node {
+  position: absolute;
+  left: -32px;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--forest-green);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.74rem;
+  box-shadow: 0 0 0 4px #FFFFFF, 0 2px 6px rgba(10, 67, 37, 0.2);
+}
+
+.timeline-v-content {
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-v-title {
+  font-weight: 700;
+  font-size: 0.96rem;
+  color: var(--forest-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Etherscan Links */
+.etherscan-link {
+  color: var(--forest-green);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.etherscan-link:hover {
+  color: var(--leaf-green);
+  text-decoration: underline;
+}
+
+/* QR Code Display Container */
+.qr-preview-box {
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.qr-preview-box img {
+  border-radius: var(--radius-xs);
+}
+
+
+/* ==========================================================================
+   Original Application Layout & Component Rules (Theme Adapted)
+   ========================================================================== */
 
 .brand-logo {
   width: 52px;

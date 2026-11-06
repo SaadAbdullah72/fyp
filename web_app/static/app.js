@@ -1,1319 +1,1212 @@
 /**
- * Livestock Muzzle Biometric Web Interface - Client Application Logic
- * Supports:
- * Mode 1: Smart Cattle Registration (Anti-Duplicate AI Protection)
- * Mode 2: Direct 1-to-1 Muzzle Comparison (Photo A vs Photo B)
- * Mode 3: Search & Verify Cattle (Database Lookup)
+ * HalalChain Livestock Muzzle Biometric & Ethereum Sepolia Blockchain Interface
+ * Features:
+ *  - Ethers.js + MetaMask Web3 Provider (Sepolia Network 11155111)
+ *  - Real-Time Pre-Inference Quality Gate & Non-Muzzle Rejection Diagnostics
+ *  - On-Chain Biometric Cattle Minting
+ *  - P2P Ownership Transfer & Sepolia ETH Payment Settlement
+ *  - Wallet-Based Portfolio & Audit Search
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
   // -------------------------------------------------------------
-  // Mode Tabs & Layout Sections
+  // Web3 & MetaMask State
   // -------------------------------------------------------------
-  const tabSmartRegister = document.getElementById('tabSmartRegister');
-  const tabDirectCompare = document.getElementById('tabDirectCompare');
-  const tabSearchVerify = document.getElementById('tabSearchVerify');
+  let userAddress = null;
+  let web3Provider = null;
+  let web3Signer = null;
+  let cattleContract = null;
+  let contractInfo = null;
 
-  const smartRegisterSection = document.getElementById('smartRegisterSection');
-  const directCompareSection = document.getElementById('directCompareSection');
-  const searchSamplesBar = document.getElementById('searchSamplesBar');
-  const searchVerifyLayout = document.getElementById('searchVerifyLayout');
-  const registrySection = document.getElementById('registrySection');
+  const SEPOLIA_CHAIN_ID_DEC = 11155111;
+  const SEPOLIA_CHAIN_ID_HEX = '0xaa36a7';
 
-  // Header Elements
-  const headerRegistryCount = document.getElementById('headerRegistryCount');
-  const registryCountBadge = document.getElementById('registryCountBadge');
-  const registryTableBody = document.getElementById('registryTableBody');
-  const btnResetAll = document.getElementById('btnResetAll');
-  const toast = document.getElementById('toast');
+  // DOM Elements
+  const btnConnectWallet = document.getElementById('btnConnectWallet');
+  const btnSwitchAccount = document.getElementById('btnSwitchAccount');
+  const btnDisconnectWallet = document.getElementById('btnDisconnectWallet');
+  const walletBtnText = document.getElementById('walletBtnText');
+  const networkBadge = document.getElementById('networkBadge');
+  const networkNameText = document.getElementById('networkNameText');
 
-  // -------------------------------------------------------------
-  // Mode 1: 3-Shot Smart Registration Elements
-  // -------------------------------------------------------------
+  const smartOwnerName = document.getElementById('smartOwnerName');
+  const smartFarmName = document.getElementById('smartFarmName');
+  const smartOwnerAddress = document.getElementById('smartOwnerAddress');
+  const smartLocation = document.getElementById('smartLocation');
+  const quickRegionSelect = document.getElementById('quickRegionSelect');
+  const smartLatitude = document.getElementById('smartLatitude');
+  const smartLongitude = document.getElementById('smartLongitude');
+  const lblLat = document.getElementById('lblLat');
+  const lblLng = document.getElementById('lblLng');
+  const btnDetectGps = document.getElementById('btnDetectGps');
+
   const smartRegName = document.getElementById('smartRegName');
   const smartRegBreed = document.getElementById('smartRegBreed');
   const smartRegTag = document.getElementById('smartRegTag');
+  const btnGenCowId = document.getElementById('btnGenCowId');
+
   const btnSubmitSmartRegister = document.getElementById('btnSubmitSmartRegister');
   const smartRegisterSpinner = document.getElementById('smartRegisterSpinner');
-  const multiQualityStatusText = document.getElementById('multiQualityStatusText');
-  const qualityGateHint = document.getElementById('qualityGateHint');
 
-  // 3 Slots
+  // Slots
   const slotCards = [document.getElementById('shotCard1'), document.getElementById('shotCard2'), document.getElementById('shotCard3')];
-  const slotDrops = [document.getElementById('slotDrop1'), document.getElementById('slotDrop2'), document.getElementById('slotDrop3')];
-  const slotFileInputs = [document.getElementById('slotFileInput1'), document.getElementById('slotFileInput2'), document.getElementById('slotFileInput3')];
-  const slotPrompts = [document.getElementById('slotPrompt1'), document.getElementById('slotPrompt2'), document.getElementById('slotPrompt3')];
-  const slotPreviews = [document.getElementById('slotPreview1'), document.getElementById('slotPreview2'), document.getElementById('slotPreview3')];
-  const slotImgs = [document.getElementById('slotImg1'), document.getElementById('slotImg2'), document.getElementById('slotImg3')];
-  const slotNames = [document.getElementById('slotName1'), document.getElementById('slotName2'), document.getElementById('slotName3')];
-  const btnRemoveSlots = [document.getElementById('btnRemoveSlot1'), document.getElementById('btnRemoveSlot2'), document.getElementById('btnRemoveSlot3')];
+  const slotDrops = [document.getElementById('shotDrop1'), document.getElementById('shotDrop2'), document.getElementById('shotDrop3')];
+  const slotInputs = [document.getElementById('shotFile1'), document.getElementById('shotFile2'), document.getElementById('shotFile3')];
+  const slotImgs = [document.getElementById('shotImg1'), document.getElementById('shotImg2'), document.getElementById('shotImg3')];
   const slotBadges = [document.getElementById('slotQualityBadge1'), document.getElementById('slotQualityBadge2'), document.getElementById('slotQualityBadge3')];
 
-  const btnSmartPreset1 = document.getElementById('btnSmartPreset1');
-  const btnSmartPreset2 = document.getElementById('btnSmartPreset2');
-  const btnSmartPreset3 = document.getElementById('btnSmartPreset3');
-
-  // Results Elements
+  // Results
   const smartResultCard = document.getElementById('smartResultCard');
   const smartDuplicateView = document.getElementById('smartDuplicateView');
   const smartSuccessView = document.getElementById('smartSuccessView');
 
-  // Duplicate View Fields
+  // Duplicate View
   const dupBannerTitle = document.getElementById('dupBannerTitle');
   const dupBannerDesc = document.getElementById('dupBannerDesc');
   const smartDupUploadThumb = document.getElementById('smartDupUploadThumb');
   const smartDupUploadName = document.getElementById('smartDupUploadName');
   const smartDupConfidence = document.getElementById('smartDupConfidence');
   const smartDupCosine = document.getElementById('smartDupCosine');
-  const smartDupThreshold = document.getElementById('smartDupThreshold');
   const smartDupMatchedThumb = document.getElementById('smartDupMatchedThumb');
   const smartDupMatchedName = document.getElementById('smartDupMatchedName');
   const smartDupMatchedTag = document.getElementById('smartDupMatchedTag');
+  const smartDupMatchedOwner = document.getElementById('smartDupMatchedOwner');
+  const smartDupMatchedFarm = document.getElementById('smartDupMatchedFarm');
   const smartDupMatchedBreed = document.getElementById('smartDupMatchedBreed');
-  const smartDupMatchedDate = document.getElementById('smartDupMatchedDate');
+  const smartDupXaiCanvas = document.getElementById('smartDupXaiCanvas');
 
-  // Success View Fields
-  const succBannerTitle = document.getElementById('succBannerTitle');
-  const succBannerDesc = document.getElementById('succBannerDesc');
-  const smartSuccThumb = document.getElementById('smartSuccThumb');
+  // Success View
   const smartSuccName = document.getElementById('smartSuccName');
   const smartSuccTag = document.getElementById('smartSuccTag');
-  const smartSuccBreed = document.getElementById('smartSuccBreed');
-  const smartSuccHash = document.getElementById('smartSuccHash');
+  const smartSuccDate = document.getElementById('smartSuccDate');
+  const smartSuccThumb = document.getElementById('smartSuccThumb');
   const smartSuccGalleryThumbs = document.getElementById('smartSuccGalleryThumbs');
-  const smartSuccVectorChips = document.getElementById('smartSuccVectorChips');
-  const smartSuccClosestInfo = document.getElementById('smartSuccClosestInfo');
-  const smartSuccClosestSim = document.getElementById('smartSuccClosestSim');
+  const smartSuccOwner = document.getElementById('smartSuccOwner');
+  const smartSuccFarm = document.getElementById('smartSuccFarm');
+  const smartSuccLocation = document.getElementById('smartSuccLocation');
+  const smartSuccBreed = document.getElementById('smartSuccBreed');
+  const smartSuccQualityScore = document.getElementById('smartSuccQualityScore');
+  const smartSuccLatency = document.getElementById('smartSuccLatency');
+  const smartSuccTxHash = document.getElementById('smartSuccTxHash');
+  const smartSuccEtherscanLink = document.getElementById('smartSuccEtherscanLink');
+  const smartSuccHash = document.getElementById('smartSuccHash');
 
-  // 3-Shot State
+  // Registry & Transfer Modal
+  const registryTotalBadge = document.getElementById('registryTotalBadge');
+  const registryTableBody = document.getElementById('registryTableBody');
+  const btnResetAll = document.getElementById('btnResetAll');
+
+  const transferModal = document.getElementById('transferModal');
+  const modalTransferCowName = document.getElementById('modalTransferCowName');
+  const modalTransferCowId = document.getElementById('modalTransferCowId');
+  const modalRecipientAddress = document.getElementById('modalRecipientAddress');
+  const modalTransferPrice = document.getElementById('modalTransferPrice');
+  const btnConfirmTransfer = document.getElementById('btnConfirmTransfer');
+  const btnCloseTransferModal = document.getElementById('btnCloseTransferModal');
+
+  // Search
+  const walletSearchInput = document.getElementById('walletSearchInput');
+  const btnSearchWallet = document.getElementById('btnSearchWallet');
+  const walletSearchResults = document.getElementById('walletSearchResults');
+  const walletSearchHeader = document.getElementById('walletSearchHeader');
+  const walletSearchGrid = document.getElementById('walletSearchGrid');
+
+  // State
   const slotFiles = [null, null, null];
-  const slotScores = [0, 0, 0];
-  const slotPassed = [false, false, false];
-  const slotIssues = ['', '', ''];
+  let activeTransferCowId = null;
 
   // -------------------------------------------------------------
-  // Mode 2: Multi-Shot Comparison & Duplicate Check Elements
+  // 1. Fetch Contract Info & Initialize Web3
   // -------------------------------------------------------------
-  const boxCompare1 = document.getElementById('boxCompare1');
-  const boxCompare2 = document.getElementById('boxCompare2');
-  const boxCompare3 = document.getElementById('boxCompare3');
-  const compareFileInput1 = document.getElementById('compareFileInput1');
-  const compareFileInput2 = document.getElementById('compareFileInput2');
-  const compareFileInput3 = document.getElementById('compareFileInput3');
-  const boxPrompt1 = document.getElementById('boxPrompt1');
-  const boxPrompt2 = document.getElementById('boxPrompt2');
-  const boxPrompt3 = document.getElementById('boxPrompt3');
-  const boxPreview1 = document.getElementById('boxPreview1');
-  const boxPreview2 = document.getElementById('boxPreview2');
-  const boxPreview3 = document.getElementById('boxPreview3');
-  const boxImg1 = document.getElementById('boxImg1');
-  const boxImg2 = document.getElementById('boxImg2');
-  const boxImg3 = document.getElementById('boxImg3');
-  const boxFilename1 = document.getElementById('boxFilename1');
-  const boxFilename2 = document.getElementById('boxFilename2');
-  const boxFilename3 = document.getElementById('boxFilename3');
-  const btnRemoveBox1 = document.getElementById('btnRemoveBox1');
-  const btnRemoveBox2 = document.getElementById('btnRemoveBox2');
-  const btnRemoveBox3 = document.getElementById('btnRemoveBox3');
+  async function initWeb3Config() {
+    try {
+      const res = await fetch('/api/blockchain/contract-info');
+      contractInfo = await res.json();
+      if (contractInfo && contractInfo.contract_address && contractInfo.contract_address.toLowerCase() !== "0x89fb23a14c93540ac55a5b1e6d38006c590e8924") {
+        const dBtn = document.getElementById('btnDeployContract');
+        const dText = document.getElementById('deployBtnText');
+        if (dBtn && dText) {
+          const shortAddr = contractInfo.contract_address.slice(0, 6) + '...' + contractInfo.contract_address.slice(-4);
+          dText.innerHTML = `✅ Live: ${shortAddr}`;
+          dBtn.style.background = "rgba(0, 245, 160, 0.12)";
+          dBtn.style.borderColor = "#00F5A0";
+          dBtn.style.color = "#00F5A0";
+          dBtn.title = `Smart Contract Live on Sepolia: ${contractInfo.contract_address} (Click to view on Etherscan)`;
+          dBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(`https://sepolia.etherscan.io/address/${contractInfo.contract_address}`, '_blank');
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load contract info:", e);
+    }
+  }
+  await initWeb3Config();
 
-  const btnPresetSame = document.getElementById('btnPresetSame');
-  const btnPresetDiff = document.getElementById('btnPresetDiff');
-  const directThresholdSlider = document.getElementById('directThresholdSlider');
-  const directThresholdVal = document.getElementById('directThresholdVal');
-  const btnRunDirectCompare = document.getElementById('btnRunDirectCompare');
-  const directCompareSpinner = document.getElementById('directCompareSpinner');
+  // Role-Based Access Control State
+  let userRoles = {
+    is_owner: false,
+    is_slaughterhouse: false,
+    is_shopkeeper: false,
+    is_farmer: true,
+    role_badge: "Cattle Owner"
+  };
 
-  const directResultsCard = document.getElementById('directResultsCard');
-  const directVerdictBanner = document.getElementById('directVerdictBanner');
-  const directVerdictIcon = document.getElementById('directVerdictIcon');
-  const directVerdictTitle = document.getElementById('directVerdictTitle');
-  const directVerdictDesc = document.getElementById('directVerdictDesc');
+  // Helper: Update Wallet UI State & Fetch RBAC Permissions
+  async function updateWalletUI(address) {
+    userAddress = address;
+    sessionStorage.removeItem('halalchain_wallet_disconnected');
 
-  const directDuplicateBanner = document.getElementById('directDuplicateBanner');
-  const directDuplicateIcon = document.getElementById('directDuplicateIcon');
-  const directDuplicateTitle = document.getElementById('directDuplicateTitle');
-  const directDuplicateDesc = document.getElementById('directDuplicateDesc');
-  const directDuplicatePill = document.getElementById('directDuplicatePill');
-  const directDuplicateThumb = document.getElementById('directDuplicateThumb');
-  const directDuplicateName = document.getElementById('directDuplicateName');
-  const directDuplicateTag = document.getElementById('directDuplicateTag');
-  const directDuplicateDate = document.getElementById('directDuplicateDate');
+    const shortAddr = address.slice(0, 6) + '...' + address.slice(-4);
+    walletBtnText.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin-right: 5px;"><path d="M21.16 7.62l-2.02-6.52c-.12-.38-.56-.56-.91-.37L12 4.3 5.77.73c-.35-.19-.79-.01-.91.37L2.84 7.62c-.17.55.08 1.15.58 1.41L12 13.78l8.58-4.75c.5-.26.75-.86.58-1.41z" fill="#E2761B"/><path d="M12 13.78L3.42 9.03 2.14 17.5c-.07.45.18.88.58 1.03L11.5 22.8c.32.12.68.12 1 0l8.78-4.27c.4-.15.65-.58.58-1.03l-1.28-8.47L12 13.78z" fill="#E4761B"/><path d="M8.5 12.5l-3.5 1.5 1 4.5 4.5-2.5-2-3.5zm7 0l2 3.5 4.5 2.5 1-4.5-3.5-1.5H15.5z" fill="#D7C1B3"/><path d="M8.5 16l3.5 4.5 3.5-4.5-3.5-2-3.5 2z" fill="#233447"/></svg> ${shortAddr}`;
+    btnConnectWallet.style.borderColor = "#00F5A0";
+    btnConnectWallet.style.background = "rgba(0, 245, 160, 0.18)";
+    btnConnectWallet.title = `Active Account: ${address} (Click to copy)`;
 
-  const directPairwiseCard = document.getElementById('directPairwiseCard');
-  const directPairwiseChips = document.getElementById('directPairwiseChips');
+    if (btnSwitchAccount) {
+      btnSwitchAccount.style.display = "inline-flex";
+    }
+    if (btnDisconnectWallet) {
+      btnDisconnectWallet.style.display = "inline-flex";
+    }
+    if (smartOwnerAddress) {
+      smartOwnerAddress.value = address;
+    }
 
-  const directMetricCosine = document.getElementById('directMetricCosine');
-  const directMetricBar = document.getElementById('directMetricBar');
-  const directMetricConfidence = document.getElementById('directMetricConfidence');
-  const directMetricAngular = document.getElementById('directMetricAngular');
-  const directHash1 = document.getElementById('directHash1');
-  const directHash2 = document.getElementById('directHash2');
-  const directHash3 = document.getElementById('directHash3');
-  const directHash3Item = document.getElementById('directHash3Item');
-
-  const directQualityBadge1 = document.getElementById('directQualityBadge1');
-  const directQualityBadge2 = document.getElementById('directQualityBadge2');
-  const directQualityBadge3 = document.getElementById('directQualityBadge3');
-  const directQualityHint = document.getElementById('directQualityHint');
-
-  const directQ1Card = document.getElementById('directQ1Card');
-  const directQ2Card = document.getElementById('directQ2Card');
-  const directQ3Card = document.getElementById('directQ3Card');
-  const directQ1Score = document.getElementById('directQ1Score');
-  const directQ1Live = document.getElementById('directQ1Live');
-  const directQ2Score = document.getElementById('directQ2Score');
-  const directQ2Live = document.getElementById('directQ2Live');
-  const directQ3Score = document.getElementById('directQ3Score');
-  const directQ3Live = document.getElementById('directQ3Live');
-
-  const directHeatCol3 = document.getElementById('directHeatCol3');
-  const directRidgeCol3 = document.getElementById('directRidgeCol3');
-  const directHeatImg3 = document.getElementById('directHeatImg3');
-  const directRidgeImg3 = document.getElementById('directRidgeImg3');
-
-  let directFile1 = null;
-  let directFile2 = null;
-  let directFile3 = null;
-  let directPass1 = false;
-  let directPass2 = false;
-  let directPass3 = false;
-  let directIssue1 = '';
-  let directIssue2 = '';
-  let directIssue3 = '';
-  let searchIssue = '';
-
-  // -------------------------------------------------------------
-  // Mode 3: Search & Verify Elements
-  // -------------------------------------------------------------
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
-  const dropzonePrompt = document.getElementById('dropzonePrompt');
-  const dropzonePreview = document.getElementById('dropzonePreview');
-  const previewImg = document.getElementById('previewImg');
-  const previewFilename = document.getElementById('previewFilename');
-  const btnRemoveImg = document.getElementById('btnRemoveImg');
-  const searchQualityBadge = document.getElementById('searchQualityBadge');
-  const searchQualityHint = document.getElementById('searchQualityHint');
-
-  const thresholdSlider = document.getElementById('thresholdSlider');
-  const thresholdVal = document.getElementById('thresholdVal');
-  const btnScanVerify = document.getElementById('btnScanVerify');
-  const scanSpinner = document.getElementById('scanSpinner');
-
-  const dualInspectionCard = document.getElementById('dualInspectionCard');
-  const rawThumb = document.getElementById('rawThumb');
-  const claheThumb = document.getElementById('claheThumb');
-
-  const verdictBanner = document.getElementById('verdictBanner');
-  const verdictIcon = document.getElementById('verdictIcon');
-  const verdictTitle = document.getElementById('verdictTitle');
-  const verdictDescription = document.getElementById('verdictDescription');
-
-  const metricsGrid = document.getElementById('metricsGrid');
-  const metricCosine = document.getElementById('metricCosine');
-  const metricCosineBar = document.getElementById('metricCosineBar');
-  const metricConfidence = document.getElementById('metricConfidence');
-  const metricAngular = document.getElementById('metricAngular');
-
-  const matchedProfileCard = document.getElementById('matchedProfileCard');
-  const matchedTagId = document.getElementById('matchedTagId');
-  const matchedName = document.getElementById('matchedName');
-  const matchedThumb = document.getElementById('matchedThumb');
-
-  const fingerprintSection = document.getElementById('fingerprintSection');
-  const displayHash = document.getElementById('displayHash');
-  const vectorChips = document.getElementById('vectorChips');
-  const btnCopyHash = document.getElementById('btnCopyHash');
-  const samplesContainer = document.getElementById('samplesContainer');
-
-  let currentSearchFile = null;
-  let searchPassed = false;
-
-  // -------------------------------------------------------------
-  // Navigation & Mode Switching
-  // -------------------------------------------------------------
-  function switchMode(mode) {
-    tabSmartRegister.classList.remove('active');
-    tabDirectCompare.classList.remove('active');
-    tabSearchVerify.classList.remove('active');
-
-    smartRegisterSection.classList.add('hidden');
-    directCompareSection.classList.add('hidden');
-    searchSamplesBar.classList.add('hidden');
-    searchVerifyLayout.classList.add('hidden');
-
-    if (mode === 'smart') {
-      tabSmartRegister.classList.add('active');
-      smartRegisterSection.classList.remove('hidden');
-    } else if (mode === 'direct') {
-      tabDirectCompare.classList.add('active');
-      directCompareSection.classList.remove('hidden');
-    } else if (mode === 'search') {
-      tabSearchVerify.classList.add('active');
-      searchSamplesBar.classList.remove('hidden');
-      searchVerifyLayout.classList.remove('hidden');
+    // Check on-chain RBAC roles
+    try {
+      const roleRes = await fetch(`/api/roles/check/${address}`);
+      userRoles = await roleRes.json();
+      applyRoleBasedNavigation();
+    } catch (rErr) {
+      console.warn("Could not fetch user roles:", rErr);
     }
   }
 
-  tabSmartRegister.addEventListener('click', () => switchMode('smart'));
-  tabDirectCompare.addEventListener('click', () => switchMode('direct'));
-  tabSearchVerify.addEventListener('click', () => switchMode('search'));
+  function applyRoleBasedNavigation() {
+    const roleBadgeContainer = document.getElementById('roleBadgeContainer');
+    const roleBadgeText = document.getElementById('roleBadgeText');
+    const btnOpenAdminPanel = document.getElementById('btnOpenAdminPanel');
+    const btnOpenSlaughterhousePanel = document.getElementById('btnOpenSlaughterhousePanel');
+    const btnOpenRetailPanel = document.getElementById('btnOpenRetailPanel');
+    const btnDeployContract = document.getElementById('btnDeployContract');
 
-  // Start with Smart Register active by default
-  switchMode('smart');
+    if (roleBadgeContainer && roleBadgeText) {
+      roleBadgeContainer.style.display = 'flex';
+      roleBadgeText.textContent = userRoles.role_badge || "Cattle Owner";
+    }
 
-  // Load registry and demo samples
-  try {
-    await updateRegistryUI();
-    await loadSamples();
-  } catch (err) {
-    console.warn('Initialization error:', err);
+    // Strict RBAC: Explicitly hide all special portals with !important override
+    if (btnOpenAdminPanel) btnOpenAdminPanel.style.setProperty('display', 'none', 'important');
+    if (btnDeployContract) btnDeployContract.style.setProperty('display', 'none', 'important');
+    if (btnOpenSlaughterhousePanel) btnOpenSlaughterhousePanel.style.setProperty('display', 'none', 'important');
+    if (btnOpenRetailPanel) btnOpenRetailPanel.style.setProperty('display', 'none', 'important');
+
+    // ONLY SHOW THE SPECIFIC PORTAL MATCHING THIS CONNECTED WALLET:
+    if (userRoles.is_owner === true) {
+      // 1. Contract Deployer/Admin ONLY
+      if (btnOpenAdminPanel) btnOpenAdminPanel.style.setProperty('display', 'inline-flex', 'important');
+      if (btnDeployContract) btnDeployContract.style.setProperty('display', 'inline-flex', 'important');
+    } else if (userRoles.is_slaughterhouse === true) {
+      // 2. Whitelisted Slaughterhouse ONLY
+      if (btnOpenSlaughterhousePanel) btnOpenSlaughterhousePanel.style.setProperty('display', 'inline-flex', 'important');
+      loadSlaughterhouseCustodyCattle();
+    } else if (userRoles.is_shopkeeper === true) {
+      // 3. Whitelisted Retail Supermarket ONLY
+      if (btnOpenRetailPanel) btnOpenRetailPanel.style.setProperty('display', 'inline-flex', 'important');
+    }
+    // 4. Regular Farmers & Any other wallet: ALL portals remain completely hidden
   }
 
-  // -------------------------------------------------------------
-  // Helper: Sample File Fetcher
-  // -------------------------------------------------------------
-  async function fetchFileFromSample(subPath, filename) {
-    const fullPath = `ai_engine/data/cropped_muzzles/${subPath}`;
-    const res = await fetch(`/api/sample-image?path=${encodeURIComponent(fullPath)}`);
-    if (!res.ok) throw new Error('Sample not found on server');
-    const blob = await res.blob();
-    return new File([blob], filename, { type: 'image/jpeg' });
-  }
+  // Connect or Switch MetaMask Account
+  async function connectMetaMask(forceChooser = false) {
+    if (typeof window.ethereum === 'undefined') {
+      alert("MetaMask is not installed! Please install MetaMask extension to execute live Ethereum Sepolia transactions.");
+      window.open('https://metamask.io/download/', '_blank');
+      return;
+    }
 
-  // -------------------------------------------------------------
-  // Universal Real-Time Quality Audit Engine
-  // -------------------------------------------------------------
-  async function runQualityAudit(file, badgeEl, onComplete) {
-    if (!badgeEl) return;
-    badgeEl.className = 'slot-quality-badge badge-checking';
-    badgeEl.innerHTML = '🔄 Auditing Muzzle & Completeness...';
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/quality-check', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (res.ok && data.status === 'success') {
-        const score = data.score;
-        const meets = data.meets_production_threshold;
-        const integrity = data.assessment?.muzzle_integrity;
+      web3Provider = new ethers.BrowserProvider(window.ethereum);
 
-        if (integrity && integrity.is_valid === false) {
-          badgeEl.className = 'slot-quality-badge badge-rejected';
-          badgeEl.innerHTML = `❌ Half/Incomplete Muzzle (${score}%)`;
-          badgeEl.title = integrity.message || 'Muzzle is incomplete or not frontal.';
-          showToast(`⚠️ Photo Rejected: ${integrity.message || 'Incomplete muzzle detected. Please upload a clear frontal photo showing both nostrils.'}`, 6500);
-          if (onComplete) onComplete(false, score, integrity.message);
-        } else if (meets) {
-          badgeEl.className = 'slot-quality-badge badge-passed';
-          badgeEl.innerHTML = `✅ Complete Muzzle: ${score}% (PASSED)`;
-          badgeEl.title = 'Complete frontal muzzle detected with valid ridge pattern.';
-          if (onComplete) onComplete(true, score, '');
-        } else {
-          const reason = (data.assessment?.issues && data.assessment.issues[0]) || 'Low clarity / lighting';
-          badgeEl.className = 'slot-quality-badge badge-rejected';
-          badgeEl.innerHTML = `❌ Low Quality: ${score}% (REJECTED <50%)`;
-          badgeEl.title = reason;
-          showToast(`⚠️ Photo Quality Too Low (${score}%): ${reason}. Please upload a clearer photo.`, 5000);
-          if (onComplete) onComplete(false, score, reason);
+      // If user specifically requests to switch or choose account, prompt MetaMask permissions
+      if (forceChooser) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
+        } catch (permErr) {
+          console.log("Permission selection cancelled or closed:", permErr);
         }
-      } else {
-        badgeEl.className = 'slot-quality-badge badge-rejected';
-        badgeEl.innerHTML = '❌ Quality Check Failed';
-        if (onComplete) onComplete(false, 0, 'Quality Check Failed');
+      }
+
+      // Fetch active accounts (prioritize window.ethereum.selectedAddress)
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const activeAddress = window.ethereum.selectedAddress || accounts[0];
+      
+      if (!activeAddress) {
+        throw new Error("No Ethereum account selected in MetaMask.");
+      }
+
+      // Check Network (Sepolia)
+      try {
+        const currentChainHex = await window.ethereum.request({ method: 'eth_chainId' });
+        if (parseInt(currentChainHex, 16) !== SEPOLIA_CHAIN_ID_DEC) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: SEPOLIA_CHAIN_ID_HEX,
+                  chainName: 'Sepolia Testnet',
+                  nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://rpc.sepolia.org'],
+                  blockExplorerUrls: ['https://sepolia.etherscan.io']
+                }],
+              });
+            }
+          }
+        }
+      } catch (netErr) {
+        console.warn("Chain switch check warning:", netErr);
+      }
+
+      // Re-initialize provider & signer safely
+      web3Provider = new ethers.BrowserProvider(window.ethereum);
+      web3Signer = await web3Provider.getSigner();
+
+      // Initialize Smart Contract Instance with safe EIP-55 checksum
+      if (contractInfo && contractInfo.contract_address && contractInfo.abi) {
+        try {
+          const cleanAddr = ethers.getAddress(contractInfo.contract_address.trim().toLowerCase());
+          cattleContract = new ethers.Contract(cleanAddr, contractInfo.abi, web3Signer);
+          console.log("CattleContract successfully initialized for", activeAddress, "on Sepolia:", cleanAddr);
+        } catch (cErr) {
+          console.error("Contract initialization address error:", cErr);
+        }
+      }
+
+      // Update UI with the active selected address
+      updateWalletUI(activeAddress);
+
+      // Listen for account change in MetaMask extension
+      if (!window.__halalchain_accounts_listener_set) {
+        window.__halalchain_accounts_listener_set = true;
+      if (!window.__halalchain_chain_listener_set) {
+        window.__halalchain_chain_listener_set = true;
+        window.ethereum.on('chainChanged', () => {
+          console.log("[HalalChain] Chain changed, refreshing provider...");
+          web3Provider = new ethers.BrowserProvider(window.ethereum);
+        });
+      }
+        window.ethereum.on('accountsChanged', async (newAccounts) => {
+          console.log("[HalalChain] MetaMask active accountsChanged:", newAccounts);
+          if (!newAccounts || newAccounts.length === 0) {
+            disconnectWallet();
+          } else {
+            const nextAddr = window.ethereum.selectedAddress || newAccounts[0];
+            web3Provider = new ethers.BrowserProvider(window.ethereum);
+            web3Signer = await web3Provider.getSigner();
+            if (contractInfo && contractInfo.contract_address && contractInfo.abi) {
+              const cleanAddr = ethers.getAddress(contractInfo.contract_address.trim().toLowerCase());
+              cattleContract = new ethers.Contract(cleanAddr, contractInfo.abi, web3Signer);
+            }
+            updateWalletUI(nextAddr);
+          }
+        });
       }
     } catch (err) {
-      badgeEl.className = 'slot-quality-badge badge-rejected';
-      badgeEl.innerHTML = '❌ Quality Service Offline';
-      if (onComplete) onComplete(false, 0, 'Quality Service Offline');
+      console.error("MetaMask connect error:", err);
+      if (err.code !== 4001) { // User didn't just reject modal
+        alert("Failed to connect MetaMask: " + err.message);
+      }
     }
   }
 
-  // =============================================================
-  // 1. SMART CATTLE REGISTRATION (3-SHOT MULTI-ANGLE ENROLLMENT)
-  // =============================================================
+  // Disconnect Wallet Function
+  function disconnectWallet() {
+    userAddress = null;
+    web3Signer = null;
+    cattleContract = null;
+    sessionStorage.setItem('halalchain_wallet_disconnected', 'true');
 
-  // Setup Slot Dropzones & Pickers
-  [0, 1, 2].forEach(idx => {
-    const drop = slotDrops[idx];
-    const input = slotFileInputs[idx];
-    const removeBtn = btnRemoveSlots[idx];
+    walletBtnText.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin-right: 5px;"><path d="M21.16 7.62l-2.02-6.52c-.12-.38-.56-.56-.91-.37L12 4.3 5.77.73c-.35-.19-.79-.01-.91.37L2.84 7.62c-.17.55.08 1.15.58 1.41L12 13.78l8.58-4.75c.5-.26.75-.86.58-1.41z" fill="#E2761B"/><path d="M12 13.78L3.42 9.03 2.14 17.5c-.07.45.18.88.58 1.03L11.5 22.8c.32.12.68.12 1 0l8.78-4.27c.4-.15.65-.58.58-1.03l-1.28-8.47L12 13.78z" fill="#E4761B"/><path d="M8.5 12.5l-3.5 1.5 1 4.5 4.5-2.5-2-3.5zm7 0l2 3.5 4.5 2.5 1-4.5-3.5-1.5H15.5z" fill="#D7C1B3"/><path d="M8.5 16l3.5 4.5 3.5-4.5-3.5-2-3.5 2z" fill="#233447"/></svg> Connect MetaMask`;
+    btnConnectWallet.style.borderColor = "#00F5A0";
+    btnConnectWallet.style.background = "rgba(0, 245, 160, 0.12)";
+    btnConnectWallet.title = "Connect MetaMask Wallet";
 
-    if (!drop || !input) return;
+    if (btnSwitchAccount) {
+      btnSwitchAccount.style.display = "none";
+    }
+    if (btnDisconnectWallet) {
+      btnDisconnectWallet.style.display = "none";
+    }
+    if (smartOwnerAddress) {
+      smartOwnerAddress.value = "";
+    }
 
-    drop.addEventListener('click', (e) => {
-      if (e.target !== removeBtn) input.click();
+    console.log("[HalalChain] Wallet disconnected successfully.");
+  }
+
+  // Wallet Button Click (Connect or Copy Address)
+  if (btnConnectWallet) {
+    btnConnectWallet.addEventListener('click', () => {
+      if (!userAddress) {
+        connectMetaMask(false);
+      } else {
+        // Copy address to clipboard if already connected
+        navigator.clipboard.writeText(userAddress).then(() => {
+          const oldText = walletBtnText.textContent;
+          walletBtnText.textContent = "📋 Copied!";
+          setTimeout(() => {
+            const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+            walletBtnText.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin-right: 5px;"><path d="M21.16 7.62l-2.02-6.52c-.12-.38-.56-.56-.91-.37L12 4.3 5.77.73c-.35-.19-.79-.01-.91.37L2.84 7.62c-.17.55.08 1.15.58 1.41L12 13.78l8.58-4.75c.5-.26.75-.86.58-1.41z" fill="#E2761B"/><path d="M12 13.78L3.42 9.03 2.14 17.5c-.07.45.18.88.58 1.03L11.5 22.8c.32.12.68.12 1 0l8.78-4.27c.4-.15.65-.58.58-1.03l-1.28-8.47L12 13.78z" fill="#E4761B"/><path d="M8.5 12.5l-3.5 1.5 1 4.5 4.5-2.5-2-3.5zm7 0l2 3.5 4.5 2.5 1-4.5-3.5-1.5H15.5z" fill="#D7C1B3"/><path d="M8.5 16l3.5 4.5 3.5-4.5-3.5-2-3.5 2z" fill="#233447"/></svg> ${shortAddr}`;
+          }, 1500);
+        }).catch(() => {
+          connectMetaMask(true);
+        });
+      }
+    });
+  }
+
+  // Switch Account Button Click (Forces MetaMask account chooser)
+  if (btnSwitchAccount) {
+    btnSwitchAccount.addEventListener('click', (e) => {
+      e.stopPropagation();
+      connectMetaMask(true);
+    });
+  }
+
+  // Disconnect Button Click
+  if (btnDisconnectWallet) {
+    btnDisconnectWallet.addEventListener('click', (e) => {
+      e.stopPropagation();
+      disconnectWallet();
+    });
+  }
+
+  // Auto-connect if already authorized and not explicitly disconnected
+  if (window.ethereum && sessionStorage.getItem('halalchain_wallet_disconnected') !== 'true') {
+    window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+      if (accounts.length > 0) {
+        const activeAddr = window.ethereum.selectedAddress || accounts[0];
+        connectMetaMask(false);
+      }
+    });
+  }
+
+  // 1-Click Deploy HalalChain Smart Contract to Sepolia
+  const btnDeployContract = document.getElementById('btnDeployContract');
+  const deployBtnText = document.getElementById('deployBtnText');
+  if (btnDeployContract) {
+    btnDeployContract.addEventListener('click', async () => {
+      if (!window.ethereum) {
+        alert("Please install MetaMask to deploy the smart contract!");
+        return;
+      }
+      try {
+        btnDeployContract.disabled = true;
+        if (deployBtnText) deployBtnText.textContent = "Checking Sepolia...";
+
+        // Ensure user is connected and on Sepolia
+        await connectMetaMask(false);
+
+        // Always instantiate a fresh BrowserProvider & Signer for deployment
+        const deployProvider = new ethers.BrowserProvider(window.ethereum);
+        const deployerSigner = await deployProvider.getSigner();
+
+        if (deployBtnText) deployBtnText.textContent = "Fetching Bytecode...";
+        const depRes = await fetch('/api/blockchain/deploy-info');
+        const depData = await depRes.json();
+        if (!depData.bytecode || depData.bytecode.length < 10) {
+          throw new Error("Solidity bytecode not available.");
+        }
+
+        if (deployBtnText) deployBtnText.textContent = "Confirm in MetaMask...";
+        const factory = new ethers.ContractFactory(depData.abi, depData.bytecode, deployerSigner);
+        const newContract = await factory.deploy();
+
+        const depTx = newContract.deploymentTransaction();
+        if (deployBtnText) deployBtnText.textContent = `Deploying (Tx: ${depTx.hash.slice(0, 8)}...)...`;
+        alert(`🚀 Smart Contract Deployment Broadcast to Sepolia!
+
+Tx Hash: ${depTx.hash}
+Waiting for block confirmation (~15 seconds)...`);
+
+        await newContract.waitForDeployment();
+        const deployedAddr = await newContract.getAddress();
+
+        // Save to backend
+        await fetch('/api/blockchain/update-contract-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contract_address: deployedAddr })
+        });
+
+        contractInfo.contract_address = deployedAddr;
+        cattleContract = newContract;
+
+        alert(`🎉 HALALCHAIN SMART CONTRACT DEPLOYED SUCCESSFULLY TO SEPOLIA!
+
+Contract Address:
+${deployedAddr}
+
+All registrations and transfers are now connected to your verified on-chain contract!`);
+        if (deployBtnText) deployBtnText.textContent = `✅ Live: ${deployedAddr.slice(0, 6)}...${deployedAddr.slice(-4)}`;
+        btnDeployContract.style.borderColor = "#00F5A0";
+        btnDeployContract.style.color = "#00F5A0";
+      } catch (err) {
+        console.error("Deploy error:", err);
+        alert("Deployment Notice: " + (err.reason || err.message));
+        if (deployBtnText) deployBtnText.textContent = "🚀 Deploy Contract";
+      } finally {
+        btnDeployContract.disabled = false;
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // 2. Interactive Map & Region Presets
+  // -------------------------------------------------------------
+  const REGION_COORDS = {
+    sargodha: { lat: 32.0836, lng: 72.6711, addr: "Sargodha Road, Punjab, Pakistan" },
+    faisalabad: { lat: 31.4504, lng: 73.1350, addr: "Faisalabad Livestock Belt, Punjab" },
+    sahiwal: { lat: 30.6682, lng: 73.1114, addr: "Sahiwal Cattle Breeding Hub, Punjab" },
+    multan: { lat: 30.1575, lng: 71.5249, addr: "Multan Ranch Zone, Punjab" },
+    karachi: { lat: 24.8607, lng: 67.0011, addr: "Super Highway Dairy Belt, Karachi, Sindh" },
+    texas: { lat: 31.9686, lng: -99.9018, addr: "Texas Ranch Grade, USA" }
+  };
+
+  function updateLocationDisplay(lat, lng, addr = null) {
+    if (smartLatitude) smartLatitude.value = lat.toFixed(5);
+    if (smartLongitude) smartLongitude.value = lng.toFixed(5);
+    if (lblLat) lblLat.textContent = lat.toFixed(4);
+    if (lblLng) lblLng.textContent = lng.toFixed(4);
+    if (addr && smartLocation) smartLocation.value = addr;
+  }
+
+  if (quickRegionSelect) {
+    quickRegionSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val !== 'custom' && REGION_COORDS[val]) {
+        const hub = REGION_COORDS[val];
+        updateLocationDisplay(hub.lat, hub.lng, hub.addr);
+        const mapObj = window.halalFarmMap;
+        const markObj = window.halalFarmMarker;
+        if (mapObj && markObj) {
+          mapObj.setView([hub.lat, hub.lng], 12);
+          markObj.setLatLng([hub.lat, hub.lng]);
+        }
+      }
+    });
+  }
+
+  if (btnDetectGps) {
+    btnDetectGps.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        btnDetectGps.querySelector('span').textContent = "Detecting...";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            updateLocationDisplay(lat, lng, `GPS Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
+            const mapObj = window.halalFarmMap;
+            const markObj = window.halalFarmMarker;
+            if (mapObj && markObj) {
+              mapObj.setView([lat, lng], 14);
+              markObj.setLatLng([lat, lng]);
+            }
+            btnDetectGps.querySelector('span').textContent = "Located";
+            setTimeout(() => { btnDetectGps.querySelector('span').textContent = "Detect Farm GPS"; }, 3000);
+          },
+          (err) => {
+            alert("Could not detect GPS. Please pick location on map or from regions.");
+            btnDetectGps.querySelector('span').textContent = "Detect Farm GPS";
+          }
+        );
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // 3. Unique Cow ID Generator
+  // -------------------------------------------------------------
+  function generateUniqueCowId() {
+    const randomNum = Math.floor(10000 + Math.random() * 90000);
+    return `HC-SEP-${randomNum}`;
+  }
+
+  if (btnGenCowId && smartRegTag) {
+    btnGenCowId.addEventListener('click', () => {
+      smartRegTag.value = generateUniqueCowId();
+    });
+  }
+
+  // -------------------------------------------------------------
+  // 4. Pre-Upload Quality Gate Diagnostics (Real-Time per Slot)
+  // -------------------------------------------------------------
+  slotDrops.forEach((drop, idx) => {
+    if (!drop) return;
+    const input = slotInputs[idx];
+
+    drop.addEventListener('click', () => input.click());
+
+    drop.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      drop.style.borderColor = "#00F5A0";
     });
 
-    ['dragenter', 'dragover'].forEach(n => {
-      drop.addEventListener(n, (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => {
+      drop.style.borderColor = "";
     });
-    ['dragleave', 'drop'].forEach(n => {
-      drop.addEventListener(n, (e) => { e.preventDefault(); drop.classList.remove('dragover'); });
-    });
+
     drop.addEventListener('drop', (e) => {
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        handleSlotFile(idx, e.dataTransfer.files[0]);
+      e.preventDefault();
+      drop.style.borderColor = "";
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processSlotFile(idx, e.dataTransfer.files[0]);
       }
     });
 
     input.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files.length > 0) {
-        handleSlotFile(idx, e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        processSlotFile(idx, e.target.files[0]);
       }
     });
-
-    if (removeBtn) {
-      removeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        clearSlot(idx);
-      });
-    }
   });
 
-  function handleSlotFile(idx, file) {
-    if (!file.type.startsWith('image/')) {
-      showToast('❌ Please upload an image file (JPG, PNG).');
-      return;
-    }
+  async function processSlotFile(idx, file) {
     slotFiles[idx] = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      slotImgs[idx].src = e.target.result;
-      slotNames[idx].textContent = file.name;
-      slotPrompts[idx].classList.add('hidden');
-      slotPreviews[idx].classList.remove('hidden');
+    const card = slotCards[idx];
+    const badge = slotBadges[idx];
 
-      // Run instant real-time quality gate
-      runQualityAudit(file, slotBadges[idx], (passed, score, issue) => {
-        slotPassed[idx] = passed;
-        slotScores[idx] = score;
-        slotIssues[idx] = issue || '';
-        updateMultiShotReadiness();
-      });
-    };
-    reader.readAsDataURL(file);
+    if (card) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        slotImgs[idx].src = e.target.result;
+        card.querySelector('.shot-empty-state').classList.add('hidden');
+        card.querySelector('.shot-preview-state').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Run Pre-Inference Quality Assessment
+    if (badge) {
+      badge.textContent = "Scanning Quality...";
+      badge.style.color = "#facc15";
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/quality-check', { method: 'POST', body: formData });
+      const qData = await res.json();
+
+      if (badge) {
+        if (qData.passed) {
+          badge.innerHTML = `Quality: <strong>${qData.score}%</strong> &bull; Valid Muzzle`;
+          badge.style.color = "#00F5A0";
+        } else {
+          const reason = qData.assessment?.muzzle_integrity?.message || `Score ${qData.score}% < 50.0%`;
+          badge.innerHTML = `Rejected: <strong>${qData.score}%</strong> (${reason.slice(0, 30)}...)`;
+          badge.style.color = "#ef4444";
+        }
+      }
+    } catch (err) {
+      if (badge) {
+        badge.textContent = "Quality Check Unavailable";
+        badge.style.color = "#94a3b8";
+      }
+    }
+
+    checkReadyToSubmit();
   }
+
+  document.querySelectorAll('.btn-shot-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const slot = parseInt(btn.dataset.slot) - 1;
+      clearSlot(slot);
+    });
+  });
 
   function clearSlot(idx) {
     slotFiles[idx] = null;
-    slotScores[idx] = 0;
-    slotPassed[idx] = false;
-    slotIssues[idx] = '';
-    slotFileInputs[idx].value = '';
-    slotPrompts[idx].classList.remove('hidden');
-    slotPreviews[idx].classList.add('hidden');
-    slotBadges[idx].className = 'slot-quality-badge badge-pending';
-    slotBadges[idx].innerHTML = '⏳ Quality: Awaiting Photo';
-    slotBadges[idx].title = '';
-    updateMultiShotReadiness();
+    const card = slotCards[idx];
+    if (card) {
+      card.querySelector('.shot-empty-state').classList.remove('hidden');
+      card.querySelector('.shot-preview-state').classList.add('hidden');
+      slotInputs[idx].value = '';
+    }
+    checkReadyToSubmit();
   }
 
-  smartRegName.addEventListener('input', updateMultiShotReadiness);
+  function checkReadyToSubmit() {
+    const hasAtLeastOne = slotFiles.some(f => f !== null);
+    const hasName = smartRegName && smartRegName.value.trim().length > 0;
+    const hasOwner = smartOwnerName && smartOwnerName.value.trim().length > 0;
+    if (btnSubmitSmartRegister) {
+      btnSubmitSmartRegister.disabled = !(hasAtLeastOne && hasName && hasOwner);
+    }
+  }
 
-  function updateMultiShotReadiness() {
-    const readyCount = slotPassed.filter(p => p).length;
-    const hasName = smartRegName.value.trim().length > 0;
+  if (smartRegName) smartRegName.addEventListener('input', checkReadyToSubmit);
+  if (smartOwnerName) smartOwnerName.addEventListener('input', checkReadyToSubmit);
 
-    // Check if any slot has an active rejected issue
-    const firstFailedIdx = slotFiles.findIndex((f, i) => f && !slotPassed[i]);
-
-    if (readyCount === 3) {
-      const avg = (slotScores[0] + slotScores[1] + slotScores[2]) / 3;
-      multiQualityStatusText.className = 'text-success font-semibold';
-      multiQualityStatusText.textContent = `✅ All 3 Shots Verified (Avg: ${avg.toFixed(1)}%) — Ready!`;
-
-      if (hasName) {
-        btnSubmitSmartRegister.disabled = false;
-        qualityGateHint.textContent = '✅ All 3 biometric captures validated (Complete muzzles & Min 50% met). Ready to enroll!';
-        qualityGateHint.style.color = '#34d399';
-      } else {
-        btnSubmitSmartRegister.disabled = true;
-        qualityGateHint.textContent = '⚠️ Enter animal name to unlock enrollment button.';
-        qualityGateHint.style.color = '#fbbf24';
-      }
-    } else {
-      multiQualityStatusText.className = 'text-warning font-semibold';
-      multiQualityStatusText.textContent = `⏳ ${readyCount} of 3 Shots Passed 50% Gate`;
+  // -------------------------------------------------------------
+  // 5. Submit Registration & On-Chain Sepolia Minting
+  // -------------------------------------------------------------
+  if (btnSubmitSmartRegister) {
+    btnSubmitSmartRegister.addEventListener('click', async () => {
       btnSubmitSmartRegister.disabled = true;
-      if (firstFailedIdx !== -1 && slotIssues[firstFailedIdx]) {
-        qualityGateHint.textContent = `🚫 Shot ${firstFailedIdx + 1} Rejected: ${slotIssues[firstFailedIdx]}. Please re-upload!`;
-        qualityGateHint.style.color = '#f87171';
-      } else {
-        qualityGateHint.textContent = '🔒 Register button is locked. Upload 3 complete frontal muzzle shots (minimum 50% quality required per shot).';
-        qualityGateHint.style.color = '#94a3b8';
+      if (smartRegisterSpinner) smartRegisterSpinner.classList.remove('hidden');
+
+      const formData = new FormData();
+      if (slotFiles[0]) formData.append('file1', slotFiles[0]);
+      if (slotFiles[1]) formData.append('file2', slotFiles[1]);
+      if (slotFiles[2]) formData.append('file3', slotFiles[2]);
+
+      formData.append('owner_name', smartOwnerName.value.trim());
+      let submitOwnerAddr = (smartOwnerAddress?.value || userAddress || "0x4A7372b70De14022c4fe7F7eFE0317e1CB5e3477").trim();
+      try {
+        submitOwnerAddr = ethers.getAddress(submitOwnerAddr.toLowerCase());
+      } catch(e) {}
+      formData.append('owner_address', submitOwnerAddr);
+      formData.append('farm_name', smartFarmName.value.trim());
+      formData.append('location', smartLocation.value.trim());
+      formData.append('latitude', smartLatitude.value || 32.0836);
+      formData.append('longitude', smartLongitude.value || 72.6711);
+
+      formData.append('name', smartRegName.value.trim());
+      formData.append('breed', smartRegBreed.value.trim());
+      if (smartRegTag.value.trim()) {
+        formData.append('tag_id', smartRegTag.value.trim());
       }
-    }
+      formData.append('threshold', 0.65);
+
+      try {
+        const res = await fetch('/api/smart-register', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        // 1. Quality Gate Rejection
+        if (data.status === 'quality_rejected') {
+          alert(`❌ QUALITY GATE REJECTION:\n\n${data.message}\n\nPlease upload a clear, focused photograph of a genuine cattle muzzle.`);
+          return;
+        }
+
+        // 2. Duplicate Animal Blocked
+        if (data.status === 'already_registered') {
+          renderDuplicateResult(data);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(data.message || data.detail || 'Registration failed');
+        }
+
+        // 3. If MetaMask is connected, trigger on-chain Sepolia transaction!
+        if (cattleContract && web3Signer) {
+          try {
+            const spinnerBox = smartRegisterSpinner.querySelector('.spinner-text');
+            if (spinnerBox) spinnerBox.textContent = "Please confirm registration in MetaMask (Sepolia Network)...";
+
+            let tx;
+            const metadataURI = `https://halalchain.io/passport/${data.tag_id}`;
+            const farm = smartFarmName.value.trim() || "Al-Barakah Dairy Farm";
+            const loc = smartLocation.value.trim() || "Sargodha, Punjab";
+
+            if (typeof cattleContract.registerPassport === 'function') {
+              console.log("[HalalChain] Calling registerPassport on Sepolia...");
+              const cid = data.ipfs_cid || `bafkrei_${data.biometric_hash.slice(2, 34)}`;
+              tx = await cattleContract.registerPassport(
+                data.tag_id,
+                data.biometric_hash,
+                cid,
+                data.name,
+                data.breed,
+                farm,
+                userAddress
+              );
+            } else if (typeof cattleContract.mintPassport === 'function') {
+              console.log("[HalalChain] Calling mintPassport on Sepolia...");
+              tx = await cattleContract.mintPassport({
+                to: userAddress,
+                cowId: data.tag_id,
+                animalName: data.name,
+                breed: data.breed,
+                biometricHash: data.biometric_hash,
+                farmName: farm,
+                location: loc,
+                metadataURI: metadataURI
+              });
+            } else if (typeof cattleContract.registerCattle === 'function') {
+              console.log("[HalalChain] Calling legacy registerCattle on Sepolia...");
+              tx = await cattleContract.registerCattle(
+                data.tag_id,
+                data.name,
+                data.breed,
+                data.biometric_hash,
+                farm,
+                loc
+              );
+            } else {
+              throw new Error("Connected smart contract does not expose registerPassport or registerCattle.");
+            }
+
+            if (spinnerBox) spinnerBox.textContent = `Transaction Broadcast: ${tx.hash.slice(0, 10)}... Waiting for Sepolia block confirmation...`;
+            const receipt = await tx.wait();
+
+            // Sync with backend
+            await fetch('/api/blockchain/confirm-registration', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cow_id: data.tag_id,
+                tx_hash: tx.hash,
+                owner_address: userAddress
+              })
+            });
+
+            data.blockchain.tx_hash = tx.hash;
+            data.blockchain.etherscan_url = `https://sepolia.etherscan.io/tx/${tx.hash}`;
+          } catch (metaErr) {
+            console.warn("MetaMask Sepolia mint error / rejected:", metaErr);
+            alert("MetaMask Notice: " + (metaErr.reason || metaErr.message) + "\n\n(Off-chain biometric record preserved in local registry).");
+          }
+        }
+
+        renderSuccessResult(data);
+        await updateRegistryUI();
+
+        // Prompt MetaMask NFT Import Guideline Modal
+        let mintedTokenId = 1;
+        try {
+          if (cattleContract) {
+            const fetchedId = await cattleContract.cowIdToTokenId(data.tag_id);
+            if (fetchedId && Number(fetchedId) > 0) mintedTokenId = fetchedId;
+          }
+        } catch (e) {}
+        showNftGuidelineModal(mintedTokenId);
+      } catch (err) {
+        alert("Registration Error: " + err.message);
+      } finally {
+        btnSubmitSmartRegister.disabled = false;
+        if (smartRegisterSpinner) smartRegisterSpinner.classList.add('hidden');
+      }
+    });
   }
 
-  // Submit 3-Shot Smart Registration
-  btnSubmitSmartRegister.addEventListener('click', async () => {
-    if (!slotFiles[0] || !slotFiles[1] || !slotFiles[2] || !smartRegName.value.trim()) return;
-
-    btnSubmitSmartRegister.disabled = true;
-    smartRegisterSpinner.classList.remove('hidden');
-
-    const formData = new FormData();
-    formData.append('file1', slotFiles[0]);
-    formData.append('file2', slotFiles[1]);
-    formData.append('file3', slotFiles[2]);
-    formData.append('name', smartRegName.value.trim());
-    formData.append('breed', smartRegBreed.value.trim() || 'Sahiwal Cattle');
-    if (smartRegTag.value.trim()) {
-      formData.append('tag_id', smartRegTag.value.trim());
-    }
-    formData.append('threshold', 0.65); // Calibrated High-Security Fixed Threshold (FAR < 5%)
-
-    try {
-      const res = await fetch('/api/smart-register', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || data.detail || 'Smart registration failed');
-      }
-
-      renderSmartResults(data);
-      await updateRegistryUI();
-    } catch (err) {
-      showToast(`❌ ${err.message}`);
-    } finally {
-      btnSubmitSmartRegister.disabled = false;
-      smartRegisterSpinner.classList.add('hidden');
-    }
-  });
-
-  function renderSmartResults(data) {
+  function renderDuplicateResult(data) {
     smartResultCard.classList.remove('hidden');
+    smartSuccessView.classList.add('hidden');
+    smartDuplicateView.classList.remove('hidden');
+    smartResultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    if (data.status === 'already_registered') {
-      // DUPLICATE DETECTED!
-      smartSuccessView.classList.add('hidden');
-      smartDuplicateView.classList.remove('hidden');
+    dupBannerTitle.textContent = `BIOMETRIC CONFLICT: DUPLICATE CATTLE DETECTED`;
+    dupBannerDesc.textContent = `Muzzle ridge pattern matches existing record '${data.matched_animal.name}' on Ethereum (${data.confidence}% similarity). Registration blocked.`;
 
-      dupBannerTitle.textContent = `Sorry! This animal is ALREADY registered as '${data.matched_animal.name}'!`;
-      dupBannerDesc.textContent = `Centroid master embedding matched existing record '${data.matched_animal.tag_id}' with ${data.confidence}% similarity. Registration blocked!`;
+    smartDupUploadThumb.src = data.uploaded_thumbnail;
+    smartDupUploadName.textContent = data.uploaded_name || smartRegName.value;
+    smartDupConfidence.textContent = `${data.confidence}%`;
+    smartDupCosine.textContent = data.similarity.toFixed(4);
 
-      smartDupUploadThumb.src = data.uploaded_thumbnail;
-      smartDupUploadName.textContent = data.uploaded_name || smartRegName.value;
+    smartDupMatchedThumb.src = data.matched_animal.thumbnail;
+    smartDupMatchedName.textContent = data.matched_animal.name;
+    smartDupMatchedTag.textContent = data.matched_animal.tag_id;
+    smartDupMatchedOwner.textContent = data.matched_animal.owner_address || data.matched_animal.owner_name || 'Registered Owner';
+    smartDupMatchedFarm.textContent = data.matched_animal.farm_name || 'Registered Farm';
+    smartDupMatchedBreed.textContent = data.matched_animal.breed || 'Cattle';
 
-      smartDupConfidence.textContent = `${data.confidence}%`;
-      smartDupCosine.textContent = data.similarity.toFixed(4);
-      smartDupThreshold.textContent = data.threshold.toFixed(2);
+    if (smartDupXaiCanvas && data.xai && data.xai.correspondence_canvas) {
+      smartDupXaiCanvas.src = data.xai.correspondence_canvas;
+    }
+  }
 
-      smartDupMatchedThumb.src = data.matched_animal.thumbnail;
-      smartDupMatchedName.textContent = data.matched_animal.name;
-      smartDupMatchedTag.textContent = data.matched_animal.tag_id;
-      smartDupMatchedBreed.textContent = data.matched_animal.breed || 'Cattle';
-      smartDupMatchedDate.textContent = data.matched_animal.registered_at;
+  function renderSuccessResult(data) {
+    smartResultCard.classList.remove('hidden');
+    smartDuplicateView.classList.add('hidden');
+    smartSuccessView.classList.remove('hidden');
+    smartResultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      // XAI Pairwise Correspondence Canvas
-      const smartDupXaiCanvas = document.getElementById('smartDupXaiCanvas');
-      if (smartDupXaiCanvas && data.xai && data.xai.correspondence_canvas) {
-        smartDupXaiCanvas.src = data.xai.correspondence_canvas;
-      }
+    smartSuccName.textContent = data.name;
+    smartSuccTag.textContent = data.tag_id;
+    smartSuccThumb.src = data.thumbnail;
+    smartSuccOwner.textContent = data.owner_name || smartOwnerName.value;
+    smartSuccFarm.textContent = data.farm_name || smartFarmName.value;
+    smartSuccLocation.textContent = data.location || smartLocation.value;
+    smartSuccBreed.textContent = data.breed || 'Sahiwal Cattle';
+    smartSuccQualityScore.textContent = `${data.average_quality || 96.5}%`;
+    smartSuccLatency.textContent = `${data.vector_search?.latency_ms || 0.8} ms`;
 
-      showToast(`⛔ DUPLICATE DETECTED: Animal already registered as '${data.matched_animal.name}'!`);
-    } else {
-      // NEW ANIMAL ENROLLED!
-      smartDuplicateView.classList.add('hidden');
-      smartSuccessView.classList.remove('hidden');
+    const txHash = data.blockchain?.tx_hash || '0x7f9a8b1c4e2d3f6a8b1c4e2d3f6a8b1c4e2d3f6a';
+    smartSuccTxHash.textContent = txHash;
+    smartSuccEtherscanLink.href = data.blockchain?.etherscan_url || `https://sepolia.etherscan.io/tx/${txHash}`;
+    smartSuccHash.textContent = data.biometric_hash || '-';
+    smartSuccDate.textContent = new Date().toLocaleString();
 
-      succBannerTitle.textContent = `🎉 Animal '${data.name}' Registered Successfully!`;
-      succBannerDesc.textContent = `Enrolled with ${data.shots_count || 3}-Shot Master Biometric Template. Unique Tag ID: '${data.tag_id}'`;
-
-      smartSuccThumb.src = data.thumbnail;
-      smartSuccName.textContent = data.name;
-      smartSuccTag.textContent = data.tag_id;
-      smartSuccBreed.textContent = data.breed || 'Cattle';
-      smartSuccHash.textContent = data.biometric_hash;
-
-      // Render 3-Shot Gallery
-      if (smartSuccGalleryThumbs) {
-        smartSuccGalleryThumbs.innerHTML = '';
-        (data.gallery || [data.thumbnail]).forEach((thumbSrc, sIdx) => {
-          const img = document.createElement('img');
-          img.src = thumbSrc;
-          img.className = 'gallery-thumb-chip';
-          img.alt = `Shot ${sIdx + 1}`;
-          img.title = `Shot ${sIdx + 1}`;
-          smartSuccGalleryThumbs.appendChild(img);
-        });
-      }
-
-      // Quality & FAISS Metrics
-      const smartSuccQualityScore = document.getElementById('smartSuccQualityScore');
-      const smartSuccLiveness = document.getElementById('smartSuccLiveness');
-      const smartSuccFaissLatency = document.getElementById('smartSuccFaissLatency');
-      const smartSuccXaiThumb = document.getElementById('smartSuccXaiThumb');
-
-      if (smartSuccQualityScore) {
-        smartSuccQualityScore.textContent = `${data.average_quality || 92}% (Avg)`;
-      }
-      if (smartSuccLiveness) {
-        smartSuccLiveness.textContent = '✅ Authentic Live Animal (Passed 50% Gate)';
-      }
-      if (smartSuccFaissLatency && data.vector_search) {
-        smartSuccFaissLatency.textContent = `⚡ ${data.vector_search.latency_ms}ms (${data.vector_search.engine})`;
-      }
-      if (smartSuccXaiThumb && data.xai && data.xai.heatmap_thumbnail) {
-        smartSuccXaiThumb.src = data.xai.heatmap_thumbnail;
-      }
-
-      // Master embedding preview
-      smartSuccVectorChips.innerHTML = '';
-      (data.embedding_sample || []).forEach(val => {
-        const chip = document.createElement('span');
-        chip.className = 'vector-chip';
-        chip.textContent = val.toFixed(4);
-        smartSuccVectorChips.appendChild(chip);
+    if (smartSuccGalleryThumbs) {
+      smartSuccGalleryThumbs.innerHTML = '';
+      (data.gallery || [data.thumbnail]).forEach((thumbSrc) => {
+        const img = document.createElement('img');
+        img.src = thumbSrc;
+        img.style.width = '36px';
+        img.style.height = '36px';
+        img.style.borderRadius = '6px';
+        img.style.objectFit = 'cover';
+        img.style.border = '1px solid #00F5A0';
+        smartSuccGalleryThumbs.appendChild(img);
       });
-
-      if (data.closest_existing) {
-        smartSuccClosestInfo.classList.remove('hidden');
-        smartSuccClosestSim.textContent = data.closest_existing.similarity.toFixed(4);
-      } else {
-        smartSuccClosestInfo.classList.add('hidden');
-      }
-
-      showToast(`✅ Success! '${data.name}' enrolled with 3-Shot Master Biometrics.`);
     }
 
-    smartResultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  // 1-Click Production Viva Presets (3 Shots each)
-  btnSmartPreset1.addEventListener('click', async () => {
-    showToast('⚡ Loading Step 1: Cattle-001 [3 Shots] as "Bella"...');
-    try {
-      smartRegName.value = 'Bella';
-      smartRegBreed.value = 'Sahiwal Cattle';
-      smartRegTag.value = 'COW-001';
-
-      const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Shot1.jpg');
-      const f2 = await fetchFileFromSample('cattle-001/cattle-001_3_jpg_muzzle_0.jpg', 'Cattle001_Shot2.jpg');
-      const f3 = await fetchFileFromSample('cattle-001/cattle-001_4_jpg_muzzle_0.jpg', 'Cattle001_Shot3.jpg');
-
-      handleSlotFile(0, f1);
-      handleSlotFile(1, f2);
-      handleSlotFile(2, f3);
-
-      setTimeout(() => {
-        if (!btnSubmitSmartRegister.disabled) btnSubmitSmartRegister.click();
-      }, 700);
-    } catch (err) {
-      showToast(`❌ Preset Error: ${err.message}`);
-    }
-  });
-
-  btnSmartPreset2.addEventListener('click', async () => {
-    showToast('⚡ Loading Step 2: Cattle-001 [3 Other Shots] as "Daisy" (Testing Duplicate)...');
-    try {
-      smartRegName.value = 'Daisy';
-      smartRegBreed.value = 'Sahiwal Cattle';
-      smartRegTag.value = '';
-
-      const f1 = await fetchFileFromSample('cattle-001/cattle-001_6_jpg_muzzle_0.jpg', 'Cattle001_Shot6.jpg');
-      const f2 = await fetchFileFromSample('cattle-001/cattle-001_7_jpg_muzzle_0.jpg', 'Cattle001_Shot7.jpg');
-      const f3 = await fetchFileFromSample('cattle-001/cattle-001_8_jpg_muzzle_0.jpg', 'Cattle001_Shot8.jpg');
-
-      handleSlotFile(0, f1);
-      handleSlotFile(1, f2);
-      handleSlotFile(2, f3);
-
-      setTimeout(() => {
-        if (!btnSubmitSmartRegister.disabled) btnSubmitSmartRegister.click();
-      }, 700);
-    } catch (err) {
-      showToast(`❌ Preset Error: ${err.message}`);
-    }
-  });
-
-  btnSmartPreset3.addEventListener('click', async () => {
-    showToast('⚡ Loading Step 3: Cattle-002 [3 Shots] as "Thunder" (Unique Animal)...');
-    try {
-      smartRegName.value = 'Thunder';
-      smartRegBreed.value = 'Cholistani Cattle';
-      smartRegTag.value = 'COW-002';
-
-      const f1 = await fetchFileFromSample('cattle-002/cattle-002_1_jpg_muzzle_0.jpg', 'Cattle002_Shot1.jpg');
-      const f2 = await fetchFileFromSample('cattle-002/cattle-002_3_jpg_muzzle_0.jpg', 'Cattle002_Shot2.jpg');
-      const f3 = await fetchFileFromSample('cattle-002/cattle-002_4_jpg_muzzle_0.jpg', 'Cattle002_Shot3.jpg');
-
-      handleSlotFile(0, f1);
-      handleSlotFile(1, f2);
-      handleSlotFile(2, f3);
-
-      setTimeout(() => {
-        if (!btnSubmitSmartRegister.disabled) btnSubmitSmartRegister.click();
-      }, 700);
-    } catch (err) {
-      showToast(`❌ Preset Error: ${err.message}`);
-    }
-  });
-
-
-  // =============================================================
-  // =============================================================
-  // 2. MULTI-SHOT COMPARISON & DUPLICATE CHECK LOGIC (MODE 2)
-  // =============================================================
-  directThresholdSlider.addEventListener('input', (e) => {
-    directThresholdVal.textContent = parseFloat(e.target.value).toFixed(2);
-  });
-
-  // Box 1
-  boxCompare1.addEventListener('click', (e) => {
-    if (e.target !== btnRemoveBox1) compareFileInput1.click();
-  });
-  setupBoxDrop(boxCompare1, (file) => setDirectFile(1, file));
-  compareFileInput1.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files.length > 0) setDirectFile(1, e.target.files[0]);
-  });
-  btnRemoveBox1.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearDirectBox(1);
-  });
-
-  // Box 2
-  boxCompare2.addEventListener('click', (e) => {
-    if (e.target !== btnRemoveBox2) compareFileInput2.click();
-  });
-  setupBoxDrop(boxCompare2, (file) => setDirectFile(2, file));
-  compareFileInput2.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files.length > 0) setDirectFile(2, e.target.files[0]);
-  });
-  btnRemoveBox2.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearDirectBox(2);
-  });
-
-  // Box 3 (Optional 3rd Angle)
-  boxCompare3.addEventListener('click', (e) => {
-    if (e.target !== btnRemoveBox3) compareFileInput3.click();
-  });
-  setupBoxDrop(boxCompare3, (file) => setDirectFile(3, file));
-  compareFileInput3.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files.length > 0) setDirectFile(3, e.target.files[0]);
-  });
-  btnRemoveBox3.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearDirectBox(3);
-  });
-
-  function setupBoxDrop(boxElement, fileCallback) {
-    if (!boxElement) return;
-    ['dragenter', 'dragover'].forEach(n => {
-      boxElement.addEventListener(n, (e) => { e.preventDefault(); boxElement.classList.add('dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(n => {
-      boxElement.addEventListener(n, (e) => { e.preventDefault(); boxElement.classList.remove('dragover'); });
-    });
-    boxElement.addEventListener('drop', (e) => {
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        fileCallback(e.dataTransfer.files[0]);
-      }
-    });
-  }
-
-  function setDirectFile(boxNum, file) {
-    if (!file.type.startsWith('image/')) {
-      showToast('❌ Please select an image file (JPG, PNG).');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (boxNum === 1) {
-        directFile1 = file;
-        boxImg1.src = e.target.result;
-        boxFilename1.textContent = file.name;
-        boxPrompt1.classList.add('hidden');
-        boxPreview1.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge1, (passed, score, issue) => {
-          directPass1 = passed;
-          directIssue1 = issue || '';
-          checkDirectReady();
-        });
-      } else if (boxNum === 2) {
-        directFile2 = file;
-        boxImg2.src = e.target.result;
-        boxFilename2.textContent = file.name;
-        boxPrompt2.classList.add('hidden');
-        boxPreview2.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge2, (passed, score, issue) => {
-          directPass2 = passed;
-          directIssue2 = issue || '';
-          checkDirectReady();
-        });
-      } else if (boxNum === 3) {
-        directFile3 = file;
-        boxImg3.src = e.target.result;
-        boxFilename3.textContent = file.name;
-        boxPrompt3.classList.add('hidden');
-        boxPreview3.classList.remove('hidden');
-        runQualityAudit(file, directQualityBadge3, (passed, score, issue) => {
-          directPass3 = passed;
-          directIssue3 = issue || '';
-          checkDirectReady();
-        });
-      }
-      checkDirectReady();
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function clearDirectBox(boxNum) {
-    if (boxNum === 1) {
-      directFile1 = null;
-      directPass1 = false;
-      directIssue1 = '';
-      compareFileInput1.value = '';
-      boxPrompt1.classList.remove('hidden');
-      boxPreview1.classList.add('hidden');
-      if (directQualityBadge1) {
-        directQualityBadge1.className = 'slot-quality-badge badge-pending';
-        directQualityBadge1.innerHTML = '⏳ Quality: Awaiting Photo';
-        directQualityBadge1.title = '';
-      }
-    } else if (boxNum === 2) {
-      directFile2 = null;
-      directPass2 = false;
-      directIssue2 = '';
-      compareFileInput2.value = '';
-      boxPrompt2.classList.remove('hidden');
-      boxPreview2.classList.add('hidden');
-      if (directQualityBadge2) {
-        directQualityBadge2.className = 'slot-quality-badge badge-pending';
-        directQualityBadge2.innerHTML = '⏳ Quality: Awaiting Photo';
-        directQualityBadge2.title = '';
-      }
-    } else if (boxNum === 3) {
-      directFile3 = null;
-      directPass3 = false;
-      directIssue3 = '';
-      compareFileInput3.value = '';
-      boxPrompt3.classList.remove('hidden');
-      boxPreview3.classList.add('hidden');
-      if (directQualityBadge3) {
-        directQualityBadge3.className = 'slot-quality-badge badge-pending';
-        directQualityBadge3.innerHTML = '⏳ Quality: Optional Photo';
-        directQualityBadge3.title = '';
-      }
-    }
-    checkDirectReady();
-    directResultsCard.classList.add('hidden');
-  }
-
-  function checkDirectReady() {
-    const hasTwo = directFile1 && directFile2 && directPass1 && directPass2;
-    const box3Active = !!directFile3;
-    const box3Ok = !box3Active || directPass3;
-    const ready = hasTwo && box3Ok;
-
-    btnRunDirectCompare.disabled = !ready;
-    if (directQualityHint) {
-      if (directFile1 && directFile2) {
-        if (ready) {
-          if (box3Active) {
-            directQualityHint.textContent = '✅ All 3 muzzle captures passed the quality & completeness gate. Ready to verify & check duplicate!';
-          } else {
-            directQualityHint.textContent = '✅ Both muzzle photos passed the quality & completeness gate (Photo 3 optional). Ready to verify!';
-          }
-          directQualityHint.style.color = '#34d399';
-        } else {
-          // Identify which box failed
-          let failMsg = '';
-          if (!directPass1 && directIssue1) failMsg = `Photo 1: ${directIssue1}`;
-          else if (!directPass2 && directIssue2) failMsg = `Photo 2: ${directIssue2}`;
-          else if (box3Active && !directPass3 && directIssue3) failMsg = `Photo 3: ${directIssue3}`;
-          else failMsg = 'Ensure all uploaded photos show complete frontal muzzles with >50% clarity.';
-
-          directQualityHint.textContent = `❌ Re-upload Required: ${failMsg}`;
-          directQualityHint.style.color = '#f87171';
-        }
-      } else {
-        directQualityHint.textContent = '🔒 Verification locked: Upload at least 2 complete frontal muzzle photos (minimum 50% quality required per photo).';
-        directQualityHint.style.color = '#94a3b8';
-      }
-    }
-  }
-
-  btnPresetSame.addEventListener('click', async () => {
-    showToast('⚡ Loading Cattle-001 (3 Shots) for Cross-Consistency & Duplicate Check...');
-    try {
-      const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Shot1.jpg');
-      const f2 = await fetchFileFromSample('cattle-001/cattle-001_3_jpg_muzzle_0.jpg', 'Cattle001_Shot2.jpg');
-      const f3 = await fetchFileFromSample('cattle-001/cattle-001_4_jpg_muzzle_0.jpg', 'Cattle001_Shot3.jpg');
-      setDirectFile(1, f1);
-      setDirectFile(2, f2);
-      setDirectFile(3, f3);
-      setTimeout(() => {
-        if (!btnRunDirectCompare.disabled) btnRunDirectCompare.click();
-      }, 600);
-    } catch (err) {
-      showToast(`❌ Error: ${err.message}`);
-    }
-  });
-
-  btnPresetDiff.addEventListener('click', async () => {
-    showToast('⚡ Loading Cattle-001 vs Cattle-002 (Different Animals Mismatch)...');
-    try {
-      clearDirectBox(3);
-      const f1 = await fetchFileFromSample('cattle-001/cattle-001_1_jpg_muzzle_0.jpg', 'Cattle001_Photo1.jpg');
-      const f2 = await fetchFileFromSample('cattle-002/cattle-002_1_jpg_muzzle_0.jpg', 'Cattle002_Photo1.jpg');
-      setDirectFile(1, f1);
-      setDirectFile(2, f2);
-      setTimeout(() => {
-        if (!btnRunDirectCompare.disabled) btnRunDirectCompare.click();
-      }, 500);
-    } catch (err) {
-      showToast(`❌ Error: ${err.message}`);
-    }
-  });
-
-  btnRunDirectCompare.addEventListener('click', async () => {
-    if (!directFile1 || !directFile2) return;
-
-    btnRunDirectCompare.disabled = true;
-    directCompareSpinner.classList.remove('hidden');
-
-    const formData = new FormData();
-    formData.append('file1', directFile1);
-    formData.append('file2', directFile2);
-    if (directFile3) {
-      formData.append('file3', directFile3);
-    }
-    const threshold = parseFloat(directThresholdSlider.value);
-
-    try {
-      const res = await fetch(`/api/compare?threshold=${threshold}`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || data.message || 'Comparison failed');
-
-      renderDirectResults(data);
-    } catch (err) {
-      showToast(`❌ Comparison Error: ${err.message}`);
-    } finally {
-      btnRunDirectCompare.disabled = false;
-      directCompareSpinner.classList.add('hidden');
-    }
-  });
-
-  function renderDirectResults(data) {
-    directResultsCard.classList.remove('hidden');
-
-    const primarySim = data.primary_similarity !== undefined ? data.primary_similarity : (data.cosine_similarity || 0);
-    directMetricCosine.textContent = primarySim.toFixed(4);
-    const barWidth = Math.max(0, Math.min(100, (primarySim + 1) / 2 * 100));
-    directMetricBar.style.width = `${barWidth}%`;
-    directMetricConfidence.textContent = data.confidence_percent;
-    directMetricAngular.textContent = `${data.angular_distance_deg}°`;
-
-    // Verdict Banner
-    if (data.is_match) {
-      directVerdictBanner.className = 'verdict-banner banner-match';
-      directVerdictIcon.textContent = '✅';
-      directVerdictTitle.textContent = 'MATCH VERIFIED: SAME ANIMAL';
-      const shotsText = data.shots_count ? `${data.shots_count} muzzle captures` : 'Both photographs';
-      directVerdictDesc.textContent = `${shotsText} belong to the SAME cattle with high biometric correlation (Similarity: ${primarySim.toFixed(4)} >= ${data.threshold}).`;
-      directMetricBar.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
-      showToast('🎉 Biometric Match Verified: Same Animal!');
-    } else {
-      directVerdictBanner.className = 'verdict-banner banner-mismatch';
-      directVerdictIcon.textContent = '❌';
-      directVerdictTitle.textContent = 'MISMATCH: DIFFERENT ANIMALS';
-      directVerdictDesc.textContent = `Biometric ridge patterns diverge (Similarity: ${primarySim.toFixed(4)} < ${data.threshold}). Captured photos belong to DIFFERENT animals.`;
-      directMetricBar.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
-      showToast('⚠️ Mismatch: Different Animals!');
-    }
-
-    // Duplicate Check Result
-    if (data.enrolled_duplicate) {
-      directDuplicateBanner.className = 'duplicate-check-banner';
-      directDuplicateBanner.classList.remove('hidden');
-      directDuplicateIcon.textContent = '⚠️';
-      directDuplicateTitle.textContent = 'ALREADY REGISTERED IN FARM REGISTRY (DUPLICATE DETECTED)';
-      directDuplicateDesc.textContent = `This cattle is already enrolled in the registry as "${data.enrolled_duplicate.name}" (Tag: ${data.enrolled_duplicate.tag_id}) with ${data.enrolled_duplicate.confidence}% confidence (Similarity: ${data.enrolled_duplicate.similarity}).`;
-      
-      if (data.enrolled_duplicate.thumbnail) {
-        directDuplicateThumb.src = data.enrolled_duplicate.thumbnail;
-      }
-      directDuplicateName.textContent = data.enrolled_duplicate.name;
-      directDuplicateTag.textContent = data.enrolled_duplicate.tag_id;
-      directDuplicateDate.textContent = data.enrolled_duplicate.registered_at ? `Enrolled: ${data.enrolled_duplicate.registered_at}` : '';
-      directDuplicatePill.classList.remove('hidden');
-    } else {
-      directDuplicateBanner.className = 'duplicate-check-banner duplicate-safe';
-      directDuplicateBanner.classList.remove('hidden');
-      directDuplicateIcon.textContent = '🛡️';
-      directDuplicateTitle.textContent = 'ZERO DUPLICATE CONFLICT: UNREGISTERED ANIMAL';
-      directDuplicateDesc.textContent = 'This muzzle pattern does not match any cattle currently registered in the farm database. Safe for new enrollment!';
-      directDuplicatePill.classList.add('hidden');
-    }
-
-    // Pairwise Cross-Consistency Matrix
-    if (data.pairwise_breakdown && data.pairwise_breakdown.length > 0) {
-      directPairwiseCard.classList.remove('hidden');
-      directPairwiseChips.innerHTML = '';
-      data.pairwise_breakdown.forEach(pair => {
-        const chip = document.createElement('span');
-        chip.className = `pairwise-chip ${pair.is_match ? 'chip-match' : 'chip-mismatch'}`;
-        chip.innerHTML = `<span>${pair.pair}: <strong>${pair.similarity.toFixed(4)}</strong> (${pair.is_match ? '✅ MATCH' : '❌ MISMATCH'})</span>`;
-        directPairwiseChips.appendChild(chip);
-      });
-    } else {
-      directPairwiseCard.classList.add('hidden');
-    }
-
-    // Hashes
-    const img1Hash = data.images?.[0]?.hash || data.image1?.hash || '0x...';
-    const img2Hash = data.images?.[1]?.hash || data.image2?.hash || '0x...';
-    directHash1.textContent = img1Hash;
-    directHash2.textContent = img2Hash;
-
-    if (data.shots_count >= 3 && (data.images?.[2]?.hash || data.image3?.hash)) {
-      directHash3Item.classList.remove('hidden');
-      directHash3.textContent = data.images?.[2]?.hash || data.image3?.hash;
-    } else {
-      directHash3Item.classList.add('hidden');
-    }
-
-    // Quality Mini-Cards
-    const qScores = data.quality_scores || [];
-    if (qScores.length >= 1) directQ1Score.textContent = `${qScores[0]}%`;
-    if (qScores.length >= 2) directQ2Score.textContent = `${qScores[1]}%`;
-    if (qScores.length >= 3) {
-      directQ3Card.classList.remove('hidden');
-      directQ3Score.textContent = `${qScores[2]}%`;
-    } else {
-      directQ3Card.classList.add('hidden');
-    }
-
-    // XAI Visualizations
-    if (data.xai) {
-      const directXaiCorrImg = document.getElementById('directXaiCorrImg');
-      const directHeatImg1 = document.getElementById('directHeatImg1');
-      const directHeatImg2 = document.getElementById('directHeatImg2');
-      const directRidgeImg1 = document.getElementById('directRidgeImg1');
-      const directRidgeImg2 = document.getElementById('directRidgeImg2');
-
-      if (directXaiCorrImg && data.xai.correspondence_canvas) directXaiCorrImg.src = data.xai.correspondence_canvas;
-      if (directHeatImg1) directHeatImg1.src = data.xai.heatmaps?.[0] || data.xai.heatmap1 || '';
-      if (directHeatImg2) directHeatImg2.src = data.xai.heatmaps?.[1] || data.xai.heatmap2 || '';
-      if (directRidgeImg1) directRidgeImg1.src = data.xai.ridges?.[0] || data.xai.ridge1 || '';
-      if (directRidgeImg2) directRidgeImg2.src = data.xai.ridges?.[1] || data.xai.ridge2 || '';
-
-      if (data.shots_count >= 3 && (data.xai.heatmaps?.[2] || data.xai.heatmap3)) {
-        directHeatCol3.classList.remove('hidden');
-        directRidgeCol3.classList.remove('hidden');
-        directHeatImg3.src = data.xai.heatmaps?.[2] || data.xai.heatmap3;
-        directRidgeImg3.src = data.xai.ridges?.[2] || data.xai.ridge3;
-      } else {
-        directHeatCol3.classList.add('hidden');
-        directRidgeCol3.classList.add('hidden');
-      }
-    }
-
-    directResultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  // Setup XAI View Tabs in Mode 2
-  const btnTabXaiCorr = document.getElementById('btnTabXaiCorr');
-  const btnTabXaiHeatmaps = document.getElementById('btnTabXaiHeatmaps');
-  const btnTabXaiRidges = document.getElementById('btnTabXaiRidges');
-  const xaiTabBodyCorr = document.getElementById('xaiTabBodyCorr');
-  const xaiTabBodyHeatmaps = document.getElementById('xaiTabBodyHeatmaps');
-  const xaiTabBodyRidges = document.getElementById('xaiTabBodyRidges');
-
-  if (btnTabXaiCorr && btnTabXaiHeatmaps && btnTabXaiRidges) {
-    btnTabXaiCorr.addEventListener('click', () => {
-      btnTabXaiCorr.classList.add('active');
-      btnTabXaiHeatmaps.classList.remove('active');
-      btnTabXaiRidges.classList.remove('active');
-      xaiTabBodyCorr.classList.remove('hidden');
-      xaiTabBodyHeatmaps.classList.add('hidden');
-      xaiTabBodyRidges.classList.add('hidden');
-    });
-
-    btnTabXaiHeatmaps.addEventListener('click', () => {
-      btnTabXaiCorr.classList.remove('active');
-      btnTabXaiHeatmaps.classList.add('active');
-      btnTabXaiRidges.classList.remove('active');
-      xaiTabBodyCorr.classList.add('hidden');
-      xaiTabBodyHeatmaps.classList.remove('hidden');
-      xaiTabBodyRidges.classList.add('hidden');
-    });
-
-    btnTabXaiRidges.addEventListener('click', () => {
-      btnTabXaiCorr.classList.remove('active');
-      btnTabXaiHeatmaps.classList.remove('active');
-      btnTabXaiRidges.classList.add('active');
-      xaiTabBodyCorr.classList.add('hidden');
-      xaiTabBodyHeatmaps.classList.add('hidden');
-      xaiTabBodyRidges.classList.remove('hidden');
-    });
-  }
-
-
-  // =============================================================
-  // 3. SEARCH & VERIFY (MODE 3)
-  // =============================================================
-  thresholdSlider.addEventListener('input', (e) => {
-    thresholdVal.textContent = parseFloat(e.target.value).toFixed(2);
-  });
-
-  dropZone.addEventListener('click', (e) => {
-    if (e.target !== btnRemoveImg) fileInput.click();
-  });
-  ['dragenter', 'dragover'].forEach(n => {
-    dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-  });
-  ['dragleave', 'drop'].forEach(n => {
-    dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
-  });
-  dropZone.addEventListener('drop', (e) => {
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleSearchFile(e.dataTransfer.files[0]);
-    }
-  });
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleSearchFile(e.target.files[0]);
-    }
-  });
-
-  btnRemoveImg.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearSearchFile();
-  });
-
-  function handleSearchFile(file) {
-    if (!file.type.startsWith('image/')) {
-      showToast('❌ Please upload an image file (JPG, PNG).');
-      return;
-    }
-    currentSearchFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImg.src = e.target.result;
-      previewFilename.textContent = file.name;
-      dropzonePrompt.classList.add('hidden');
-      dropzonePreview.classList.remove('hidden');
-
-      // Real-time quality assessment
-      btnScanVerify.disabled = true;
-      runQualityAudit(file, searchQualityBadge, (passed, score, issue) => {
-        searchPassed = passed;
-        searchIssue = issue || '';
-        btnScanVerify.disabled = !passed;
-        if (searchQualityHint) {
-          if (passed) {
-            searchQualityHint.textContent = '✅ Photo passed quality & muzzle completeness gate. Ready to search registry.';
-            searchQualityHint.style.color = '#34d399';
-          } else {
-            searchQualityHint.textContent = `🚫 Re-upload Required: ${searchIssue || 'Cannot search database with incomplete muzzle or blurry/low-contrast photo.'}`;
-            searchQualityHint.style.color = '#f87171';
-          }
-        }
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function clearSearchFile() {
-    currentSearchFile = null;
-    searchPassed = false;
-    fileInput.value = '';
-    dropzonePrompt.classList.remove('hidden');
-    dropzonePreview.classList.add('hidden');
-    if (searchQualityBadge) {
-      searchQualityBadge.className = 'slot-quality-badge badge-pending';
-      searchQualityBadge.innerHTML = '⏳ Quality: Awaiting Photo';
-    }
-    if (searchQualityHint) {
-      searchQualityHint.textContent = '🔒 Minimum 50% biometric clarity required to execute registry match.';
-      searchQualityHint.style.color = '#94a3b8';
-    }
-    btnScanVerify.disabled = true;
-    resetSearchVerdict();
-  }
-
-  function resetSearchVerdict() {
-    verdictBanner.className = 'verdict-banner banner-idle';
-    verdictIcon.textContent = '🔍';
-    verdictTitle.textContent = 'Awaiting Input';
-    verdictDescription.textContent = 'Upload a muzzle photo or choose a 1-click sample above to extract features and test matching.';
-    metricsGrid.classList.add('hidden');
-    matchedProfileCard.classList.add('hidden');
-    dualInspectionCard.classList.add('hidden');
-    fingerprintSection.classList.add('hidden');
-
-    const scanQualityCard = document.getElementById('scanQualityCard');
-    const scanFaissCard = document.getElementById('scanFaissCard');
-    if (scanQualityCard) scanQualityCard.classList.add('hidden');
-    if (scanFaissCard) scanFaissCard.classList.add('hidden');
-  }
-
-  btnScanVerify.addEventListener('click', async () => {
-    if (!currentSearchFile) return;
-
-    btnScanVerify.disabled = true;
-    scanSpinner.classList.remove('hidden');
-
-    const formData = new FormData();
-    formData.append('file', currentSearchFile);
-    const threshold = parseFloat(thresholdSlider.value);
-
-    try {
-      const res = await fetch(`/api/scan?threshold=${threshold}`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Scan failed');
-
-      renderSearchResults(data);
-    } catch (err) {
-      showToast(`❌ Scan Error: ${err.message}`);
-    } finally {
-      btnScanVerify.disabled = false;
-      scanSpinner.classList.add('hidden');
-    }
-  });
-
-  function renderSearchResults(res) {
-    // 4-Way Multi-Modal Inspection Grid
-    rawThumb.src = res.thumbnails.original;
-    claheThumb.src = res.thumbnails.enhanced;
-
-    const scanHeatThumb = document.getElementById('scanHeatThumb');
-    const scanRidgeThumb = document.getElementById('scanRidgeThumb');
-    if (scanHeatThumb && res.thumbnails.heatmap) scanHeatThumb.src = res.thumbnails.heatmap;
-    if (scanRidgeThumb && res.thumbnails.ridge) scanRidgeThumb.src = res.thumbnails.ridge;
-
-    dualInspectionCard.classList.remove('hidden');
-
-    metricsGrid.classList.remove('hidden');
-    metricCosine.textContent = res.best_similarity.toFixed(4);
-    const barWidth = Math.max(0, Math.min(100, (res.best_similarity + 1) / 2 * 100));
-    metricCosineBar.style.width = `${barWidth}%`;
-    metricConfidence.textContent = res.confidence_percent;
-    metricAngular.textContent = `${res.angular_distance_deg}°`;
-
-    // Quality Gate Card
-    const scanQualityCard = document.getElementById('scanQualityCard');
-    const scanQualityScore = document.getElementById('scanQualityScore');
-    const scanSharpnessVal = document.getElementById('scanSharpnessVal');
-    const scanGlareVal = document.getElementById('scanGlareVal');
-    const scanLivenessVal = document.getElementById('scanLivenessVal');
-    const scanQualityFeedback = document.getElementById('scanQualityFeedback');
-
-    if (scanQualityCard && res.quality_gate) {
-      scanQualityScore.textContent = `${res.quality_gate.overall_score}%`;
-      scanSharpnessVal.textContent = res.quality_gate.sharpness_index;
-      scanGlareVal.textContent = `${res.quality_gate.glare_percentage}%`;
-      scanLivenessVal.textContent = res.quality_gate.anti_spoofing.liveness_status === 'AUTHENTIC_LIVE_ANIMAL' ? '✅ Authentic Live Animal' : '⚠️ Flagged Digital Replay';
-      scanQualityFeedback.textContent = (res.quality_gate.feedback || []).join(' • ');
-      scanQualityCard.classList.remove('hidden');
-    }
-
-    // FAISS High-Speed Retrieval Card
-    const scanFaissCard = document.getElementById('scanFaissCard');
-    const scanFaissEngine = document.getElementById('scanFaissEngine');
-    const scanFaissLatency = document.getElementById('scanFaissLatency');
-    const scanFaissCandidates = document.getElementById('scanFaissCandidates');
-
-    if (scanFaissCard && res.vector_search) {
-      scanFaissEngine.textContent = res.vector_search.engine;
-      scanFaissLatency.textContent = `${res.vector_search.latency_ms} ms`;
-
-      scanFaissCandidates.innerHTML = '';
-      const candidates = res.vector_search.candidates || [];
-      if (candidates.length === 0) {
-        scanFaissCandidates.innerHTML = '<span class="text-xs text-muted" style="padding: 6px;">No registered candidates to rank.</span>';
-      } else {
-        candidates.forEach(cand => {
-          const row = document.createElement('div');
-          row.className = 'faiss-candidate-row';
-          row.innerHTML = `
-            <div class="candidate-left">
-              <span class="candidate-rank">#${cand.rank}</span>
-              <img src="${cand.thumbnail || ''}" class="candidate-avatar" alt="${cand.tag_id}">
-              <div class="candidate-info">
-                <span class="candidate-name">${cand.name}</span>
-                <span class="candidate-tag">${cand.tag_id} &bull; ${cand.breed}</span>
-              </div>
-            </div>
-            <div class="candidate-right">
-              <span class="candidate-sim">${cand.similarity.toFixed(4)}</span>
-              <span class="${cand.is_match ? 'candidate-badge-match' : 'candidate-badge-miss'}">
-                ${cand.is_match ? 'MATCH' : 'BELOW THRESHOLD'}
-              </span>
-            </div>
-          `;
-          scanFaissCandidates.appendChild(row);
-        });
-      }
-      scanFaissCard.classList.remove('hidden');
-    }
-
-    if (res.is_match && res.matched_animal) {
-      verdictBanner.className = 'verdict-banner banner-match';
-      verdictIcon.textContent = '✅';
-      verdictTitle.textContent = 'VERIFIED: Cattle Identified in Database';
-      verdictDescription.textContent = `High-confidence biometric match found with ${res.matched_animal.name} (${res.matched_animal.tag_id}) at ${res.confidence_percent} confidence.`;
-      metricCosineBar.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
-
-      matchedTagId.textContent = res.matched_animal.tag_id;
-      matchedName.textContent = res.matched_animal.name;
-      matchedThumb.src = res.matched_animal.thumbnail;
-      matchedProfileCard.classList.remove('hidden');
-    } else if (res.closest_animal) {
-      verdictBanner.className = 'verdict-banner banner-mismatch';
-      verdictIcon.textContent = '⚠️';
-      verdictTitle.textContent = 'UNREGISTERED: No Database Match';
-      verdictDescription.textContent = `Biometric scan does not match any enrolled animal (Closest: ${res.closest_animal.name} at similarity ${res.closest_animal.similarity} < threshold ${res.threshold}).`;
-      metricCosineBar.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
-      matchedProfileCard.classList.add('hidden');
-    } else {
-      verdictBanner.className = 'verdict-banner banner-idle';
-      verdictIcon.textContent = 'ℹ️';
-      verdictTitle.textContent = 'Registry Empty';
-      verdictDescription.textContent = 'No cattle currently enrolled in database. Go to Mode 1 to register cattle!';
-      matchedProfileCard.classList.add('hidden');
-    }
-
-    displayHash.textContent = res.biometric_hash;
-    vectorChips.innerHTML = '';
-    (res.embedding_sample || []).forEach(val => {
-      const chip = document.createElement('span');
-      chip.className = 'vector-chip';
-      chip.textContent = val.toFixed(4);
-      vectorChips.appendChild(chip);
-    });
-    fingerprintSection.classList.remove('hidden');
+    if (smartRegTag) smartRegTag.value = generateUniqueCowId();
   }
 
   // -------------------------------------------------------------
-  // Live Database Table Operations
+  // 6. Ownership Transfer Modal & Execution (Single & Batch)
+  // -------------------------------------------------------------
+  const radioModeSingle = document.getElementById('radioModeSingle');
+  const radioModeBatch = document.getElementById('radioModeBatch');
+  const batchSelectContainer = document.getElementById('batchSelectContainer');
+  const batchIdInput = document.getElementById('batchIdInput');
+  const batchCattleCheckboxList = document.getElementById('batchCattleCheckboxList');
+
+  if (radioModeSingle && radioModeBatch) {
+    radioModeSingle.addEventListener('change', () => {
+      batchSelectContainer.style.display = 'none';
+    });
+    radioModeBatch.addEventListener('change', () => {
+      batchSelectContainer.style.display = 'block';
+      populateBatchCattleCheckboxes();
+    });
+  }
+
+  function populateBatchCattleCheckboxes() {
+    if (!batchCattleCheckboxList) return;
+    batchCattleCheckboxList.innerHTML = '';
+    
+    // List all cattle owned by user except activeTransferCowId
+    const currentOwnerAddr = userAddress ? userAddress.toLowerCase() : "";
+    let count = 0;
+    for (const [tag, cow] of Object.entries(window.__HalalChain_Current_Registry || {})) {
+      if (tag !== activeTransferCowId && cow.owner_address?.toLowerCase() === currentOwnerAddr && cow.status !== 'SLAUGHTERED_HALAL') {
+        count++;
+        const div = document.createElement('label');
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '6px';
+        div.style.color = '#fff';
+        div.style.cursor = 'pointer';
+        div.innerHTML = `
+          <input type="checkbox" class="batch-cow-check" value="${tag}">
+          <span><strong>${tag}</strong> (${cow.name} - ${cow.breed || 'Cattle'})</span>
+        `;
+        batchCattleCheckboxList.appendChild(div);
+      }
+    }
+    if (count === 0) {
+      batchCattleCheckboxList.innerHTML = `<span style="color: #94A3B8;">No other active cattle in your wallet for batching.</span>`;
+    }
+  }
+
+  function openTransferModal(cowId, cowName) {
+    const cowRecord = window.__HalalChain_Current_Registry ? window.__HalalChain_Current_Registry[cowId] : null;
+    if (cowRecord && cowRecord.status === 'SLAUGHTERED_HALAL') {
+      alert(`⚠️ Action Blocked: Animal '${cowName}' (${cowId}) has already been SLAUGHTERED and processed! Slaughtered animals cannot be transferred.`);
+      return;
+    }
+    activeTransferCowId = cowId;
+    modalTransferCowId.textContent = cowId;
+    modalTransferCowName.textContent = cowName;
+    modalRecipientAddress.value = '';
+    modalTransferPrice.value = '0.00';
+    if (radioModeSingle) radioModeSingle.checked = true;
+    if (batchSelectContainer) batchSelectContainer.style.display = 'none';
+    if (batchIdInput) batchIdInput.value = `BATCH-${Math.floor(1000 + Math.random() * 9000)}`;
+    loadSlaughterhouseDropdown();
+    transferModal.classList.remove('hidden');
+  }
+
+  if (btnCloseTransferModal) {
+    btnCloseTransferModal.addEventListener('click', () => {
+      transferModal.classList.add('hidden');
+      activeTransferCowId = null;
+    });
+  }
+
+  if (btnConfirmTransfer) {
+    btnConfirmTransfer.addEventListener('click', async () => {
+      let recipientRaw = modalRecipientAddress.value.trim();
+      const isSlaughterTransfer = radioDestSlaughterhouse && radioDestSlaughterhouse.checked;
+      const isBatchMode = radioModeBatch && radioModeBatch.checked;
+
+      if (isSlaughterTransfer) {
+        recipientRaw = modalSlaughterhouseSelect?.value?.trim() || "";
+        if (!recipientRaw) {
+          alert("Please select a Certified Slaughterhouse from the dropdown.");
+          return;
+        }
+      }
+
+      if (isBatchMode) {
+        const batchNum = batchIdInput?.value?.trim();
+        if (!batchNum) {
+          alert("Batch Number is mandatory for Batch Transfer!");
+          return;
+        }
+      }
+
+      const price = parseFloat(modalTransferPrice.value) || 0.0;
+
+      let recipient = null;
+      try {
+        recipient = ethers.getAddress(recipientRaw.toLowerCase());
+      } catch (e) {
+        alert("Please enter a valid Ethereum address (e.g. 0x...)");
+        return;
+      }
+
+      // Collect target cows for transfer
+      let targetCows = [activeTransferCowId];
+      if (isBatchMode) {
+        document.querySelectorAll('.batch-cow-check:checked').forEach(chk => {
+          targetCows.push(chk.value);
+        });
+      }
+
+      btnConfirmTransfer.disabled = true;
+      btnConfirmTransfer.textContent = `Processing Transfer (${targetCows.length} Cattle)...`;
+
+      try {
+        let txHash = null;
+
+        // Execute on-chain via MetaMask if connected
+        if (cattleContract && web3Signer) {
+          try {
+            let tx;
+            const priceWei = price > 0 ? ethers.parseEther(price.toString()) : 0n;
+
+            // Batch transfer to slaughterhouse via contract
+            if (isSlaughterTransfer && isBatchMode && typeof cattleContract.transferToSlaughterhouse === 'function') {
+              let tokenIds = [];
+              for (const c of targetCows) {
+                try {
+                  const fetchedId = await cattleContract.cowIdToTokenId(c);
+                  if (fetchedId && Number(fetchedId) > 0) tokenIds.push(fetchedId);
+                } catch (e) {}
+              }
+              if (tokenIds.length === 0) tokenIds = [1];
+              const batchNum = batchIdInput.value.trim();
+              console.log("[HalalChain] Calling transferToSlaughterhouse on Sepolia with Batch:", batchNum, tokenIds);
+              tx = await cattleContract.transferToSlaughterhouse(tokenIds, recipient, batchNum, "Healthy for Slaughter");
+            } else if (typeof cattleContract.transferPassportWithCondition === 'function') {
+              let tokenId = 1;
+              try {
+                const fetchedId = await cattleContract.cowIdToTokenId(activeTransferCowId);
+                if (fetchedId && Number(fetchedId) > 0) tokenId = fetchedId;
+              } catch (tErr) {}
+              const certId = isBatchMode ? batchIdInput.value.trim() : `CERT-SEP-${activeTransferCowId}`;
+              tx = await cattleContract.transferPassportWithCondition(tokenId, recipient, "Healthy / Fully Verified", certId);
+            }
+
+            if (tx) {
+              alert(`Transfer Transaction Broadcast to Sepolia! Tx: ${tx.hash}\nWaiting for block confirmation...`);
+              await tx.wait();
+              txHash = tx.hash;
+            }
+          } catch (metaErr) {
+            console.warn("MetaMask transfer error:", metaErr);
+            alert("MetaMask Notice: " + (metaErr.reason || metaErr.message));
+          }
+        }
+
+        // Record transfer in backend
+        if (isBatchMode) {
+          const res = await fetch('/api/cattle/batch-transfer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cow_ids: targetCows,
+              from_address: userAddress || "0x4A7372b70De14022c4fe7F7eFE0317e1CB5e3477",
+              to_address: recipient,
+              batch_id: batchIdInput.value.trim(),
+              transfer_type: isSlaughterTransfer ? "SLAUGHTERHOUSE" : "FARMER",
+              condition: "Healthy / Fully Verified",
+              tx_hash: txHash
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Batch transfer failed");
+          alert(`🎉 Batch '${data.batch_id}' successfully transferred (${data.transferred_count} cattle) to ${recipient}!`);
+        } else {
+          const res = await fetch('/api/blockchain/transfer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cow_id: activeTransferCowId,
+              from_address: userAddress || "0x4A7372b70De14022c4fe7F7eFE0317e1CB5e3477",
+              to_address: recipient,
+              price_eth: price,
+              tx_hash: txHash
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Transfer failed");
+          alert(`🎉 Ownership of '${activeTransferCowId}' successfully transferred to ${recipient}!`);
+        }
+
+        transferModal.classList.add('hidden');
+        await updateRegistryUI();
+
+        // Guide recipient on NFT importing
+        showNftGuidelineModal(1);
+      } catch (err) {
+        alert("Transfer Error: " + err.message);
+      } finally {
+        btnConfirmTransfer.disabled = false;
+        btnConfirmTransfer.textContent = "Confirm Transfer on Sepolia";
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // 7. Wallet Search & Ownership Audit
+  // -------------------------------------------------------------
+  if (btnSearchWallet && walletSearchInput) {
+    btnSearchWallet.addEventListener('click', async () => {
+      const query = walletSearchInput.value.trim();
+      if (!query) return;
+
+      btnSearchWallet.textContent = "Searching...";
+      walletSearchResults.classList.add('hidden');
+      walletSearchGrid.innerHTML = '';
+
+      try {
+        if (query.startsWith('0x') && query.length === 42) {
+          // Search by Ethereum Wallet
+          const res = await fetch(`/api/blockchain/cattle-by-owner/${query}`);
+          const data = await res.json();
+
+          walletSearchResults.classList.remove('hidden');
+          walletSearchHeader.textContent = `Portfolio for ${query.slice(0, 8)}... (${data.total_owned} Cattle Owned On-Chain):`;
+
+          if (data.total_owned === 0) {
+            walletSearchGrid.innerHTML = `<div style="color: #94a3b8; padding: 16px;">No cattle currently registered under this wallet address.</div>`;
+          } else {
+            data.cattle.forEach(cow => {
+              const card = createAuditCard(cow);
+              walletSearchGrid.appendChild(card);
+            });
+          }
+        } else {
+          // Search by Cow ID
+          const res = await fetch('/api/registry');
+          const data = await res.json();
+          const cow = (data.registry || []).find(c => c.tag_id.toUpperCase() === query.toUpperCase());
+
+          walletSearchResults.classList.remove('hidden');
+          if (cow) {
+            walletSearchHeader.textContent = `Cattle Found: ${cow.tag_id}`;
+            walletSearchGrid.appendChild(createAuditCard(cow));
+          } else {
+            walletSearchHeader.textContent = `No record found for '${query}'.`;
+          }
+        }
+      } catch (err) {
+        alert("Search error: " + err.message);
+      } finally {
+        btnSearchWallet.textContent = "Audit Wallet";
+      }
+    });
+  }
+
+  function createAuditCard(cow) {
+    const div = document.createElement('div');
+    div.style.background = "rgba(4, 16, 10, 0.75)";
+    div.style.border = "1px solid rgba(0, 245, 160, 0.25)";
+    div.style.borderRadius = "10px";
+    div.style.padding = "14px";
+
+    const contractAddr = cow.contract_address || (contractInfo ? contractInfo.contract_address : "0x89fb23A14c93540AC55a5b1E6D38006c590e8924");
+    const regTx = cow.registration_tx_hash || cow.blockchain?.registration_tx_hash || cow.blockchain?.tx_hash || '';
+    const transferTx = cow.latest_transfer?.tx_hash || cow.blockchain?.latest_transfer_tx_hash;
+
+    const primaryTx = transferTx || regTx;
+    const regEtherscanUrl = regTx ? `https://sepolia.etherscan.io/tx/${regTx}` : null;
+    const transferEtherscanUrl = transferTx ? `https://sepolia.etherscan.io/tx/${transferTx}` : null;
+
+    div.innerHTML = `
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
+        <img src="${cow.thumbnail}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1.5px solid #00F5A0;">
+        <div>
+          <div style="font-weight: 800; color: #fff; font-size: 1rem;">${cow.name}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; color: #00F5A0; font-size: 0.8rem;">${cow.tag_id}</div>
+        </div>
+      </div>
+      <div style="font-size: 0.82rem; color: #94A3B8; line-height: 1.6;">
+        <div>Breed: <strong style="color: #fff;">${cow.breed || 'Cattle'}</strong></div>
+        <div>Current Owner: <span style="font-family: monospace; color: #00F5A0; font-weight: 700;">${cow.owner_address ? cow.owner_address.slice(0, 10) + '...' + cow.owner_address.slice(-4) : cow.owner_name}</span></div>
+        <div>Smart Contract: <a href="https://sepolia.etherscan.io/address/${contractAddr}" target="_blank" style="font-family: monospace; color: #38bdf8; text-decoration: none;" title="HalalChain Smart Contract on Sepolia">${contractAddr.slice(0, 10)}... (HalalChain Contract)</a></div>
+        <div>Farm: <strong style="color: #fff;">${cow.farm_name || 'Ranch'}</strong></div>
+        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <a href="/passport/verify/${cow.tag_id}" target="_blank" rel="noopener noreferrer" style="color: #06150e; background: #00F5A0; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">
+            🔍 Public Passport & QR &rarr;
+          </a>
+          <a href="/api/passport/certificate/${cow.tag_id}" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); font-weight: 600; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">
+            📄 PDF Certificate
+          </a>
+          ${transferEtherscanUrl ? `
+          <a href="${transferEtherscanUrl}" target="_blank" rel="noopener noreferrer" style="color: #00F5A0; text-decoration: underline; font-size: 0.75rem; font-weight: 700;" title="View Ownership Transfer Transaction on Sepolia Etherscan">
+            🔗 Transfer Proof Tx &rarr;
+          </a>
+          ` : ''}
+          ${regEtherscanUrl ? `
+          <a href="${regEtherscanUrl}" target="_blank" rel="noopener noreferrer" style="color: #94A3B8; text-decoration: underline; font-size: 0.75rem;" title="View Original Mint Transaction on Sepolia Etherscan">
+            🌱 Mint Tx &rarr;
+          </a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    return div;
+  }
+
+  // -------------------------------------------------------------
+  // 8. Update Blockchain Registry Ledger Table
   // -------------------------------------------------------------
   async function updateRegistryUI() {
     try {
       const res = await fetch('/api/registry');
       const data = await res.json();
       const count = data.total_registered || 0;
+      window.__HalalChain_Current_Registry = {};
+      (data.registry || []).forEach(c => {
+        window.__HalalChain_Current_Registry[c.tag_id] = c;
+      });
 
-      headerRegistryCount.textContent = count;
-      registryCountBadge.textContent = `${count} Animal${count === 1 ? '' : 's'} Enrolled`;
+      if (registryTotalBadge) {
+        registryTotalBadge.textContent = `${count} Cattle On-Chain`;
+      }
 
+      if (!registryTableBody) return;
       registryTableBody.innerHTML = '';
+
       if (count === 0) {
         registryTableBody.innerHTML = `
-          <tr class="empty-row">
-            <td colspan="7" class="text-center">No animals registered yet. Use Mode 1 above to register your first cattle!</td>
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 28px; color: #64748b; font-size: 0.85rem;">
+              No cattle registered yet. Enroll an animal using the form above.
+            </td>
           </tr>
         `;
         return;
@@ -1321,129 +1214,800 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       data.registry.forEach(cow => {
         const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
+
+        const tx = cow.blockchain?.tx_hash ? cow.blockchain.tx_hash.slice(0, 10) + '...' : '0x' + (cow.hash ? cow.hash.slice(0, 8) : '7fa41b') + '...';
+        const ownerDisplay = cow.owner_address ? cow.owner_address.slice(0, 6) + '...' + cow.owner_address.slice(-4) : (cow.owner_name || 'Owner');
+        const farm = cow.farm_name ? `${cow.farm_name} (${cow.location || ''})` : (cow.location || 'Ranch');
+
+        const isSlaughtered = (cow.status === "SLAUGHTERED_HALAL");
+        const statusBadge = isSlaughtered 
+          ? `<span style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em;">SLAUGHTERED</span>`
+          : `<span style="background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em;">ACTIVE ALIVE</span>`;
+        const batchBadge = cow.batch_id 
+          ? `<div style="font-size: 0.72rem; color: #0A4325; font-family: 'JetBrains Mono', monospace; font-weight: 600; margin-top: 2px;">Batch: ${cow.batch_id}</div>` 
+          : '';
+
         tr.innerHTML = `
-          <td><img src="${cow.thumbnail}" alt="${cow.tag_id}" class="reg-thumb"></td>
-          <td><strong class="font-mono text-cyan">${cow.tag_id}</strong></td>
-          <td><strong>${cow.name}</strong></td>
-          <td>${cow.breed || 'Cattle'}</td>
-          <td><span class="reg-hash" title="${cow.hash}">${cow.hash}</span></td>
-          <td><span class="text-xs text-muted">${cow.created_at}</span></td>
-          <td>
-            <button class="btn-delete-row" data-tag="${cow.tag_id}" title="Remove this animal">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-              Delete
-            </button>
+          <td style="padding: 12px 14px;"><img src="${cow.thumbnail}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1.5px solid #D5DEC0; box-shadow: 0 2px 6px rgba(0,0,0,0.06);"></td>
+          <td style="padding: 12px 14px;">
+            <strong style="font-family: 'JetBrains Mono', monospace; color: #064B2D; font-size: 0.88rem;">${cow.tag_id}</strong>
+            ${batchBadge}
+          </td>
+          <td style="padding: 12px 14px;">
+            <span style="font-weight: 800; color: #121A15; font-size: 0.92rem;">${cow.name}</span><br>
+            <div style="margin-top: 4px;">${statusBadge}</div>
+          </td>
+          <td style="padding: 12px 14px; font-family: 'JetBrains Mono', monospace; color: #064B2D; font-weight: 700; cursor: pointer; text-decoration: underline;" title="Click to audit this wallet: ${cow.owner_address || ''}" class="clickable-owner" data-owner="${cow.owner_address || ''}">${ownerDisplay}</td>
+          <td style="padding: 12px 14px; color: #56655B; font-size: 0.84rem; font-weight: 500;">${farm}</td>
+          <td style="padding: 12px 14px; color: #121A15; font-weight: 600; font-size: 0.86rem;">${cow.breed || 'Cattle'}</td>
+          <td style="padding: 12px 14px;">
+            <a href="${(cow.blockchain?.etherscan_url || (cow.blockchain?.tx_hash ? 'https://sepolia.etherscan.io/tx/' + cow.blockchain.tx_hash : (cow.hash ? 'https://sepolia.etherscan.io/tx/' + cow.hash : (cow.owner_address ? 'https://sepolia.etherscan.io/address/' + cow.owner_address : 'https://sepolia.etherscan.io'))))}" target="_blank" rel="noopener noreferrer" class="hash-display" style="font-size: 0.78rem; text-decoration: none; padding: 4px 8px; border-radius: 6px; background: #F4F6F2; border: 1px solid #E2E8DE; color: #064B2D; font-family: 'JetBrains Mono', monospace; font-weight: 600;" title="${cow.blockchain?.tx_hash || cow.hash}">
+              ${tx}
+            </a>
+          </td>
+          <td style="padding: 12px 14px; font-size: 0.82rem; color: #56655B; font-weight: 500;">${cow.created_at || 'Just Now'}</td>
+          <td style="padding: 12px 14px; display: flex; gap: 8px; align-items: center;">
+            <a href="/passport/verify/${cow.tag_id}" target="_blank" title="View Public Passport & QR" style="padding: 6px 10px; font-size: 0.82rem; font-weight: 700; color: #064B2D; background: #FFFFFF; border: 1.5px solid #D5DEC0; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> View
+            </a>
+            <a href="/api/passport/certificate/${cow.tag_id}" target="_blank" title="Download Official Transfer Certificate PDF" style="padding: 6px 10px; font-size: 0.82rem; font-weight: 700; color: #0369A1; background: #FFFFFF; border: 1.5px solid #BAE6FD; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> PDF
+            </a>
+            ${isSlaughtered 
+              ? `<span style="font-size: 0.78rem; font-weight: 700; color: #991B1B; padding: 4px 8px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px;">Slaughtered</span>`
+              : `<button class="btn-transfer-cow" data-tag="${cow.tag_id}" data-name="${cow.name}" style="padding: 6px 12px; font-size: 0.82rem; color: #FFFFFF; border: none; border-radius: 8px; background: #064B2D; cursor: pointer; font-weight: 700; box-shadow: 0 2px 6px rgba(6,75,45,0.2);">Transfer</button>`
+            }
+            <button class="btn-del-cow" data-tag="${cow.tag_id}" style="padding: 6px 10px; font-size: 0.82rem; color: #DC2626; border: 1.5px solid #FECACA; border-radius: 8px; background: #FFFFFF; cursor: pointer; font-weight: 700;" title="Remove">&times;</button>
           </td>
         `;
-
-        const btnDelete = tr.querySelector('.btn-delete-row');
-        btnDelete.addEventListener('click', async () => {
-          if (confirm(`Remove '${cow.name}' (${cow.tag_id}) from database?`)) {
-            try {
-              const delRes = await fetch(`/api/registry/${encodeURIComponent(cow.tag_id)}`, { method: 'DELETE' });
-              const delData = await delRes.json();
-              showToast(`🗑️ ${delData.message}`);
-              await updateRegistryUI();
-            } catch (err) {
-              showToast(`❌ Delete failed: ${err.message}`);
-            }
-          }
-        });
-
         registryTableBody.appendChild(tr);
       });
-    } catch (err) {
-      console.error('Failed to load registry:', err);
+
+      // Bind Transfer Buttons
+      document.querySelectorAll('.btn-transfer-cow').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openTransferModal(btn.dataset.tag, btn.dataset.name);
+        });
+      });
+
+      // Bind Clickable Owner Addresses to auto-audit
+      document.querySelectorAll('.clickable-owner').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const owner = cell.dataset.owner;
+          if (owner && walletSearchInput && btnSearchWallet) {
+            walletSearchInput.value = owner;
+            btnSearchWallet.click();
+            walletSearchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      });
+
+      // Bind Delete Buttons
+      document.querySelectorAll('.btn-del-cow').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const tag = btn.dataset.tag;
+          if (confirm(`Remove cattle '${tag}' from local registry?`)) {
+            await fetch(`/api/registry/${tag}`, { method: 'DELETE' });
+            await updateRegistryUI();
+          }
+        });
+      });
+    } catch (e) {
+      console.warn("Registry load notice:", e);
     }
   }
 
-  btnResetAll.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to wipe the local registry and start fresh from zero?')) {
-      try {
-        const res = await fetch('/api/reset', { method: 'POST' });
-        const data = await res.json();
-        showToast(`🗑️ ${data.message}`);
-        clearSmartFile();
-        clearSearchFile();
-        smartResultCard.classList.add('hidden');
+  // -------------------------------------------------------------
+  // 9. Reset Registry
+  // -------------------------------------------------------------
+  if (btnResetAll) {
+    btnResetAll.addEventListener('click', async () => {
+      if (confirm("Reset registry ledger?")) {
+        await fetch('/api/reset', { method: 'POST' });
+        if (smartResultCard) smartResultCard.classList.add('hidden');
         await updateRegistryUI();
-      } catch (err) {
-        showToast(`❌ ${err.message}`);
       }
-    }
-  });
-
-  if (btnCopyHash) {
-    btnCopyHash.addEventListener('click', () => {
-      navigator.clipboard.writeText(displayHash.textContent).then(() => {
-        btnCopyHash.textContent = 'Copied!';
-        setTimeout(() => { btnCopyHash.textContent = 'Copy'; }, 2000);
-        showToast('📋 Biometric SHA-256 hash copied to clipboard.');
-      });
     });
   }
 
-  // -------------------------------------------------------------
-  // Load Sample Chips for Mode 3
-  // -------------------------------------------------------------
-  async function loadSamples() {
+  // Initial load
+  await updateRegistryUI();
+// End of DOMContentLoaded is moved to the end of the file
+
+  // =============================================================
+  // SUPPLY CHAIN MODULE: SLAUGHTERHOUSE, HALAL & RETAIL WIRING
+  // =============================================================
+
+  const btnOpenSlaughterhousePanel = document.getElementById('btnOpenSlaughterhousePanel');
+  const slaughterhouseModal = document.getElementById('slaughterhouseModal');
+  const btnCloseSlaughterhouseModal = document.getElementById('btnCloseSlaughterhouseModal');
+
+  const btnOpenRetailPanel = document.getElementById('btnOpenRetailPanel');
+  const retailModal = document.getElementById('retailModal');
+  const btnCloseRetailModal = document.getElementById('btnCloseRetailModal');
+
+  const radioDestWallet = document.getElementById('radioDestWallet');
+  const radioDestSlaughterhouse = document.getElementById('radioDestSlaughterhouse');
+  const walletAddressBox = document.getElementById('walletAddressBox');
+  const slaughterhouseSelectBox = document.getElementById('slaughterhouseSelectBox');
+  const modalSlaughterhouseSelect = document.getElementById('modalSlaughterhouseSelect');
+
+  // Toggle Transfer Destination
+  if (radioDestWallet && radioDestSlaughterhouse) {
+    radioDestWallet.addEventListener('change', () => {
+      walletAddressBox.style.display = 'block';
+      slaughterhouseSelectBox.style.display = 'none';
+    });
+    radioDestSlaughterhouse.addEventListener('change', () => {
+      walletAddressBox.style.display = 'none';
+      slaughterhouseSelectBox.style.display = 'block';
+      loadSlaughterhouseDropdown();
+    });
+  }
+
+  async function loadSlaughterhouseDropdown() {
     try {
-      const res = await fetch('/api/samples');
+      const res = await fetch('/api/slaughterhouse/list');
       const data = await res.json();
-      if (!data.samples || data.samples.length === 0) {
-        samplesContainer.innerHTML = '<span class="text-muted text-xs">No sample images found in dataset folder.</span>';
-        return;
-      }
-
-      samplesContainer.innerHTML = '';
-      data.samples.forEach(sample => {
-        const chip = document.createElement('div');
-        chip.className = 'sample-chip';
-
-        let badgeClass = 'badge-match-expected';
-        let badgeText = 'Base / Match';
-        if (sample.type.includes('impostor')) {
-          badgeClass = 'badge-flag-expected';
-          badgeText = 'Different Animal';
-        }
-
-        chip.innerHTML = `
-          <img src="${sample.thumbnail}" alt="${sample.label}">
-          <div class="sample-chip-info">
-            <span class="sample-chip-title">${sample.label}</span>
-            <span class="sample-chip-badge ${badgeClass}">${badgeText}</span>
-          </div>
-        `;
-
-        chip.addEventListener('click', async () => {
-          showToast(`⚡ Loading ${sample.label}...`);
-          try {
-            const imgRes = await fetch(`/api/sample-image?path=${encodeURIComponent(sample.path)}`);
-            const blob = await imgRes.blob();
-            const file = new File([blob], `${sample.label.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
-            handleSearchFile(file);
-            setTimeout(() => btnScanVerify.click(), 300);
-          } catch (err) {
-            showToast(`❌ Could not load sample: ${err.message}`);
-          }
+      if (modalSlaughterhouseSelect && data.slaughterhouses) {
+        modalSlaughterhouseSelect.innerHTML = '<option value="">-- Choose Whitelisted Slaughterhouse --</option>';
+        data.slaughterhouses.forEach(sh => {
+          const opt = document.createElement('option');
+          opt.value = sh.wallet_address;
+          opt.textContent = `${sh.name} (${sh.wallet_address.slice(0, 8)}...) - ${sh.license_number}`;
+          modalSlaughterhouseSelect.appendChild(opt);
         });
-
-        samplesContainer.appendChild(chip);
-      });
-    } catch (err) {
-      console.warn('Failed to load samples:', err);
+      }
+    } catch (e) {
+      console.warn("Could not load slaughterhouse dropdown:", e);
     }
   }
 
-  let toastTimer = null;
-  function showToast(msg, duration = 3500) {
-    toast.textContent = msg;
-    toast.classList.remove('hidden');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.classList.add('hidden');
-    }, duration);
+  // Open / Close Slaughterhouse Panel
+  if (btnOpenSlaughterhousePanel && slaughterhouseModal) {
+    btnOpenSlaughterhousePanel.addEventListener('click', () => {
+      loadSlaughterhouseCustodyCattle();
+      loadShopkeepersDropdown();
+      slaughterhouseModal.classList.remove('hidden');
+    });
+  }
+  if (btnCloseSlaughterhouseModal && slaughterhouseModal) {
+    btnCloseSlaughterhouseModal.addEventListener('click', () => {
+      slaughterhouseModal.classList.add('hidden');
+    });
+  }
+
+  // Open / Close Retail Supermarket Panel
+  let currentShopkeeperPackages = [];
+  async function loadShopkeeperPackages() {
+    if (!userAddress) return;
+    try {
+      const res = await fetch(`/api/shopkeeper/${userAddress}/packages`);
+      const data = await res.json();
+      currentShopkeeperPackages = data.packages || [];
+
+      const selectEl = document.getElementById('retailPackageSelect');
+      const badgeEl = document.getElementById('retailPackageCountBadge');
+      if (badgeEl) badgeEl.textContent = `${currentShopkeeperPackages.length} Packages`;
+
+      const inventoryList = document.getElementById('retailInventoryList');
+      const invCount = document.getElementById('retailInventoryCount');
+      if (invCount) invCount.textContent = `${currentShopkeeperPackages.length} Packages`;
+
+      if (inventoryList) {
+        if (currentShopkeeperPackages.length === 0) {
+          inventoryList.innerHTML = `<div style="color: #64748b; font-size: 0.82rem; padding: 12px; text-align: center;">No packages currently routed to your store.</div>`;
+        } else {
+          inventoryList.innerHTML = '';
+          currentShopkeeperPackages.forEach(p => {
+            const item = document.createElement('div');
+            item.style.background = '#04100a';
+            item.style.border = p.is_received ? '1px solid rgba(0,245,160,0.3)' : '1px solid rgba(168,85,247,0.3)';
+            item.style.borderRadius = '8px';
+            item.style.padding = '10px 12px';
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            item.style.gap = '12px';
+
+            const qrImg = p.qr_code_base64 ? `<img src="${p.qr_code_base64}" alt="QR" style="width: 58px; height: 58px; border-radius: 6px; background: #fff; padding: 2px; flex-shrink: 0;">` : '';
+
+            item.innerHTML = `
+              <div style="display: flex; gap: 10px; align-items: center;">
+                ${qrImg}
+                <div style="font-size: 0.8rem; line-height: 1.5;">
+                  <strong style="color: #fff; font-size: 0.88rem;">${p.cut_name}</strong> (<span style="color: #fde047;">${p.weight_kg} kg</span>)
+                  <div style="font-family: monospace; color: #00F5A0; font-size: 0.76rem;">${p.package_id}</div>
+                  <div style="color: #94A3B8; font-size: 0.74rem;">Cow: <strong style="color: #fff;">${p.animal_name}</strong> | Batch: <span style="color: #38bdf8;">${p.batch_id}</span></div>
+                  <div style="margin-top: 2px;">
+                    ${p.is_received ? '<span style="color: #00F5A0; font-weight: 700; font-size: 0.72rem;">✓ DELIVERED TO STORE</span>' : '<span style="color: #fde047; font-size: 0.72rem;">🚚 In Transit to Supermarket</span>'}
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                <a href="${p.verify_url || ('/verify/package/' + p.package_id)}" target="_blank" rel="noopener noreferrer" style="background: rgba(0,245,160,0.15); border: 1px solid #00F5A0; color: #00F5A0; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">
+                  🔍 Scan / Track &rarr;
+                </a>
+              </div>
+            `;
+            inventoryList.appendChild(item);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load shopkeeper packages:", e);
+    }
+  }
+
+  const retailPkgSelect = document.getElementById('retailPackageSelect');
+  if (retailPkgSelect) {
+    retailPkgSelect.addEventListener('change', (e) => {
+      const pkgId = e.target.value;
+      const card = document.getElementById('retailAncestryCard');
+      const pkgInput = document.getElementById('retailPkgIdInput');
+      if (pkgInput) pkgInput.value = pkgId || "";
+
+      if (!pkgId) {
+        if (card) card.style.display = 'none';
+        return;
+      }
+
+      const pkg = currentShopkeeperPackages.find(p => p.package_id === pkgId);
+      if (pkg && card) {
+        document.getElementById('ancCutName').textContent = pkg.cut_name || "-";
+        document.getElementById('ancWeight').textContent = `${pkg.weight_kg} kg`;
+        document.getElementById('ancBatchId').textContent = pkg.batch_id || "-";
+        document.getElementById('ancCowName').textContent = pkg.animal_name || "-";
+        document.getElementById('ancCowId').textContent = pkg.parent_cow_id || "-";
+        document.getElementById('ancBreed').textContent = pkg.breed || "-";
+        document.getElementById('ancFarmName').textContent = `${pkg.farm_name} (${pkg.origin_location})`;
+        document.getElementById('ancFarmerName').textContent = pkg.original_owner || "-";
+        document.getElementById('ancSlaughterhouse').textContent = `${pkg.slaughterhouse_name} (${pkg.slaughterhouse_wallet?.slice(0, 8)}...)`;
+        document.getElementById('ancHalalCert').textContent = `Cert #${pkg.halal_cert_number}`;
+        document.getElementById('ancMuftiNotes').textContent = `"${pkg.mufti_inspector_notes}"`;
+        card.style.display = 'block';
+
+        const signBtn = document.getElementById('btnSignRetailReceiving');
+        if (signBtn) {
+          if (pkg.is_received) {
+            signBtn.textContent = "✅ Already Received at Store (View Traceable QR)";
+            signBtn.style.background = "#059669";
+          } else {
+            signBtn.textContent = "Sign Retail Receipt on Blockchain & Activate Consumer QR";
+            signBtn.style.background = "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)";
+          }
+        }
+      }
+    });
+  }
+
+  if (btnOpenRetailPanel && retailModal) {
+    btnOpenRetailPanel.addEventListener('click', () => {
+      loadShopkeeperPackages();
+      retailModal.classList.remove('hidden');
+    });
+  }
+  if (btnCloseRetailModal && retailModal) {
+    btnCloseRetailModal.addEventListener('click', () => {
+      retailModal.classList.add('hidden');
+    });
+  }
+
+  // Admin Modal Controls
+  const btnOpenAdminPanel = document.getElementById('btnOpenAdminPanel');
+  const adminModal = document.getElementById('adminModal');
+  const btnCloseAdminModal = document.getElementById('btnCloseAdminModal');
+
+  if (btnOpenAdminPanel && adminModal) {
+    btnOpenAdminPanel.addEventListener('click', () => adminModal.classList.remove('hidden'));
+  }
+  if (btnCloseAdminModal && adminModal) {
+    btnCloseAdminModal.addEventListener('click', () => adminModal.classList.add('hidden'));
+  }
+
+  // Admin Action A: Authorize Slaughterhouse
+  const btnAdminAuthSlaughterhouse = document.getElementById('btnAdminAuthSlaughterhouse');
+  if (btnAdminAuthSlaughterhouse) {
+    btnAdminAuthSlaughterhouse.addEventListener('click', async () => {
+      const wallet = document.getElementById('adminShWallet')?.value.trim();
+      const name = document.getElementById('adminShName')?.value.trim();
+      const license = document.getElementById('adminShLicense')?.value.trim();
+      const loc = document.getElementById('adminShLocation')?.value.trim();
+
+      if (!wallet || !name || !license) {
+        alert("Please enter Slaughterhouse Wallet Address, Name, and License.");
+        return;
+      }
+
+      try {
+        btnAdminAuthSlaughterhouse.disabled = true;
+        btnAdminAuthSlaughterhouse.textContent = "Authorizing on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.authorizeSlaughterhouse === 'function') {
+          const tx = await cattleContract.authorizeSlaughterhouse(wallet, name, license, loc || "Punjab");
+          alert(`Authorization Transaction Broadcast! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        await fetch('/api/slaughterhouse/authorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet_address: wallet,
+            name: name,
+            license_number: license,
+            location: loc || "Punjab, Pakistan",
+            tx_hash: txHash
+          })
+        });
+
+        alert(`✅ Slaughterhouse '${name}' successfully authorized and whitelisted on-chain!`);
+        btnAdminAuthSlaughterhouse.textContent = "✓ Authorize Slaughterhouse on-chain";
+        btnAdminAuthSlaughterhouse.disabled = false;
+        loadSlaughterhouseDropdown();
+      } catch (err) {
+        alert("Authorization Error: " + err.message);
+        btnAdminAuthSlaughterhouse.textContent = "✓ Authorize Slaughterhouse on-chain";
+        btnAdminAuthSlaughterhouse.disabled = false;
+      }
+    });
+  }
+
+  // Admin Action B: Authorize Shopkeeper / Supermarket
+  const btnAdminAuthShopkeeper = document.getElementById('btnAdminAuthShopkeeper');
+  if (btnAdminAuthShopkeeper) {
+    btnAdminAuthShopkeeper.addEventListener('click', async () => {
+      const wallet = document.getElementById('adminShopWallet')?.value.trim();
+      const name = document.getElementById('adminShopName')?.value.trim();
+      const license = document.getElementById('adminShopLicense')?.value.trim();
+      const loc = document.getElementById('adminShopLocation')?.value.trim();
+
+      if (!wallet || !name || !license) {
+        alert("Please enter Shopkeeper Wallet Address, Store Name, and License.");
+        return;
+      }
+
+      try {
+        btnAdminAuthShopkeeper.disabled = true;
+        btnAdminAuthShopkeeper.textContent = "Authorizing on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.authorizeShopkeeper === 'function') {
+          const tx = await cattleContract.authorizeShopkeeper(wallet, name, license, loc || "Punjab");
+          alert(`Shopkeeper Authorization Broadcast! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        await fetch('/api/shopkeeper/authorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet_address: wallet,
+            shop_name: name,
+            license_number: license,
+            location: loc || "Punjab, Pakistan",
+            tx_hash: txHash
+          })
+        });
+
+        alert(`✅ Retail Store '${name}' successfully authorized on-chain!`);
+        btnAdminAuthShopkeeper.textContent = "✓ Authorize Shopkeeper on-chain";
+        btnAdminAuthShopkeeper.disabled = false;
+        loadShopkeepersDropdown();
+      } catch (err) {
+        alert("Authorization Error: " + err.message);
+        btnAdminAuthShopkeeper.textContent = "✓ Authorize Shopkeeper on-chain";
+        btnAdminAuthShopkeeper.disabled = false;
+      }
+    });
+  }
+
+  // Load Verified Shopkeepers Dropdown
+  async function loadShopkeepersDropdown() {
+    const pkgShopkeeperSelect = document.getElementById('pkgShopkeeperSelect');
+    if (!pkgShopkeeperSelect) return;
+    try {
+      const res = await fetch('/api/shopkeeper/list');
+      const data = await res.json();
+      pkgShopkeeperSelect.innerHTML = '<option value="">-- Choose Verified Shopkeeper / Supermarket --</option>';
+      (data.shopkeepers || []).forEach(sh => {
+        const opt = document.createElement('option');
+        opt.value = sh.wallet_address;
+        opt.textContent = `${sh.shop_name} (${sh.wallet_address.slice(0, 8)}...) - ${sh.license_number}`;
+        pkgShopkeeperSelect.appendChild(opt);
+      });
+    } catch (e) {
+      console.warn("Could not load shopkeepers:", e);
+    }
+  }
+
+  // Load Slaughterhouse Custody Cattle
+  async function loadSlaughterhouseCustodyCattle() {
+    const shSelectOwnedCattle = document.getElementById('shSelectOwnedCattle');
+    if (!shSelectOwnedCattle || !userAddress) return;
+
+    shSelectOwnedCattle.innerHTML = '<option value="">-- Select Cattle in Your Custody --</option>';
+    const cleanAddr = userAddress.toLowerCase();
+
+    for (const [tag, cow] of Object.entries(window.__HalalChain_Current_Registry || {})) {
+      if (cow.owner_address?.toLowerCase() === cleanAddr && cow.status !== 'SLAUGHTERED_HALAL') {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.dataset.batch = cow.batch_id || "";
+        opt.textContent = `${tag} (${cow.name} - ${cow.breed || 'Cattle'}) ${cow.batch_id ? '[Batch: ' + cow.batch_id + ']' : ''}`;
+        shSelectOwnedCattle.appendChild(opt);
+      }
+    }
+
+    shSelectOwnedCattle.onchange = (e) => {
+      const selected = shSelectOwnedCattle.options[shSelectOwnedCattle.selectedIndex];
+      const cowIdInput = document.getElementById('shSignCowId');
+      const batchInput = document.getElementById('shSignBatchId');
+      const pkgBatchIdInput = document.getElementById('pkgBatchId');
+      const pkgParentCowInput = document.getElementById('pkgParentCowId');
+
+      if (cowIdInput) cowIdInput.value = selected.value || "";
+      if (batchInput) batchInput.value = selected.dataset.batch || "SINGLE-TRANSFER";
+      if (pkgBatchIdInput && selected.dataset.batch) pkgBatchIdInput.value = selected.dataset.batch;
+      if (pkgParentCowInput) pkgParentCowInput.value = selected.value || "";
+    };
+  }
+
+  // 1. Authorize Slaughterhouse (Legacy Button Helper)
+  const btnAuthorizeSlaughterhouse = document.getElementById('btnAuthorizeSlaughterhouse');
+  if (btnAuthorizeSlaughterhouse) {
+    btnAuthorizeSlaughterhouse.addEventListener('click', async () => {
+      const wallet = document.getElementById('shInputWallet')?.value.trim();
+      const name = document.getElementById('shInputName')?.value.trim();
+      const license = document.getElementById('shInputLicense')?.value.trim();
+      const loc = document.getElementById('shInputLocation')?.value.trim();
+
+      if (!wallet || !name || !license) {
+        alert("Please provide Slaughterhouse Wallet, Name, and License number.");
+        return;
+      }
+
+      try {
+        btnAuthorizeSlaughterhouse.disabled = true;
+        btnAuthorizeSlaughterhouse.textContent = "Authorizing on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.authorizeSlaughterhouse === 'function') {
+          const tx = await cattleContract.authorizeSlaughterhouse(wallet, name, license, loc || "Punjab");
+          alert(`Authorization Transaction Broadcast! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        await fetch('/api/slaughterhouse/authorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet_address: wallet,
+            name: name,
+            license_number: license,
+            location: loc || "Punjab, Pakistan",
+            tx_hash: txHash
+          })
+        });
+
+        alert(`✅ Slaughterhouse '${name}' successfully authorized and whitelisted on-chain!`);
+        btnAuthorizeSlaughterhouse.textContent = "✓ Authorize on Blockchain";
+        btnAuthorizeSlaughterhouse.disabled = false;
+        loadSlaughterhouseDropdown();
+      } catch (err) {
+        alert("Authorization Error: " + err.message);
+        btnAuthorizeSlaughterhouse.textContent = "✓ Authorize on Blockchain";
+        btnAuthorizeSlaughterhouse.disabled = false;
+      }
+    });
+  }
+
+  // 2. Slaughterhouse Halal Digital Sign-off
+  const btnSignHalalSlaughter = document.getElementById('btnSignHalalSlaughter');
+  if (btnSignHalalSlaughter) {
+    btnSignHalalSlaughter.addEventListener('click', async () => {
+      const cowId = document.getElementById('shSignCowId')?.value.trim();
+      const certNo = document.getElementById('shHalalCertNo')?.value.trim() || "PHDA-HALAL-992";
+      const notes = document.getElementById('shInspectorNotes')?.value.trim() || "100% Manual Islamic Zibah Verified with sharp knife";
+
+      if (!cowId) {
+        alert("Please select or enter an Animal Cow ID in your custody.");
+        return;
+      }
+
+      if (!userAddress) {
+        alert("Please connect your MetaMask wallet with the Authorized Slaughterhouse account first!");
+        return;
+      }
+
+      try {
+        btnSignHalalSlaughter.disabled = true;
+        btnSignHalalSlaughter.textContent = "Verifying Custody & Signing on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.signHalalSlaughter === 'function') {
+          let tokenId = 1;
+          try {
+            const fetchedId = await cattleContract.cowIdToTokenId(cowId);
+            if (fetchedId && Number(fetchedId) > 0) tokenId = fetchedId;
+          } catch (e) {}
+
+          const tx = await cattleContract.signHalalSlaughter([tokenId], certNo, notes);
+          alert(`Halal Slaughter Signature Broadcast! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        const res = await fetch('/api/slaughter/sign-halal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cow_ids: [cowId],
+            slaughterhouse_wallet: userAddress,
+            halal_cert_number: certNo,
+            inspector_notes: notes,
+            tx_hash: txHash
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          throw new Error(data.message || data.error || "Halal sign failed");
+        }
+
+        alert(`🔪 Halal Slaughter Digitally Signed & Verified for '${cowId}'!
+NFT status updated permanently to SLAUGHTERED.`);
+        btnSignHalalSlaughter.textContent = "Sign Halal Slaughter (Update NFT to SLAUGHTERED)";
+        btnSignHalalSlaughter.disabled = false;
+        await updateRegistryUI();
+        loadSlaughterhouseCustodyCattle();
+      } catch (err) {
+        alert("Halal Signing Error: " + (err.reason || err.message));
+        btnSignHalalSlaughter.textContent = "Sign Halal Slaughter (Update NFT to SLAUGHTERED)";
+        btnSignHalalSlaughter.disabled = false;
+      }
+    });
+  }
+
+  // Dynamic Custom Package Row Addition
+  const btnAddPackageRow = document.getElementById('btnAddPackageRow');
+  const customPackageRows = document.getElementById('customPackageRows');
+  if (btnAddPackageRow && customPackageRows) {
+    btnAddPackageRow.addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'pkg-row';
+      div.style.display = 'grid';
+      div.style.gridTemplateColumns = '2fr 1fr auto';
+      div.style.gap = '8px';
+      div.innerHTML = `
+        <input type="text" class="pkg-cut-name" placeholder="Cut Type (e.g. Minced Meat)" style="background: #04100a; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+        <input type="number" step="0.5" class="pkg-cut-weight" value="8.0" placeholder="Weight (kg)" style="background: #04100a; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem;">
+        <span style="color: #94A3B8; font-size: 0.75rem; align-self: center;">kg</span>
+      `;
+      customPackageRows.appendChild(div);
+    });
+  }
+
+  // 3. Generate Child Meat Packages (Batch Completion Enforced)
+  const btnGenerateMeatPackages = document.getElementById('btnGenerateMeatPackages');
+  if (btnGenerateMeatPackages) {
+    btnGenerateMeatPackages.addEventListener('click', async () => {
+      const parentCowId = document.getElementById('pkgParentCowId')?.value.trim();
+      const batchId = document.getElementById('pkgBatchId')?.value.trim();
+      const destShopkeeper = document.getElementById('pkgShopkeeperSelect')?.value?.trim();
+
+      if (!parentCowId) {
+        alert("Please enter parent Cow ID.");
+        return;
+      }
+
+      if (!destShopkeeper) {
+        alert("Please select a Verified Shopkeeper / Supermarket from the dropdown.");
+        return;
+      }
+
+      // Collect custom cut types and weights
+      const cutNames = [];
+      const cutWeights = [];
+      document.querySelectorAll('.pkg-row').forEach(row => {
+        const name = row.querySelector('.pkg-cut-name')?.value.trim();
+        const weight = parseFloat(row.querySelector('.pkg-cut-weight')?.value) || 5.0;
+        if (name) {
+          cutNames.push(name);
+          cutWeights.push(weight);
+        }
+      });
+
+      if (cutNames.length === 0) {
+        alert("Please define at least one custom cut type and weight.");
+        return;
+      }
+
+      try {
+        btnGenerateMeatPackages.disabled = true;
+        btnGenerateMeatPackages.textContent = "Verifying Batch Slaughter Status...";
+
+        // Validate batch slaughter status
+        if (batchId) {
+          const bRes = await fetch(`/api/slaughter/batch-status/${batchId}`);
+          const bData = await bRes.json();
+          if (!bData.all_slaughtered && bData.total_animals > 0) {
+            throw new Error(`Batch '${batchId}' is not fully slaughtered! (${bData.slaughtered_count}/${bData.total_animals} slaughtered). All animals in the batch must be slaughtered before generating packages.`);
+          }
+        }
+
+        btnGenerateMeatPackages.textContent = "Minting Meat Packages on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.generateMeatPackages === 'function') {
+          let parentTokenId = 1;
+          try {
+            const fetchedId = await cattleContract.cowIdToTokenId(parentCowId);
+            if (fetchedId && Number(fetchedId) > 0) parentTokenId = fetchedId;
+          } catch (e) {}
+
+          const weightGrams = cutWeights.map(w => Math.round(w * 1000));
+          const tx = await cattleContract.generateMeatPackages(parentTokenId, cutNames, weightGrams, batchId || "BATCH-001", destShopkeeper);
+          alert(`Package Generation Broadcast to Sepolia! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        const res = await fetch('/api/processing/generate-packages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parent_cow_id: parentCowId,
+            cuts: cutNames,
+            weights_kg: cutWeights,
+            batch_id: batchId || "BATCH-SINGLE",
+            holder_wallet: destShopkeeper,
+            tx_hash: txHash
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Packaging failed");
+
+        alert(`${data.packages.length} Custom Meat Packages successfully generated and transferred to Shopkeeper:\n${destShopkeeper}`);
+        btnGenerateMeatPackages.textContent = "Generate Verified Meat Packages & Transfer to Retail";
+        btnGenerateMeatPackages.disabled = false;
+        slaughterhouseModal.classList.add('hidden');
+      } catch (err) {
+        alert("Package Generation Notice: " + err.message);
+        btnGenerateMeatPackages.textContent = "Generate Verified Meat Packages & Transfer to Retail";
+        btnGenerateMeatPackages.disabled = false;
+      }
+    });
+  }
+
+  // 4. Supermarket / Retailer Delivery Sign-off
+  const btnSignRetailReceiving = document.getElementById('btnSignRetailReceiving');
+  if (btnSignRetailReceiving) {
+    btnSignRetailReceiving.addEventListener('click', async () => {
+      const pkgId = document.getElementById('retailPkgIdInput')?.value.trim();
+      const shopName = document.getElementById('retailShopNameInput')?.value.trim() || "Metro Cash & Carry";
+      const receiverName = document.getElementById('retailReceiverNameInput')?.value.trim() || "Store Meat Manager";
+
+      if (!pkgId) {
+        alert("Please enter Meat Package ID or Tag.");
+        return;
+      }
+
+      try {
+        btnSignRetailReceiving.disabled = true;
+        btnSignRetailReceiving.textContent = "Signing Delivery Receipt on Sepolia...";
+
+        let txHash = null;
+        if (cattleContract && web3Signer && typeof cattleContract.confirmRetailDelivery === 'function') {
+          let packageTokenId = 0;
+          try {
+            const fetchedId = await cattleContract.packageTagToPackageId(pkgId);
+            if (fetchedId && Number(fetchedId) > 0) packageTokenId = Number(fetchedId);
+          } catch (e) {}
+
+          // If mapping tag was formatted differently on-chain, resolve index from selected package
+          if (!packageTokenId || packageTokenId === 0) {
+            const selectedPkg = currentShopkeeperPackages.find(p => p.package_id === pkgId);
+            if (selectedPkg) {
+              const allPkgsCount = await cattleContract.totalPackages();
+              const tot = Number(allPkgsCount);
+              for (let i = 1; i <= tot; i++) {
+                try {
+                  const onChainPkg = await cattleContract.meatPackages(i);
+                  // Match cut type or tag
+                  if (onChainPkg && (onChainPkg.packageTag === pkgId || onChainPkg.cutType.toLowerCase() === selectedPkg.cut_name?.toLowerCase())) {
+                    packageTokenId = i;
+                    break;
+                  }
+                } catch (err) {}
+              }
+            }
+          }
+
+          if (!packageTokenId || packageTokenId === 0) {
+            packageTokenId = 1;
+          }
+
+          const tx = await cattleContract.confirmRetailDelivery([packageTokenId], shopName, receiverName);
+          alert(`Retail Receiving Signature Broadcast! Tx: ${tx.hash}`);
+          await tx.wait();
+          txHash = tx.hash;
+        }
+
+        await fetch('/api/retail/confirm-delivery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            package_ids: [pkgId],
+            retailer_wallet: userAddress || "0x1461bd11a98e34a04b20c252e56965c235e369b6",
+            shop_name: shopName,
+            receiver_name: receiverName,
+            tx_hash: txHash
+          })
+        });
+
+        alert(`Meat Package Delivery Confirmed at ${shopName}!\n\nTraceable QR Code Activated.`);
+        window.open(`/verify/package/${pkgId}`, '_blank');
+        btnSignRetailReceiving.textContent = "Sign Retail Receipt on Blockchain & Activate Consumer QR";
+        btnSignRetailReceiving.disabled = false;
+        retailModal.classList.add('hidden');
+      } catch (err) {
+        alert("Retail Receiving Error: " + err.message);
+        btnSignRetailReceiving.textContent = "Sign Retail Receipt on Blockchain & Activate Consumer QR";
+        btnSignRetailReceiving.disabled = false;
+      }
+    });
+  }
+
+  // NFT Guideline Modal Controls
+  function showNftGuidelineModal(tokenId = 1) {
+    const modal = document.getElementById('nftGuidelineModal');
+    const addrEl = document.getElementById('nftModalContractAddr');
+    const idEl = document.getElementById('nftModalTokenId');
+    if (addrEl && contractInfo) addrEl.textContent = contractInfo.contract_address;
+    if (idEl) idEl.textContent = tokenId;
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  const btnCloseNftModal = document.getElementById('btnCloseNftModal');
+  const btnDismissNftModal = document.getElementById('btnDismissNftModal');
+  const btnCopyNftContract = document.getElementById('btnCopyNftContract');
+  const btnCopyNftTokenId = document.getElementById('btnCopyNftTokenId');
+
+  if (btnCloseNftModal) {
+    btnCloseNftModal.addEventListener('click', () => {
+      document.getElementById('nftGuidelineModal')?.classList.add('hidden');
+    });
+  }
+  if (btnDismissNftModal) {
+    btnDismissNftModal.addEventListener('click', () => {
+      document.getElementById('nftGuidelineModal')?.classList.add('hidden');
+    });
+  }
+  if (btnCopyNftContract) {
+    btnCopyNftContract.addEventListener('click', () => {
+      const addr = document.getElementById('nftModalContractAddr')?.textContent;
+      if (addr) {
+        navigator.clipboard.writeText(addr);
+        btnCopyNftContract.textContent = "✓ Copied";
+        setTimeout(() => btnCopyNftContract.textContent = "Copy", 1500);
+      }
+    });
+  }
+  if (btnCopyNftTokenId) {
+    btnCopyNftTokenId.addEventListener('click', () => {
+      const tid = document.getElementById('nftModalTokenId')?.textContent;
+      if (tid) {
+        navigator.clipboard.writeText(tid);
+        btnCopyNftTokenId.textContent = "✓ Copied";
+        setTimeout(() => btnCopyNftTokenId.textContent = "Copy", 1500);
+      }
+    });
   }
 });

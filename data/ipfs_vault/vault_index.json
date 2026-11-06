@@ -1,0 +1,40 @@
+{
+  "cids": {
+    "bafkrei609a2a4d205169c389b763ab64a47efb80acddc3c5afe7ba": {
+      "sha256": "8360acee84a18c3a589ec140eee310d8d8e71144194dc6eb45a33129e1dee2ec",
+      "cow_id": "HC-SEP-96049",
+      "animal_name": "saad",
+      "pinned_at": 1793943256
+    },
+    "bafkrei8902d7b5e1ada0182d989978edbe911e75ab0c829c93ae2a": {
+      "sha256": "c7c99d1bb0a6e3cdbf999944c7b79254947e0fe68d3d59d14c8a85c749820093",
+      "cow_id": "HC-SEP-96049",
+      "animal_name": "Bella",
+      "pinned_at": 1793943256
+    },
+    "bafkreia456ecf18733f15b8caa34a739714704a561afb53495fc1c": {
+      "sha256": "d8f26094dc902b464d6a564408a8e25dd41f34f6660f63ab94193063ec457ea3",
+      "cow_id": "HC-SEP-11129",
+      "animal_name": "saad",
+      "pinned_at": 1793943571
+    },
+    "bafkrei68cf947cf2fcedfa5b124b0c7f7e7c94bd657939aaf4e5d3": {
+      "sha256": "337ba56e97029e38a6c76cd193a8044d984935757cdc10181051b93c61a16b61",
+      "cow_id": "HC-SEP-11129",
+      "animal_name": "Bella",
+      "pinned_at": 1793943571
+    }
+  },
+  "biometric_hashes": {
+    "0x02f95c70c70ec782ab1ee0db64deab918af9ced60c08ff83e3234b0826a9097a": {
+      "cid": "bafkrei8902d7b5e1ada0182d989978edbe911e75ab0c829c93ae2a",
+      "cow_id": "HC-SEP-96049",
+      "animal_name": "Bella"
+    },
+    "0x9bb00496d542c31242ffc77ab8fcb0c313eb3e18c42ac5dd349d5f0a9c657014": {
+      "cid": "bafkrei68cf947cf2fcedfa5b124b0c7f7e7c94bd657939aaf4e5d3",
+      "cow_id": "HC-SEP-11129",
+      "animal_name": "Bella"
+    }
+  }
+}

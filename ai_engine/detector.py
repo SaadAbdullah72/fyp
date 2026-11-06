@@ -27,18 +27,32 @@ class LivestockMuzzleDetector:
     def is_already_cropped_muzzle(self, image: np.ndarray) -> bool:
         """
         Determines whether the input image is already a close-up muzzle crop.
-        Muzzle close-ups typically have an aspect ratio near square/portrait (0.55 to 1.75)
-        and high ridge texture energy across the central area rather than a distant full cow body.
+        Muzzle close-ups have an aspect ratio near square/portrait (0.45 to 2.2),
+        and significant central dermatoglyphic ridge energy.
         """
         h, w = image.shape[:2]
         aspect = w / float(h) if h > 0 else 1.0
-        
-        # If aspect ratio is normal camera framing of cattle face/muzzle (0.55 - 1.75)
-        if 0.55 <= aspect <= 1.75:
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            center_roi = gray[int(h*0.20):int(h*0.80), int(w*0.20):int(w*0.80)]
-            if center_roi.std() > 10:
-                return True
+        if not (0.45 <= aspect <= 2.2):
+            return False
+
+        # Check for environmental pasture or sky (accurate green foliage range)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        green_mask = cv2.inRange(hsv, (38, 60, 50), (85, 255, 255))
+        green_pct = float(np.sum(green_mask > 0) / (h * w) * 100.0)
+        top_h = int(h * 0.25)
+        sky_top = cv2.inRange(hsv[:top_h, :], (95, 60, 120), (130, 255, 255))
+        sky_top_pct = float(np.sum(sky_top > 0) / (top_h * w) * 100.0) if top_h > 0 else 0.0
+
+        if green_pct > 35.0 or sky_top_pct > 25.0:
+            return False
+
+        # Close-up muzzle ridge check
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        ridge_energy = float(np.mean(np.sqrt(sobelx**2 + sobely**2)))
+        if ridge_energy >= 10.0 and np.std(gray) >= 10.0:
+            return True
         return False
 
     def detect_and_crop(self, image_input, save_crop_path: str = None) -> np.ndarray:

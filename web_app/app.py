@@ -1563,7 +1563,7 @@ def api_check_user_roles(address: str):
         "is_shopkeeper": is_shop,
         "is_farmer": not (is_owner or is_sh or is_shop) or len(owned_cattle) > 0,
         "owned_cattle_count": len(owned_cattle),
-        "role_badge": "👑 Contract Admin" if is_owner else ("🔪 Certified Slaughterhouse" if is_sh else ("🛒 Verified Supermarket / Shop" if is_shop else "👨‍🌾 Cattle Owner / Farmer"))
+        "role_badge": "Contract Admin" if is_owner else ("Certified Slaughterhouse" if is_sh else ("Verified Supermarket / Shop" if is_shop else "Cattle Owner / Farmer"))
     }
 
 @app.get("/api/ipfs/{cid}")

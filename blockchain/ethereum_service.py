@@ -29,6 +29,8 @@ DEFAULT_CONFIG = {
 class EthereumService:
     def __init__(self):
         os.makedirs(LEDGER_DIR, exist_ok=True)
+        self.vault_dir = os.path.join(LEDGER_DIR, "ipfs_vault")
+        os.makedirs(self.vault_dir, exist_ok=True)
         self.config = DEFAULT_CONFIG.copy()
         self.ledger: Dict[str, Any] = self._load_ledger()
         if isinstance(self.ledger.get("contract"), dict) and self.ledger["contract"].get("address"):

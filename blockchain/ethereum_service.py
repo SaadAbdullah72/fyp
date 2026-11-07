@@ -609,6 +609,9 @@ class EthereumService:
                         "owner_address": c.get("owner_address", ""),
                         "status": c.get("status", "SLAUGHTERED_HALAL"),
                         "farm_name": c.get("farm_name", "Al-Barakah Dairy Farm"),
+                        "location": c.get("location", "Punjab, Pakistan"),
+                        "latitude": c.get("latitude", 32.0836),
+                        "longitude": c.get("longitude", 72.6711),
                         "biometric_hash": c.get("biometric_hash", ""),
                         "thumbnail": c.get("thumbnail", "")
                     })

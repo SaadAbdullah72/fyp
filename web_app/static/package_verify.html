@@ -448,12 +448,13 @@
               
               const thumb = an.thumbnail || '/static/images/halalchain_icon.png';
               div.innerHTML = `
-                <img src="${thumb}" style="width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border-subtle);">
-                <div style="font-size: 0.8rem; line-height: 1.5;">
+                <img src="${thumb}" style="width: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border-subtle); flex-shrink: 0;">
+                <div style="font-size: 0.8rem; line-height: 1.5; flex-grow: 1;">
                   <strong style="color: var(--forest-green); font-size: 0.88rem;">${an.name}</strong>
                   <div class="mono" style="color: var(--leaf-green); font-weight: 700; font-size: 0.76rem;">${an.cow_id}</div>
+                  <div style="color: var(--text-muted); font-size: 0.74rem;">📍 Farm Location: <strong style="color: var(--text-dark);">${an.farm_name || 'Al-Barakah Farm'} (${an.location || 'Punjab, Pakistan'})</strong></div>
                   <div style="color: var(--text-muted); font-size: 0.72rem;">Current Owner: <span class="mono" style="color: var(--forest-green); font-weight: 600;">${an.owner_address ? (an.owner_address.slice(0, 6) + '...' + an.owner_address.slice(-4)) : an.owner_name}</span></div>
-                  <div style="margin-top: 2px;"><a href="/passport/verify/${an.cow_id}" target="_blank" style="color: var(--accent-gold-dark); text-decoration: underline; font-weight: 700; font-size: 0.72rem;">View Full Passport &rarr;</a></div>
+                  <div style="margin-top: 4px;"><a href="/passport/verify/${an.cow_id}" target="_blank" style="color: var(--accent-gold-dark); text-decoration: underline; font-weight: 700; font-size: 0.74rem;">View Full Biometric Passport &rarr;</a></div>
                 </div>
               `;
               batchGrid.appendChild(div);

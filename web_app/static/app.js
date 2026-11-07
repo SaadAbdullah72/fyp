@@ -1423,8 +1423,8 @@ All registrations and transfers are now connected to your verified on-chain cont
             item.style.gap = '12px';
 
             const qrHtml = p.is_received 
-              ? (p.qr_code_base64 ? `<img src="${p.qr_code_base64}" alt="QR" style="width: 58px; height: 58px; border-radius: 6px; background: #fff; padding: 2px; flex-shrink: 0;">` : '')
-              : `<div style="width: 58px; height: 58px; border-radius: 6px; background: rgba(253,224,71,0.1); border: 1.5px dashed rgba(253,224,71,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.65rem; color: #fde047; text-align: center; flex-shrink: 0; padding: 2px; line-height: 1.1;"><span>🔒 QR</span><span>Locked</span></div>`;
+              ? (p.qr_code_base64 ? `<img src="${p.qr_code_base64}" alt="QR" style="width: 58px; height: 58px; border-radius: 6px; background: #fff; padding: 2px; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,245,160,0.3);">` : '')
+              : '';
 
             item.innerHTML = `
               <div style="display: flex; gap: 10px; align-items: center;">
@@ -1434,17 +1434,30 @@ All registrations and transfers are now connected to your verified on-chain cont
                   <div style="font-family: monospace; color: #00F5A0; font-size: 0.76rem;">${p.package_id}</div>
                   <div style="color: #94A3B8; font-size: 0.74rem;">Cow: <strong style="color: #fff;">${p.animal_name}</strong> | Batch: <span style="color: #38bdf8;">${p.batch_id}</span></div>
                   <div style="margin-top: 2px;">
-                    ${p.is_received ? '<span style="color: #00F5A0; font-weight: 700; font-size: 0.72rem;">✓ DELIVERED TO STORE (QR Activated)</span>' : '<span style="color: #fde047; font-size: 0.72rem;">🚚 In Transit to Supermarket (Sign to Unlock QR)</span>'}
+                    ${p.is_received ? '<span style="color: #00F5A0; font-weight: 700; font-size: 0.72rem;">✓ DELIVERED TO STORE (Official QR Active)</span>' : '<span style="color: #fde047; font-size: 0.72rem;">🚚 In Transit to Supermarket (Sign Receipt to Generate QR)</span>'}
                   </div>
                 </div>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
-                <a href="${p.verify_url || ('/verify/package/' + p.package_id)}" target="_blank" rel="noopener noreferrer" style="background: rgba(0,245,160,0.15); border: 1px solid #00F5A0; color: #00F5A0; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <a href="${p.verify_url || ('/verify/package/' + p.package_id)}" target="_blank" rel="noopener noreferrer" style="background: rgba(0,245,160,0.15); border: 1px solid #00F5A0; color: #00F5A0; font-weight: 700; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                   🔍 Scan / Track &rarr;
                 </a>
+                <button class="btn-del-pkg" data-pkg-id="${p.package_id}" style="background: rgba(220,38,38,0.15); border: 1px solid rgba(239,68,68,0.4); color: #EF4444; border-radius: 6px; padding: 5px 9px; font-size: 0.85rem; font-weight: 700; cursor: pointer;" title="Remove this Package">&times;</button>
               </div>
             `;
             inventoryList.appendChild(item);
+          });
+
+          // Bind delete package buttons
+          inventoryList.querySelectorAll('.btn-del-pkg').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const pId = btn.dataset.pkgId;
+              if (confirm(`Remove Package '${pId}' from store inventory?`)) {
+                await fetch(`/api/package/${pId}`, { method: 'DELETE' });
+                await loadShopkeeperPackages();
+              }
+            });
           });
         }
       }

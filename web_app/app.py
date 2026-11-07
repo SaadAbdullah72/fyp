@@ -1468,6 +1468,16 @@ def api_generate_meat_packages(payload: GeneratePackagesPayload):
     )
     return res
 
+@app.delete("/api/package/{package_id}")
+def api_delete_package(package_id: str):
+    """Deletes or removes a meat package from the ledger inventory"""
+    pkgs = ethereum_service.ledger.get("meat_packages", {})
+    if package_id in pkgs:
+        del pkgs[package_id]
+        ethereum_service._save_ledger()
+        return {"status": "success", "message": f"Package {package_id} removed"}
+    return {"status": "not_found", "message": f"Package {package_id} not found"}
+
 @app.get("/api/packages")
 def api_list_packages():
     """Returns all active meat packages"""

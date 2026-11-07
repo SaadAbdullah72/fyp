@@ -1,4 +1,6 @@
 # Web Framework & Server
+gradio>=4.44.0
+spaces
 fastapi>=0.100.0
 uvicorn[standard]>=0.23.0
 python-multipart>=0.0.6

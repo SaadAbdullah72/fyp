@@ -1,10 +1,11 @@
 ---
-title: Livestock Muzzle Biometric System
+title: HalalChain Live Biometric
 emoji: 🐮
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-app_port: 7860
+colorFrom: green
+colorTo: emerald
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
 pinned: false
 ---
 

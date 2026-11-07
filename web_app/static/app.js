@@ -1970,33 +1970,35 @@ NFT status updated permanently to SLAUGHTERED.`);
             if (fetchedId && Number(fetchedId) > 0) packageTokenId = Number(fetchedId);
           } catch (e) {}
 
-          // If mapping tag was formatted differently on-chain, resolve index from selected package
+          // Match exact package index on-chain
           if (!packageTokenId || packageTokenId === 0) {
-            const selectedPkg = currentShopkeeperPackages.find(p => p.package_id === pkgId);
-            if (selectedPkg) {
+            try {
               const allPkgsCount = await cattleContract.totalPackages();
               const tot = Number(allPkgsCount);
-              for (let i = 1; i <= tot; i++) {
+              const selectedPkg = currentShopkeeperPackages.find(p => p.package_id === pkgId);
+              for (let i = tot; i >= 1; i--) {
                 try {
                   const onChainPkg = await cattleContract.meatPackages(i);
                   // Match cut type or tag
-                  if (onChainPkg && (onChainPkg.packageTag === pkgId || onChainPkg.cutType.toLowerCase() === selectedPkg.cut_name?.toLowerCase())) {
-                    packageTokenId = i;
-                    break;
+                  if (onChainPkg && !onChainPkg.isDeliveredToRetail) {
+                    if (onChainPkg.packageTag === pkgId || onChainPkg.cutType.toLowerCase() === selectedPkg?.cut_name?.toLowerCase()) {
+                      packageTokenId = i;
+                      break;
+                    }
                   }
                 } catch (err) {}
               }
+            } catch (scanErr) {
+              console.warn("Package scan warning:", scanErr);
             }
           }
 
-          if (!packageTokenId || packageTokenId === 0) {
-            packageTokenId = 1;
+          if (packageTokenId && packageTokenId > 0) {
+            const tx = await cattleContract.confirmRetailDelivery([packageTokenId], shopName, receiverName);
+            alert(`Retail Receiving Signature Broadcast! Tx: ${tx.hash}`);
+            await tx.wait();
+            txHash = tx.hash;
           }
-
-          const tx = await cattleContract.confirmRetailDelivery([packageTokenId], shopName, receiverName);
-          alert(`Retail Receiving Signature Broadcast! Tx: ${tx.hash}`);
-          await tx.wait();
-          txHash = tx.hash;
         }
 
         await fetch('/api/retail/confirm-delivery', {

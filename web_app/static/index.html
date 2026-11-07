@@ -889,8 +889,14 @@
           </p>
           
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-            <input type="text" id="pkgBatchId" placeholder="Batch ID (e.g. BATCH-LHR-2026-001)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
-            <input type="text" id="pkgParentCowId" placeholder="Parent Cow ID (e.g. HC-ETH-89412)" style="background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            <div>
+              <label style="color: #064B2D; font-size: 0.78rem; font-weight: 600;">Batch Reference:</label>
+              <input type="text" id="pkgBatchId" placeholder="Batch ID (e.g. BATCH-LHR-2026-001)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
+            <div>
+              <label style="color: #064B2D; font-size: 0.78rem; font-weight: 600;">Batch Animals (All Verified):</label>
+              <input type="text" id="pkgParentCowId" placeholder="Parent Cow IDs (e.g. HC-SEP-39523, HC-SEP-60381)" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #121A15; font-family: monospace; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem;">
+            </div>
             <div style="grid-column: 1 / -1;">
               <label style="color: #064B2D; font-size: 0.78rem;">Destination Authorized Shopkeeper / Supermarket:</label>
               <select id="pkgShopkeeperSelect" style="width: 100%; background: #FFFFFF; border: 1.5px solid #D5DEC0; color: #064B2D; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem;">

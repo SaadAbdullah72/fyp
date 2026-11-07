@@ -1650,10 +1650,25 @@ All registrations and transfers are now connected to your verified on-chain cont
       const pkgBatchIdInput = document.getElementById('pkgBatchId');
       const pkgParentCowInput = document.getElementById('pkgParentCowId');
 
+      const batchVal = selected?.dataset?.batch || "";
       if (cowIdInput) cowIdInput.value = selected.value || "";
-      if (batchInput) batchInput.value = selected.dataset.batch || "SINGLE-TRANSFER";
-      if (pkgBatchIdInput && selected.dataset.batch) pkgBatchIdInput.value = selected.dataset.batch;
-      if (pkgParentCowInput) pkgParentCowInput.value = selected.value || "";
+      if (batchInput) batchInput.value = batchVal || "SINGLE-TRANSFER";
+      if (pkgBatchIdInput) pkgBatchIdInput.value = batchVal || "SINGLE-TRANSFER";
+
+      // If cow belongs to a batch, auto-populate all cows belonging to this batch!
+      if (batchVal && window.__HalalChain_Current_Registry) {
+        const batchCows = [];
+        for (const [tag, cow] of Object.entries(window.__HalalChain_Current_Registry)) {
+          if (cow.batch_id === batchVal) {
+            batchCows.push(tag);
+          }
+        }
+        if (pkgParentCowInput) {
+          pkgParentCowInput.value = batchCows.length > 0 ? batchCows.join(', ') : (selected.value || "");
+        }
+      } else {
+        if (pkgParentCowInput) pkgParentCowInput.value = selected.value || "";
+      }
     };
   }
 
@@ -1766,6 +1781,23 @@ NFT status updated permanently to SLAUGHTERED.`);
         btnSignHalalSlaughter.disabled = false;
         await updateRegistryUI();
         loadSlaughterhouseCustodyCattle();
+
+        // Check if all cows in this batch are slaughtered and populate package fields
+        const currBatch = document.getElementById('shSignBatchId')?.value.trim();
+        if (currBatch && currBatch !== "SINGLE-TRANSFER" && window.__HalalChain_Current_Registry) {
+          const batchCows = [];
+          for (const [tag, cow] of Object.entries(window.__HalalChain_Current_Registry)) {
+            if (cow.batch_id === currBatch) {
+              batchCows.push(tag);
+            }
+          }
+          const pkgBatchIdInput = document.getElementById('pkgBatchId');
+          const pkgParentCowInput = document.getElementById('pkgParentCowId');
+          if (pkgBatchIdInput) pkgBatchIdInput.value = currBatch;
+          if (pkgParentCowInput && batchCows.length > 0) {
+            pkgParentCowInput.value = batchCows.join(', ');
+          }
+        }
       } catch (err) {
         alert("Halal Signing Error: " + (err.reason || err.message));
         btnSignHalalSlaughter.textContent = "Sign Halal Slaughter (Update NFT to SLAUGHTERED)";
@@ -1844,10 +1876,11 @@ NFT status updated permanently to SLAUGHTERED.`);
         btnGenerateMeatPackages.textContent = "Minting Meat Packages on Sepolia...";
 
         let txHash = null;
+        const primaryCowId = parentCowId.split(',')[0].trim();
         if (cattleContract && web3Signer && typeof cattleContract.generateMeatPackages === 'function') {
           let parentTokenId = 1;
           try {
-            const fetchedId = await cattleContract.cowIdToTokenId(parentCowId);
+            const fetchedId = await cattleContract.cowIdToTokenId(primaryCowId);
             if (fetchedId && Number(fetchedId) > 0) parentTokenId = fetchedId;
           } catch (e) {}
 

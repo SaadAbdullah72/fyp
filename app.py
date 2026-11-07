@@ -22,14 +22,17 @@ footer {visibility: hidden !important;}
 iframe {border: none; width: 100%; height: 100vh;}
 """
 
+with open(os.path.join(root_dir, "web_app", "static", "standalone_landing.html"), "r", encoding="utf-8") as f:
+    LANDING_HTML_RAW = f.read()
+
 with gr.Blocks(title="HalalChain Livestock Intelligence", css=custom_css) as demo:
     # Keep GPU engine hook active for Hugging Face ZeroGPU watchdog
     ping_btn = gr.Button("GPU Active", visible=False)
     ping_out = gr.Textbox(visible=False)
     ping_btn.click(predict_muzzle, outputs=ping_out)
     
-    # Render HalalChain Web Portal directly inside the Space
-    gr.HTML('<iframe src="/portal" style="width: 100%; height: 98vh; border: none;"></iframe>')
+    # Render HalalChain Web Portal directly inside the Space without any 404 iframe route!
+    gr.HTML(LANDING_HTML_RAW)
 
 # In Gradio, gr.mount_gradio_app(fastapi_app, demo, path=...) mounts Gradio ONTO FastAPI!
 # So we mount demo on /gradio, and fastapi_app remains the master app on root!

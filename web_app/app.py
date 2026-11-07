@@ -178,6 +178,7 @@ def bytes_to_cv2(image_bytes: bytes) -> np.ndarray:
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/landing", response_class=HTMLResponse)
 async def serve_home():
     landing_file = os.path.join(STATIC_DIR, "landing.html")
     if os.path.exists(landing_file):

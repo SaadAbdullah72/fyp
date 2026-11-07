@@ -29,10 +29,10 @@ with gr.Blocks(title="HalalChain Livestock Intelligence", css=custom_css) as dem
     ping_btn.click(predict_muzzle, outputs=ping_out)
     
     # Render HalalChain Web Portal directly inside the Space
-    gr.HTML('<iframe src="/landing" style="width: 100%; height: 98vh; border: none;"></iframe>')
+    gr.HTML('<iframe src="/gradio/landing" style="width: 100%; height: 98vh; border: none;"></iframe>')
 
-# Mount FastAPI app onto Gradio
-app = gr.mount_gradio_app(fastapi_app, demo, path="/")
+# Mount FastAPI app onto Gradio under /gradio
+app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
 
 # Launch with native Gradio launch to satisfy ZeroGPU watchdog completely
 if __name__ == "__main__":

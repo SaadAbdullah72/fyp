@@ -587,10 +587,31 @@ class EthereumService:
         if not pkg:
             return None
 
-        cow_id = pkg.get("parent_cow_id")
-        cattle = self.ledger.get("cattle_records", {}).get(cow_id, {})
-        slaughter = self.ledger.get("slaughter_records", {}).get(cow_id, {})
-        transfers = self.ledger.get("transfers", {}).get(cow_id, [])
+        raw_cow_id = pkg.get("parent_cow_id", "")
+        cow_ids = [c.strip() for c in raw_cow_id.split(",") if c.strip()]
+        primary_cow_id = cow_ids[0] if cow_ids else raw_cow_id
+        
+        cattle = self.ledger.get("cattle_records", {}).get(primary_cow_id, {})
+        slaughter = self.ledger.get("slaughter_records", {}).get(primary_cow_id, {})
+        transfers = self.ledger.get("transfers", {}).get(primary_cow_id, [])
+
+        # Collect all batch animal records for full batch ancestry display
+        batch_id = pkg.get("batch_id")
+        batch_animals = []
+        if batch_id:
+            for cid, c in self.ledger.get("cattle_records", {}).items():
+                if c.get("batch_id") == batch_id or cid in cow_ids:
+                    batch_animals.append({
+                        "cow_id": cid,
+                        "name": c.get("name") or c.get("animal_name") or "Cattle",
+                        "breed": c.get("breed", "Sahiwal Cattle"),
+                        "owner_name": c.get("owner_name", "Farmer"),
+                        "owner_address": c.get("owner_address", ""),
+                        "status": c.get("status", "SLAUGHTERED_HALAL"),
+                        "farm_name": c.get("farm_name", "Al-Barakah Dairy Farm"),
+                        "biometric_hash": c.get("biometric_hash", ""),
+                        "thumbnail": c.get("thumbnail", "")
+                    })
 
         active_contract = (
             self.config.get("contract_address")
@@ -602,6 +623,7 @@ class EthereumService:
         return {
             "package": pkg,
             "cattle": cattle,
+            "batch_animals": batch_animals,
             "slaughter_record": slaughter,
             "transfers": transfers,
             "network": "Ethereum Sepolia Testnet",

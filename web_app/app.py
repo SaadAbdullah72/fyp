@@ -1491,16 +1491,25 @@ def api_get_shopkeeper_packages(wallet: str):
         curr_holder = p.get("current_holder", "").lower()
         if holder == clean_wallet or curr_holder == clean_wallet:
             # Enrich package with parent animal & slaughterhouse data
-            cow_id = p.get("parent_cow_id")
-            cow = cattle_dict.get(cow_id, {})
-            slaughter = slaughter_dict.get(cow_id, {})
+            raw_cow_id = p.get("parent_cow_id", "")
+            cow_ids = [c.strip() for c in raw_cow_id.split(",") if c.strip()]
+            primary_cow_id = cow_ids[0] if cow_ids else raw_cow_id
+            cow = cattle_dict.get(primary_cow_id, {})
+            slaughter = slaughter_dict.get(primary_cow_id, {})
+
+            # Gather all parent cattle names and IDs in batch
+            batch_cow_names = []
+            for cid in cow_ids:
+                c_rec = cattle_dict.get(cid, {})
+                c_name = c_rec.get("name") or c_rec.get("animal_name") or cid
+                batch_cow_names.append(f"{c_name} ({cid})")
             
             # Find originating slaughterhouse facility info
             sh_wallet = cow.get("slaughterhouse_wallet", "").lower()
             sh_info = sh_dict.get(sh_wallet, {})
 
             enriched = dict(p)
-            enriched["animal_name"] = cow.get("name", "Unknown Animal")
+            enriched["animal_name"] = ", ".join(batch_cow_names) if len(batch_cow_names) > 1 else (cow.get("name") or "Cattle")
             enriched["breed"] = cow.get("breed", "Cattle")
             enriched["farm_name"] = cow.get("farm_name", "Registered Farm")
             enriched["origin_location"] = cow.get("location", "Punjab, Pakistan")
@@ -1511,16 +1520,19 @@ def api_get_shopkeeper_packages(wallet: str):
             enriched["mufti_inspector_notes"] = slaughter.get("inspector_notes", "Verified Halal Islamic Zibah")
             enriched["is_received"] = (p.get("status") == "DELIVERED_TO_RETAIL")
             
-            # Generate QR Code for package
+            # Generate QR Code for package ONLY if already received by shopkeeper
             import qrcode
             verify_url = f"http://127.0.0.1:8000/verify/package/{p['package_id']}"
-            qr = qrcode.QRCode(box_size=4, border=1)
-            qr.add_data(verify_url)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
-            buf = io.BytesIO()
-            img.save(buf, format="PNG")
-            enriched["qr_code_base64"] = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+            if enriched["is_received"]:
+                qr = qrcode.QRCode(box_size=4, border=1)
+                qr.add_data(verify_url)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="black", back_color="white")
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                enriched["qr_code_base64"] = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+            else:
+                enriched["qr_code_base64"] = None
             enriched["verify_url"] = verify_url
 
             shop_pkgs.append(enriched)

@@ -273,6 +273,19 @@
       </div>
     </div>
 
+    <!-- Batch Herd Provenance & Ancestry Summary Card -->
+    <div class="card" id="batchHerdCard" style="display: none;">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Batch Cattle Herd Provenance (<span id="batchCountBadge" style="color: var(--accent-gold-dark);">0 Animals</span>)
+        </div>
+        <span style="font-size: 0.75rem; background: rgba(10,67,37,0.08); color: var(--forest-green); padding: 4px 10px; border-radius: 9999px; font-weight: 700;">Halal Batch Trace</span>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">The animals below were processed together in this certified Halal batch. View their current owners and verified biometric ancestry:</p>
+      <div id="batchAnimalsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;"></div>
+    </div>
+
     <!-- 5-Stage Journey Timeline -->
     <div class="card">
       <div class="card-title">
@@ -405,6 +418,7 @@
         const cattle = data.cattle || {};
         const slaughter = data.slaughter_record || {};
         const transfers = data.transfers || [];
+        const batchAnimals = data.batch_animals || [];
 
         // Product Spec
         document.getElementById('pkgIdDisplay').textContent = pkg.package_id || packageId;
@@ -412,6 +426,41 @@
         document.getElementById('pkgCutSummary').textContent = `${pkg.cut_name || 'Prime Cut'} (${pkg.weight_kg || 15.0} kg)`;
         document.getElementById('weightDisplay').textContent = `${pkg.weight_kg || 15.0} kg`;
         document.getElementById('batchIdDisplay').textContent = pkg.batch_id || 'BATCH-1175';
+
+        // Render Batch Herd Animals
+        if (batchAnimals && batchAnimals.length > 0) {
+          const batchCard = document.getElementById('batchHerdCard');
+          const batchGrid = document.getElementById('batchAnimalsGrid');
+          const batchCountBadge = document.getElementById('batchCountBadge');
+          if (batchCountBadge) batchCountBadge.textContent = `${batchAnimals.length} Animals in Batch`;
+          if (batchGrid) {
+            batchGrid.innerHTML = '';
+            batchAnimals.forEach(an => {
+              const div = document.createElement('div');
+              div.style.background = '#FFFFFF';
+              div.style.border = '1px solid var(--border-subtle)';
+              div.style.borderRadius = '10px';
+              div.style.padding = '12px';
+              div.style.display = 'flex';
+              div.style.gap = '10px';
+              div.style.alignItems = 'center';
+              div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
+              
+              const thumb = an.thumbnail || '/static/images/halalchain_icon.png';
+              div.innerHTML = `
+                <img src="${thumb}" style="width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border-subtle);">
+                <div style="font-size: 0.8rem; line-height: 1.5;">
+                  <strong style="color: var(--forest-green); font-size: 0.88rem;">${an.name}</strong>
+                  <div class="mono" style="color: var(--leaf-green); font-weight: 700; font-size: 0.76rem;">${an.cow_id}</div>
+                  <div style="color: var(--text-muted); font-size: 0.72rem;">Current Owner: <span class="mono" style="color: var(--forest-green); font-weight: 600;">${an.owner_address ? (an.owner_address.slice(0, 6) + '...' + an.owner_address.slice(-4)) : an.owner_name}</span></div>
+                  <div style="margin-top: 2px;"><a href="/passport/verify/${an.cow_id}" target="_blank" style="color: var(--accent-gold-dark); text-decoration: underline; font-weight: 700; font-size: 0.72rem;">View Full Passport &rarr;</a></div>
+                </div>
+              `;
+              batchGrid.appendChild(div);
+            });
+          }
+          if (batchCard) batchCard.style.display = 'block';
+        }
 
         // Stage 1: Farm Origin
         const animalName = cattle.name || cattle.animal_name || 'Bella';

@@ -1391,6 +1391,17 @@ All registrations and transfers are now connected to your verified on-chain cont
       const badgeEl = document.getElementById('retailPackageCountBadge');
       if (badgeEl) badgeEl.textContent = `${currentShopkeeperPackages.length} Packages`;
 
+      if (selectEl) {
+        selectEl.innerHTML = '<option value="">-- Select Incoming Meat Package to Inspect & Receive --</option>';
+        currentShopkeeperPackages.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.package_id;
+          const statusText = p.is_received ? '[RECEIVED]' : '[INCOMING]';
+          opt.textContent = `${statusText} ${p.package_id} - ${p.cut_name} (${p.weight_kg} kg) | Batch: ${p.batch_id}`;
+          selectEl.appendChild(opt);
+        });
+      }
+
       const inventoryList = document.getElementById('retailInventoryList');
       const invCount = document.getElementById('retailInventoryCount');
       if (invCount) invCount.textContent = `${currentShopkeeperPackages.length} Packages`;
@@ -1411,17 +1422,19 @@ All registrations and transfers are now connected to your verified on-chain cont
             item.style.alignItems = 'center';
             item.style.gap = '12px';
 
-            const qrImg = p.qr_code_base64 ? `<img src="${p.qr_code_base64}" alt="QR" style="width: 58px; height: 58px; border-radius: 6px; background: #fff; padding: 2px; flex-shrink: 0;">` : '';
+            const qrHtml = p.is_received 
+              ? (p.qr_code_base64 ? `<img src="${p.qr_code_base64}" alt="QR" style="width: 58px; height: 58px; border-radius: 6px; background: #fff; padding: 2px; flex-shrink: 0;">` : '')
+              : `<div style="width: 58px; height: 58px; border-radius: 6px; background: rgba(253,224,71,0.1); border: 1.5px dashed rgba(253,224,71,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.65rem; color: #fde047; text-align: center; flex-shrink: 0; padding: 2px; line-height: 1.1;"><span>🔒 QR</span><span>Locked</span></div>`;
 
             item.innerHTML = `
               <div style="display: flex; gap: 10px; align-items: center;">
-                ${qrImg}
+                ${qrHtml}
                 <div style="font-size: 0.8rem; line-height: 1.5;">
                   <strong style="color: #fff; font-size: 0.88rem;">${p.cut_name}</strong> (<span style="color: #fde047;">${p.weight_kg} kg</span>)
                   <div style="font-family: monospace; color: #00F5A0; font-size: 0.76rem;">${p.package_id}</div>
                   <div style="color: #94A3B8; font-size: 0.74rem;">Cow: <strong style="color: #fff;">${p.animal_name}</strong> | Batch: <span style="color: #38bdf8;">${p.batch_id}</span></div>
                   <div style="margin-top: 2px;">
-                    ${p.is_received ? '<span style="color: #00F5A0; font-weight: 700; font-size: 0.72rem;">✓ DELIVERED TO STORE</span>' : '<span style="color: #fde047; font-size: 0.72rem;">🚚 In Transit to Supermarket</span>'}
+                    ${p.is_received ? '<span style="color: #00F5A0; font-weight: 700; font-size: 0.72rem;">✓ DELIVERED TO STORE (QR Activated)</span>' : '<span style="color: #fde047; font-size: 0.72rem;">🚚 In Transit to Supermarket (Sign to Unlock QR)</span>'}
                   </div>
                 </div>
               </div>

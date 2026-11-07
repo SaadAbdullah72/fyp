@@ -1,3 +1,12 @@
+# CRITICAL: spaces must be imported first before any other package initializes CUDA/torch
+try:
+    import spaces
+    @spaces.GPU
+    def zerogpu_inference():
+        return "ZeroGPU active"
+except Exception as e:
+    print(f"[*] ZeroGPU fallback: {e}")
+
 import os
 import sys
 
@@ -8,17 +17,6 @@ if root_dir not in sys.path:
 import gradio as gr
 from web_app.app import app as fastapi_app
 
-# ZeroGPU function requirement for Hugging Face ZeroGPU runtime
-try:
-    import spaces
-    import torch
-    @spaces.GPU
-    def zerogpu_inference():
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        return f"ZeroGPU active on {device}"
-except Exception as e:
-    print(f"[*] ZeroGPU fallback: {e}")
-
 # Mount FastAPI inside Gradio app to satisfy Hugging Face ZeroGPU SDK while preserving full HalalChain Web App
 app = gr.mount_gradio_app(fastapi_app, gr.Blocks(title="HalalChain AI"), path="/gradio")
 
@@ -27,5 +25,6 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     print(f"[*] Starting HalalChain Server on 0.0.0.0:{port}...")
     uvicorn.run(app, host="0.0.0.0", port=port)
+
 
 

@@ -23,6 +23,12 @@
       "cow_id": "HC-SEP-11129",
       "animal_name": "Bella",
       "pinned_at": 1793943571
+    },
+    "bafkrei67cef6ddb26d8d58a5bfad9f3ecbdde41ad7bd4a75067251": {
+      "sha256": "afa27a3c65cdd4eeaea12d76ed3a03af34926dfa129f80e05f53fa6be117926b",
+      "cow_id": "HC-SEP-93452",
+      "animal_name": "CATTLE 01",
+      "pinned_at": 1794037284
     }
   },
   "biometric_hashes": {
@@ -32,9 +38,9 @@
       "animal_name": "Bella"
     },
     "0x9bb00496d542c31242ffc77ab8fcb0c313eb3e18c42ac5dd349d5f0a9c657014": {
-      "cid": "bafkrei68cf947cf2fcedfa5b124b0c7f7e7c94bd657939aaf4e5d3",
-      "cow_id": "HC-SEP-11129",
-      "animal_name": "Bella"
+      "cid": "bafkrei67cef6ddb26d8d58a5bfad9f3ecbdde41ad7bd4a75067251",
+      "cow_id": "HC-SEP-93452",
+      "animal_name": "CATTLE 01"
     }
   }
 }

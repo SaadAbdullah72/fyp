@@ -252,10 +252,19 @@ async def get_registry():
         owner_addr = data.get("owner_address", "")
         etherscan_url = bc.get("etherscan_url") or (f"https://sepolia.etherscan.io/tx/{tx_h}" if tx_h else (f"https://sepolia.etherscan.io/address/{owner_addr}" if owner_addr else "https://sepolia.etherscan.io"))
 
-        # Synchronize lifecycle status from on-chain ledger
+        # Synchronize lifecycle status and latest owner from on-chain ledger
         on_chain_rec = cattle_records.get(tag_id, {})
+        transfers = ethereum_service.ledger.get("transfers", {}).get(tag_id, [])
+        latest_transfer = transfers[-1] if transfers else None
+        if latest_transfer and latest_transfer.get("to_address"):
+            owner_addr = latest_transfer.get("to_address").lower()
+        elif on_chain_rec.get("owner_address"):
+            owner_addr = on_chain_rec.get("owner_address").lower()
+        elif data.get("owner_address"):
+            owner_addr = data.get("owner_address").lower()
+
         current_status = on_chain_rec.get("status") or data.get("status", "ALIVE_REGISTERED")
-        current_name = on_chain_rec.get("name") or data.get("name", "Cattle")
+        current_name = on_chain_rec.get("name") or data.get("animal_name") or data.get("name", "Cattle")
         current_owner_name = on_chain_rec.get("owner_name") or data.get("owner_name", "Farmer")
 
         items.append({

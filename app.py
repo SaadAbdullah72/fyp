@@ -35,12 +35,15 @@ with gr.Blocks(title="HalalChain Livestock Intelligence", css=custom_css) as dem
 # So we mount demo on /gradio, and fastapi_app remains the master app on root!
 app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
 
+# Launch with native Gradio launch to satisfy ZeroGPU watchdog completely
 if __name__ == "__main__":
-    import uvicorn
     demo.queue()
-    port = int(os.environ.get("PORT", 7860))
-    print(f"[*] Starting HalalChain Server on 0.0.0.0:{port}...")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        show_error=True
+    )
 
 
 
